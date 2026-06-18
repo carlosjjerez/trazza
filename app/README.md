@@ -34,22 +34,27 @@ python3 -m http.server 8080
 En escritorio puedes simular posiciones desde las DevTools (Sensors → Location),
 pero la prueba real es en el móvil.
 
-## Desplegar (para usarlo en el móvil este finde)
-Cualquier hosting estático con HTTPS sirve. Sin build, son ficheros estáticos.
+## Desplegar en Vercel (para usarlo en el móvil este finde)
+Sin build: son ficheros estáticos y HTTPS es automático. La config de despliegue
+(`vercel.json`) ya fija los headers correctos de PWA (service worker sin caché,
+`Service-Worker-Allowed: /` y el MIME del manifest).
 
-**Vercel**
+**Opción A — CLI (desde la carpeta `app/`):**
 ```bash
 npm i -g vercel
-cd app && vercel --prod
+cd app
+vercel --prod
 ```
+La primera vez confirma el proyecto; despliega el contenido de `app/` tal cual.
 
-**Netlify** (arrastra la carpeta `app/` en app.netlify.com/drop, o):
-```bash
-npm i -g netlify-cli
-cd app && netlify deploy --prod --dir .
-```
+**Opción B — Dashboard (conectando el repo de GitHub):**
+1. En vercel.com → *Add New Project* → importa `carlosjjerez/trazza`.
+2. En *Configure Project* pon **Root Directory = `app`**.
+3. Framework Preset: *Other*; sin Build Command ni Output Directory (es estático).
+4. *Deploy*. Te da una URL `https://…vercel.app`.
 
-**GitHub Pages**: publica el contenido de `app/` y entra por la URL `https://…`.
+Para futuras versiones: `git push` y Vercel redespliega solo (Opción B), o repite
+`vercel --prod` (Opción A).
 
 ## Instalar en el iPhone
 1. Abre la URL **https** en Safari.

@@ -1,12 +1,13 @@
 /* Trazza service worker — app shell offline-first.
    Importante para la pista: una vez abierta la app con conexión, el crono
    funciona sin red. */
-const CACHE = 'trazza-v1';
+const CACHE = 'trazza-v2';
 const SHELL = [
   './',
   './index.html',
   './app.css',
   './app.js',
+  './sim.js',
   './manifest.webmanifest',
   './icons/icon.svg',
   './icons/icon-192.png',

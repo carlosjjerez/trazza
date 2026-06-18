@@ -74,15 +74,37 @@ Para futuras versiones: `git push` y Vercel redespliega solo (Opción B), o repi
 6. **Red de seguridad recomendada:** corre en paralelo RaceChrono / Harry's LapTimer
    y compara, para validar la repetibilidad del MVP.
 
+## Modo demo (probar el HUD sin salir a pista)
+En **Ajustes → Pruebas → Modo demo (GPS simulado)** la app deja de usar el GPS real
+y un simulador da vueltas solo alrededor de la meta, cruzándola en el sentido
+correcto cada ~45 s. Sirve para ver el HUD en vivo, la detección de vueltas, la
+mejor vuelta, el delta y la exportación funcionando antes del finde.
+
+Flujo: activa el modo demo → *Nueva sesión* → elige el preset **Cartagena** (o
+*Marcar meta aquí*) → *Empezar sesión*. Verás registrarse vueltas cada ~45 s.
+
+> Por seguridad, el modo demo **nunca se guarda**: al recargar la app vuelve
+> siempre al GPS real. No lo dejes puesto pensando que cronometra de verdad.
+
 ## Estructura
 ```
 app/
 ├── index.html      # 5 pantallas (inicio, meta, HUD, resumen, ajustes)
 ├── app.css         # estilos según el brief de marca Trazza
 ├── app.js          # GPS, geometría de meta, detección de vuelta, estado, export
+├── sim.js          # simulador de GPS (modo demo)
 ├── sw.js           # service worker (offline app shell)
+├── vercel.json     # config de despliegue estático (headers PWA)
 ├── manifest.webmanifest
-└── icons/          # iconos PWA + generador sin dependencias (gen-icons.js)
+├── icons/          # iconos PWA + generador sin dependencias (gen-icons.js)
+└── test/           # pruebas de geometría y del simulador (node, sin deps)
+```
+
+## Pruebas
+```bash
+cd app
+node test/geo-test.js   # geometría de detección de meta (10/10)
+node test/sim-test.js   # modo demo de extremo a extremo (vueltas detectadas)
 ```
 
 ## Notas técnicas

@@ -13,6 +13,7 @@ const DEFAULTS = {
   sound: true,
   haptic: true,
   wakelock: true,
+  sim: false,
 };
 
 const TRACK_PRESETS = [
@@ -25,6 +26,7 @@ const LS_METAS    = 'trazza.metas.v1';
 
 let settings = loadJSON(LS_SETTINGS, DEFAULTS);
 settings = Object.assign({}, DEFAULTS, settings);
+settings.sim = false; // el modo demo nunca persiste: arranca siempre con GPS real
 
 // estado en vivo de la sesión
 const live = {
@@ -149,6 +151,8 @@ function gateCrossing(gate, p0, p1){
 /* ----------------------------- GPS ----------------------------- */
 let gpsLastT=null, gpsHz=0;
 function startGPS(onFix){
+  // Modo demo: el simulador alimenta los fixes en vez del GPS real.
+  if(settings.sim && window.TrazzaSim){ window.TrazzaSim.start(onFix); return; }
   if(!('geolocation' in navigator)){ toast('Este dispositivo no tiene GPS disponible'); return; }
   live.watchId = navigator.geolocation.watchPosition(
     (pos)=>{
@@ -166,7 +170,10 @@ function startGPS(onFix){
     { enableHighAccuracy:true, maximumAge:0, timeout:15000 }
   );
 }
-function stopGPS(){ if(live.watchId!=null){ navigator.geolocation.clearWatch(live.watchId); live.watchId=null; } }
+function stopGPS(){
+  if(window.TrazzaSim && window.TrazzaSim.active) window.TrazzaSim.stop();
+  if(live.watchId!=null){ navigator.geolocation.clearWatch(live.watchId); live.watchId=null; }
+}
 
 function onGpsError(err){
   let msg='Error de GPS';
@@ -558,7 +565,10 @@ function applySettingsHandlers(){
     saveJSON(LS_SETTINGS,settings); renderSettings();
   }));
   $all('#units-toggle button').forEach(b=>b.addEventListener('click',()=>{ settings.units=b.dataset.units; saveJSON(LS_SETTINGS,settings); renderSettings(); }));
-  $all('.switch[data-toggle]').forEach(b=>b.addEventListener('click',()=>{ const k=b.dataset.toggle; settings[k]=!settings[k]; saveJSON(LS_SETTINGS,settings); renderSettings(); }));
+  $all('.switch[data-toggle]').forEach(b=>b.addEventListener('click',()=>{
+    const k=b.dataset.toggle; settings[k]=!settings[k]; saveJSON(LS_SETTINGS,settings); renderSettings();
+    if(k==='sim') toast(settings.sim ? 'Modo demo activado · GPS simulado' : 'Modo demo desactivado · GPS real', 2600);
+  }));
   $('#btn-clear-data').addEventListener('click',()=>{
     if(confirm('¿Borrar TODAS las sesiones guardadas? No se puede deshacer.')){
       localStorage.removeItem(LS_SESSIONS); renderSessions(); toast('Sesiones borradas');

@@ -4,7 +4,7 @@
   "description": "Cronometraje GPS de vueltas para moto en circuito. Afina tu trazada, baja tus décimas.",
   "lang": "es",
   "dir": "ltr",
-  "start_url": "./index.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",

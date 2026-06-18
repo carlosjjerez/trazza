@@ -603,9 +603,13 @@ function init(){
   renderPresets();
   renderSettings();
 
-  // registra service worker
+  // registra service worker (forzando recarga del script, no desde caché HTTP)
   if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('sw.js').catch(()=>{});
+    let refreshing=false;
+    navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+      if(refreshing) return; refreshing=true; location.reload();
+    });
+    navigator.serviceWorker.register('sw.js', { updateViaCache:'none' }).catch(()=>{});
   }
 }
 document.addEventListener('DOMContentLoaded', init);

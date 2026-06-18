@@ -54,12 +54,16 @@ ok('mejor vuelta en HUD', txt('#hud-best').trim()!=='--');
 ok('última vuelta en HUD', txt('#hud-last').trim()!=='--');
 ok('contador de vuelta avanzó', txt('#hud-lapnum')!=='VUELTA 00');
 ok('velocidad máx > 0 en HUD', parseInt(txt('#hud-spdmax'))>0);
+ok('strip de 3 sectores en HUD', window.document.querySelectorAll('#hud-sectors .sec').length===3);
+ok('algún sector con tiempo', [...window.document.querySelectorAll('#hud-sectors .sd')].some(e=>e.textContent.trim()!=='—'));
 
 click('#btn-stop');
 ok('pantalla resumen activa', window.document.querySelector('#screen-summary').classList.contains('active'));
 const count=parseInt(txt('#sum-count'));
 ok('resumen cuenta >=2 vueltas ('+count+')', count>=2);
 ok('resumen mejor vuelta válida', txt('#sum-best').trim()!=='--');
+ok('resumen vuelta óptima válida', txt('#sum-opt').trim()!=='--');
+ok('resumen muestra chips de sector', window.document.querySelectorAll('#sum-laps .lap-secs .sc').length>0);
 
 click('[data-go="home"]');
 ok('sesión listada en home', window.document.querySelectorAll('#session-list .sess').length>=1);

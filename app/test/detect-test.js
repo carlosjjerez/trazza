@@ -90,5 +90,19 @@ function run(det, fixes){
   ok('6: clamp por encima', interpProfile(prof,999)===9000);
 }
 
+// ---- CASO 7: sectores por distancia ----
+{
+  const { sectorSplits } = D;
+  // vuelta de 300 m en 30 s a ritmo constante -> 3 sectores de 10 s
+  const samples=[]; for(let i=0;i<=30;i++) samples.push({d:i*10, t:i*1000});
+  const s=sectorSplits(samples, 300, 3);
+  ok('7: 3 sectores', s && s.length===3);
+  ok('7: cada sector ~10 s', s.every(x=>near(x,10000,50)));
+  ok('7: suman la vuelta', near(s.reduce((a,b)=>a+b,0), 30000, 1));
+  // ritmo variable: rápido al inicio (40m en sector si refDist/3=100? probamos no uniforme)
+  const s2=sectorSplits([{d:0,t:0},{d:100,t:4000},{d:200,t:9000},{d:300,t:15000}], 300, 3);
+  ok('7: variable s1<s2<s3', s2[0]<s2[1] && s2[1]<s2[2]);
+}
+
 console.log(`\nDETECT TESTS: ${pass} pass, ${fail} fail`);
 process.exit(fail?1:0);

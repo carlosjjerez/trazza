@@ -64,6 +64,21 @@
     return profile[n-1].t;
   }
 
+  /* Divide una vuelta (samples [{d,t}], t relativo al inicio de vuelta) en n
+     sectores por distancia igual sobre refDist. Devuelve los n tiempos de
+     sector. El último sector cierra en el tiempo final de la muestra. */
+  function sectorSplits(samples, refDist, n){
+    if(!samples || samples.length<2 || !refDist || n<1) return null;
+    const totalT=samples[samples.length-1].t;
+    const out=[]; let prev=0;
+    for(let i=1;i<=n;i++){
+      const d=(i/n)*refDist;
+      const t = (i===n) ? totalT : interpProfile(samples, d);
+      out.push(t-prev); prev=t;
+    }
+    return out;
+  }
+
   /* Detector de cruces de meta. Acumula candidatos durante un "paso" (fixes
      consecutivos dentro del radio) y, al terminar el paso, elige el de menor
      distancia (la aproximación real) para máxima precisión también a alta
@@ -125,7 +140,7 @@
     }
   }
 
-  const api={ R, projFactory, haversine, angDiff, segApproach, interpProfile, LapDetector };
+  const api={ R, projFactory, haversine, angDiff, segApproach, interpProfile, sectorSplits, LapDetector };
   if(typeof module!=='undefined' && module.exports) module.exports=api;
   global.TrazzaDetect=api;
 })(typeof self!=='undefined' ? self : globalThis);

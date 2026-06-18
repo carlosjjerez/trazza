@@ -128,6 +128,8 @@
       <div class="delta-num" id="hud-delta-num">--</div>
     </div>
 
+    <div class="sectors" id="hud-sectors"></div>
+
     <div class="duo">
       <div class="duo-cell">
         <span class="kicker">Última</span>
@@ -165,13 +167,21 @@
       <span class="kicker green">Mejor vuelta</span>
       <div class="sum-best" id="sum-best">--</div>
       <div class="sum-stats">
+        <div><span class="k">Óptima</span><span class="v green" id="sum-opt">--</span></div>
         <div><span class="k">Media</span><span class="v" id="sum-avg">--</span></div>
         <div><span class="k">Vueltas</span><span class="v" id="sum-count">0</span></div>
         <div><span class="k">V. máx</span><span class="v" id="sum-vmax">--</span></div>
       </div>
+      <div class="opt-note">Óptima = suma de tus mejores sectores</div>
     </div>
 
     <canvas id="sum-map" class="map"></canvas>
+    <div class="map-legend">
+      <span><i class="lg" style="background:#FF3B30"></i>Lento</span>
+      <span><i class="lg" style="background:#FF9E1B"></i>Medio</span>
+      <span><i class="lg" style="background:#1FE0C8"></i>Rápido</span>
+      <span><i class="lg" style="background:rgba(138,147,166,.5)"></i>Resto</span>
+    </div>
 
     <div class="laps-head"><span class="kicker">Vuelta</span><span class="kicker">Tiempo · Δ</span></div>
     <div id="sum-laps" class="stack tight"></div>
@@ -210,6 +220,11 @@
       <div class="grow">
         <div><div class="g-title">Vuelta mínima</div><div class="g-sub">Ignora cruces antes de este tiempo</div></div>
         <div class="stepper"><button data-step="minlap" data-d="-1">−</button><span id="set-minlap">20 s</span><button data-step="minlap" data-d="1">+</button></div>
+      </div>
+      <div class="hr"></div>
+      <div class="grow">
+        <div><div class="g-title">Sectores</div><div class="g-sub">Tramos para tiempos parciales y vuelta óptima</div></div>
+        <div class="stepper"><button data-step="sectors" data-d="-1">−</button><span id="set-sectors">3</span><button data-step="sectors" data-d="1">+</button></div>
       </div>
     </div>
 

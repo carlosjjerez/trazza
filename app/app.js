@@ -5,7 +5,7 @@
    ===================================================================== */
 'use strict';
 
-const DEFAULTS = { radius:30, minLap:20, units:'kmh', sound:true, haptic:true, wakelock:true, sim:false };
+const DEFAULTS = { radius:30, minLap:20, sectors:3, units:'kmh', sound:true, haptic:true, wakelock:true, sim:false };
 const TRACK_PRESETS = [
   { id:'cartagena', name:'Circuito de Cartagena', sub:'Recta principal', lat:37.6444, lon:-1.0352 },
 ];
@@ -22,6 +22,8 @@ const live = {
   laps:[], best:null, bestProfile:null,
   lapStartT:null, lapNum:0, cumDist:0, samples:[], prevFix:null,
   track:[], speedMax:0, startedAt:null, rafId:null, wakeLock:null,
+  // sectores
+  nSectors:3, refDist:null, crossTimes:[], curSectorIdx:0, lastSplitT:0, curSectors:[], bestSectors:[],
 };
 let metaTrack = []; // traza reciente para el mini-mapa de meta
 
@@ -40,6 +42,8 @@ function fmtLap(ms){
 }
 function splitLap(ms){ const f=fmtLap(ms); const i=f.lastIndexOf('.'); return i<0?{main:f,ms:''}:{main:f.slice(0,i),ms:f.slice(i)}; }
 function fmtDelta(ms){ const s=ms/1000; return (s>=0?'+':'−')+Math.abs(s).toFixed(2).replace('.',','); }
+function fmtSecShort(ms){ if(ms==null||!isFinite(ms)) return '—'; return ms<60000 ? (ms/1000).toFixed(2).replace('.',',') : fmtLap(ms); }
+function sectorClass(delta){ if(delta==null) return ''; const s=delta/1000; return s<=-0.02?'good':s>=0.5?'bad':s>=0.05?'warn':'good'; }
 function speedFactor(){ return settings.units==='mph'?2.23694:3.6; }
 function speedUnit(){ return settings.units==='mph'?'mph':'km/h'; }
 function fmtSpeed(mps){ return mps==null?'--':Math.round(mps*speedFactor()); }
@@ -153,7 +157,9 @@ function startSession(){
     laps:[], best:null, bestProfile:null,
     lapStartT:null, lapNum:0, cumDist:0, samples:[{d:0,t:0}], prevFix:null,
     track:[], speedMax:0, startedAt:Date.now(),
+    nSectors:settings.sectors, refDist:null, crossTimes:[], curSectorIdx:0, lastSplitT:0, curSectors:[], bestSectors:[],
   });
+  renderSectorStrip(settings.sectors);
   viewingSessionId=null;
   resetHud();
   show('hud');
@@ -180,6 +186,7 @@ function liveFix(fix){
       const ref=TrazzaDetect.interpProfile(live.bestProfile, live.cumDist);
       if(ref!=null) setDelta(elapsed-ref);
     }
+    updateLiveSectors(elapsed);
   }
   live.prevFix=fix;
 
@@ -190,27 +197,59 @@ function liveFix(fix){
 
 function onCrossing(ev){
   if(ev.kind==='start'){
-    live.lapStartT=ev.t; live.lapNum=1; live.cumDist=0; live.samples=[{d:0,t:0}];
+    startLapState(ev.t, 1);
+    live.crossTimes=[ev.t];
     $('#hud-lapnum').textContent='VUELTA 01';
     haptic(60); beep('lap'); toast('¡Cronómetro en marcha!');
     return;
   }
   // cierra vuelta
   const lapMs=ev.lapMs;
-  // finaliza perfil de la vuelta cerrada
   live.samples.push({ d:live.cumDist, t:lapMs });
+  live.crossTimes.push(ev.t);
+
+  // referencia de distancia: la fija la primera vuelta completa
+  if(live.refDist==null && live.cumDist>0) live.refDist=live.cumDist;
+  // sectores de la vuelta cerrada
+  const secs = TrazzaDetect.sectorSplits(live.samples, live.refDist||live.cumDist, live.nSectors) || [];
+  secs.forEach((s,i)=>{ if(live.bestSectors[i]==null || s<live.bestSectors[i]) live.bestSectors[i]=s; });
+
   const isBest = live.best==null || lapMs<live.best;
-  live.laps.push({ n:ev.lapNum, ms:lapMs });
+  live.laps.push({ n:ev.lapNum, ms:lapMs, sectors:secs });
   if(isBest){ live.best=lapMs; live.bestProfile=live.samples.slice(); }
 
   flashHud(); haptic(isBest?[60,40,60]:80); beep(isBest?'best':'lap');
   toast((isBest?'¡Mejor vuelta! ':'Vuelta '+ev.lapNum+' · ')+fmtLap(lapMs), 2600);
 
+  // muestra los sectores recién cerrados (con color vs mejor sector)
+  showLapSectors(secs);
+
   // siguiente vuelta
-  live.lapStartT=ev.t; live.lapNum=ev.lapNum+1; live.cumDist=0; live.samples=[{d:0,t:0}];
+  startLapState(ev.t, ev.lapNum+1);
   $('#hud-lapnum').textContent='VUELTA '+String(live.lapNum).padStart(2,'0');
   renderHudLastBest();
   persistSession(false);
+}
+
+function startLapState(t, lapNum){
+  live.lapStartT=t; live.lapNum=lapNum; live.cumDist=0; live.samples=[{d:0,t:0}];
+  live.curSectorIdx=0; live.lastSplitT=0; live.curSectors=[];
+}
+
+/* sectores en vivo: al pasar cada frontera de distancia, cierra el sector */
+function updateLiveSectors(elapsed){
+  if(!live.refDist || live.nSectors<2) return;
+  while(live.curSectorIdx < live.nSectors-1){
+    const boundary=((live.curSectorIdx+1)/live.nSectors)*live.refDist;
+    if(live.cumDist < boundary) break;
+    const splitT=TrazzaDetect.interpProfile(live.samples, boundary);
+    const secT=splitT-live.lastSplitT;
+    live.curSectors[live.curSectorIdx]=secT;
+    paintSector(live.curSectorIdx, secT);
+    live.lastSplitT=splitT;
+    live.curSectorIdx++;
+  }
+  highlightSector(live.curSectorIdx);
 }
 
 function renderHudLastBest(){
@@ -218,6 +257,23 @@ function renderHudLastBest(){
   const sl=splitLap(last); $('#hud-last').innerHTML = last==null?'--':`${sl.main}<span class="ms">${sl.ms}</span>`;
   const sb=splitLap(live.best); $('#hud-best').innerHTML = live.best==null?'--':`${sb.main}<span class="ms">${sb.ms}</span>`;
 }
+
+/* ---- sectores en el HUD ---- */
+function renderSectorStrip(n){
+  const wrap=$('#hud-sectors'); if(!wrap) return; wrap.innerHTML='';
+  for(let i=0;i<n;i++){ const d=document.createElement('div'); d.className='sec'; d.dataset.i=i;
+    d.innerHTML=`<span class="sl">S${i+1}</span><span class="sd">—</span>`; wrap.appendChild(d); }
+}
+function paintSector(i, secT){
+  const cell=$(`#hud-sectors .sec[data-i="${i}"]`); if(!cell) return;
+  const best=live.bestSectors[i];
+  const delta = best!=null ? secT-best : null;
+  cell.querySelector('.sd').textContent=fmtSecShort(secT);
+  cell.classList.remove('good','warn','bad');
+  const cls=sectorClass(delta); if(cls) cell.classList.add(cls);
+}
+function highlightSector(idx){ $all('#hud-sectors .sec').forEach((c,i)=>c.classList.toggle('cur', i===idx)); }
+function showLapSectors(secs){ secs.forEach((s,i)=>paintSector(i,s)); highlightSector(-1); }
 function setDelta(ms){
   const card=$('#hud-delta'), num=$('#hud-delta-num');
   card.classList.remove('good','bad'); num.classList.remove('good','bad');
@@ -233,6 +289,7 @@ function resetHud(){
   $('#hud-spd').textContent='0'; $('#hud-spdmax').textContent='0';
   $('#hud-spd-unit').textContent=speedUnit().toUpperCase();
   setDelta(null);
+  $all('#hud-sectors .sec').forEach(c=>{ c.classList.remove('good','warn','bad','cur'); const sd=c.querySelector('.sd'); if(sd) sd.textContent='—'; });
 }
 function flashHud(){ const h=$('#screen-hud'); h.classList.remove('flash'); void h.offsetWidth; h.classList.add('flash'); }
 function startClock(){
@@ -259,12 +316,15 @@ function stopSession(){
 let currentId=null;
 function persistSession(finalize){
   const sessions=loadJSON(LS_SESSIONS,[]);
+  const optimal = (live.bestSectors.length===live.nSectors && live.bestSectors.every(x=>x!=null))
+    ? live.bestSectors.reduce((a,b)=>a+b,0) : null;
   const data={
     id: currentId || ('s'+live.startedAt),
     name: live.gate.name, startedAt: live.startedAt, endedAt: finalize?Date.now():null,
-    laps: live.laps.map(l=>({n:l.n, ms:l.ms})), best: live.best,
+    laps: live.laps.map(l=>({n:l.n, ms:l.ms, sectors:l.sectors||null})), best: live.best,
+    nSectors: live.nSectors, bestSectors: live.bestSectors.slice(), optimal,
     speedMaxKmh: Math.round(live.speedMax*3.6),
-    gate:{ lat:live.gate.lat, lon:live.gate.lon }, track: live.track,
+    gate:{ lat:live.gate.lat, lon:live.gate.lon }, crossTimes: live.crossTimes.slice(), track: live.track,
   };
   currentId=data.id;
   const i=sessions.findIndex(s=>s.id===data.id);
@@ -299,21 +359,32 @@ function renderSummary(s){
   $('#sum-avg').textContent=fmtLap(avg);
   $('#sum-count').textContent=s.laps.length;
   $('#sum-vmax').textContent=(s.speedMaxKmh!=null?Math.round(s.speedMaxKmh*(settings.units==='mph'?0.621371:1)):'--')+' '+speedUnit();
+  $('#sum-opt').textContent = s.optimal!=null ? fmtLap(s.optimal) : '--';
 
+  const best=s.bestSectors||[];
   const wrap=$('#sum-laps'); wrap.innerHTML='';
   if(!s.laps.length) wrap.innerHTML='<div class="empty">No se registraron vueltas completas. Revisa la posición de la meta.</div>';
   s.laps.forEach(l=>{
     const isBest=l.ms===s.best, delta=l.ms-s.best;
     let cls='best',txt='MEJOR';
     if(!isBest){ const sec=delta/1000; txt='+'+sec.toFixed(2); cls=sec>=1?'worse':'close'; }
+    let secsHtml='';
+    if(l.sectors && l.sectors.length){
+      secsHtml='<div class="lap-secs">'+l.sectors.map((sv,i)=>{
+        const d = best[i]!=null ? sv-best[i] : null;
+        const isBestSec = best[i]!=null && Math.abs(sv-best[i])<1e-6;
+        const c = isBestSec ? 'good' : sectorClass(d);
+        return `<span class="sc ${c}">S${i+1} ${fmtSecShort(sv)}</span>`;
+      }).join('')+'</div>';
+    }
     const row=document.createElement('div'); row.className='lap'+(isBest?' best':'');
-    row.innerHTML=`<span class="ln">${String(l.n).padStart(2,'0')}</span><div class="rt"><span class="lt">${fmtLap(l.ms)}</span><span class="dl ${cls}">${txt}</span></div>`;
+    row.innerHTML=`<div class="lap-top"><span class="ln">${String(l.n).padStart(2,'0')}</span><div class="rt"><span class="lt">${fmtLap(l.ms)}</span><span class="dl ${cls}">${txt}</span></div></div>${secsHtml}`;
     wrap.appendChild(row);
   });
 
   $('#btn-csv').onclick=()=>exportCSV(s);
   $('#btn-gpx').onclick=()=>exportGPX(s);
-  requestAnimationFrame(()=>drawMap($('#sum-map'), (s.track||[]), s.gate, settings.radius));
+  requestAnimationFrame(()=>drawSummaryMap($('#sum-map'), s));
 }
 
 /* ----------------------------- Export ----------------------------- */
@@ -322,8 +393,15 @@ function download(name,text,type){ const b=new Blob([text],{type:type||'text/pla
 function slug(s){ return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
 function exportCSV(s){
   const d=new Date(s.startedAt).toISOString().slice(0,16).replace(/[:T]/g,'-');
-  let csv='vuelta,tiempo_ms,tiempo,delta_ms,mejor\n';
-  s.laps.forEach(l=>{ csv+=`${l.n},${Math.round(l.ms)},"${fmtLap(l.ms)}",${Math.round(l.ms-s.best)},${l.ms===s.best?'1':'0'}\n`; });
+  const n=s.nSectors||0;
+  const secCols=Array.from({length:n},(_,i)=>`sector${i+1}_ms`).join(',');
+  let csv='vuelta,tiempo_ms,tiempo,delta_ms,mejor'+(n?','+secCols:'')+'\n';
+  s.laps.forEach(l=>{
+    let row=`${l.n},${Math.round(l.ms)},"${fmtLap(l.ms)}",${Math.round(l.ms-s.best)},${l.ms===s.best?'1':'0'}`;
+    if(n){ for(let i=0;i<n;i++){ const v=l.sectors&&l.sectors[i]!=null?Math.round(l.sectors[i]):''; row+=','+v; } }
+    csv+=row+'\n';
+  });
+  if(s.optimal!=null) csv+=`óptima,${Math.round(s.optimal)},"${fmtLap(s.optimal)}",,${''}`+(n?','+(s.bestSectors||[]).map(x=>x!=null?Math.round(x):'').join(','):'')+'\n';
   download(`trazza-${slug(s.name)}-${d}-vueltas.csv`,csv,'text/csv'); toast('CSV descargado');
 }
 function exportGPX(s){
@@ -335,39 +413,86 @@ function exportGPX(s){
 }
 
 /* ----------------------------- Mini-mapa ----------------------------- */
-function drawMap(canvas, pts, finish, radiusM){
-  if(!canvas) return;
+// prepara canvas + proyección que encuadra todos los puntos
+function setupCanvas(canvas, allPts){
   const dpr=window.devicePixelRatio||1;
   const W=canvas.clientWidth, H=canvas.clientHeight;
-  if(!W||!H) return;
+  if(!W||!H) return null;
   canvas.width=W*dpr; canvas.height=H*dpr;
-  const ctx=canvas.getContext && canvas.getContext('2d'); if(!ctx) return;
+  const ctx=canvas.getContext && canvas.getContext('2d'); if(!ctx) return null;
   ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,H);
-
-  const all=pts.slice(); if(finish) all.push(finish);
-  if(!all.length) return;
-  const lat0=all.reduce((s,p)=>s+p.lat,0)/all.length, k=Math.cos(lat0*Math.PI/180);
-  let minX=Math.min(...all.map(p=>p.lon*k)), maxX=Math.max(...all.map(p=>p.lon*k));
-  let minY=Math.min(...all.map(p=>p.lat)),     maxY=Math.max(...all.map(p=>p.lat));
+  if(!allPts.length) return null;
+  const lat0=allPts.reduce((s,p)=>s+p.lat,0)/allPts.length, k=Math.cos(lat0*Math.PI/180);
+  let minX=Math.min(...allPts.map(p=>p.lon*k)), maxX=Math.max(...allPts.map(p=>p.lon*k));
+  let minY=Math.min(...allPts.map(p=>p.lat)),     maxY=Math.max(...allPts.map(p=>p.lat));
   const minSpan=0.0016;
   if(maxX-minX<minSpan*k){ const c=(maxX+minX)/2; minX=c-minSpan*k/2; maxX=c+minSpan*k/2; }
   if(maxY-minY<minSpan){ const c=(maxY+minY)/2; minY=c-minSpan/2; maxY=c+minSpan/2; }
   const pad=22, spanX=maxX-minX, spanY=maxY-minY;
   const scale=Math.min((W-2*pad)/spanX,(H-2*pad)/spanY);
   const offX=(W-spanX*scale)/2, offY=(H-spanY*scale)/2;
-  const toPx=p=>({ x:offX+(p.lon*k-minX)*scale, y:H-(offY+(p.lat-minY)*scale) });
+  return { ctx, W, H, k, scale,
+    toPx:p=>({ x:offX+(p.lon*k-minX)*scale, y:H-(offY+(p.lat-minY)*scale) }) };
+}
+function strokeLine(ctx, toPx, pts, color, width){
+  if(pts.length<2) return; ctx.beginPath();
+  pts.forEach((p,i)=>{ const q=toPx(p); i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y); });
+  ctx.strokeStyle=color; ctx.lineWidth=width; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke();
+}
+function drawFinish(ctx, toPx, finish, radiusM, scale){
+  if(!finish) return; const f=toPx(finish); const rpx=(radiusM/111320)*scale;
+  ctx.beginPath(); ctx.arc(f.x,f.y,Math.max(rpx,5),0,2*Math.PI); ctx.strokeStyle='rgba(31,224,200,.55)'; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.beginPath(); ctx.arc(f.x,f.y,6,0,2*Math.PI); ctx.fillStyle='#B6FF1A'; ctx.fill();
+}
+// color por velocidad: lento (rojo) -> medio (ámbar) -> rápido (cian)
+function speedColor(frac){
+  frac=Math.max(0,Math.min(1,frac));
+  const stops=[[255,59,48],[255,158,27],[31,224,200]];
+  const seg=frac<0.5?0:1, t=frac<0.5?frac/0.5:(frac-0.5)/0.5;
+  const a=stops[seg], b=stops[seg+1];
+  return `rgb(${Math.round(a[0]+(b[0]-a[0])*t)},${Math.round(a[1]+(b[1]-a[1])*t)},${Math.round(a[2]+(b[2]-a[2])*t)})`;
+}
 
-  if(pts.length>1){ ctx.beginPath(); pts.forEach((p,i)=>{ const q=toPx(p); i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y); });
-    ctx.strokeStyle='#1FE0C8'; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.stroke(); }
-  if(finish){ const f=toPx(finish); const rpx=(radiusM/111320)*scale;
-    ctx.beginPath(); ctx.arc(f.x,f.y,Math.max(rpx,5),0,2*Math.PI); ctx.strokeStyle='rgba(31,224,200,.55)'; ctx.lineWidth=1.5; ctx.stroke();
-    ctx.beginPath(); ctx.arc(f.x,f.y,6,0,2*Math.PI); ctx.fillStyle='#B6FF1A'; ctx.fill(); }
-  if(pts.length){ const c=toPx(pts[pts.length-1]); ctx.beginPath(); ctx.arc(c.x,c.y,6,0,2*Math.PI);
-    ctx.fillStyle='#F5F7FA'; ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle='#0E0F12'; ctx.stroke(); }
+// mapa simple (meta): traza + meta + posición actual
+function drawMap(canvas, pts, finish, radiusM){
+  if(!canvas) return;
+  const all=pts.slice(); if(finish) all.push(finish);
+  const P=setupCanvas(canvas, all); if(!P) return;
+  strokeLine(P.ctx, P.toPx, pts, '#1FE0C8', 2.5);
+  drawFinish(P.ctx, P.toPx, finish, radiusM, P.scale);
+  if(pts.length){ const c=P.toPx(pts[pts.length-1]); P.ctx.beginPath(); P.ctx.arc(c.x,c.y,6,0,2*Math.PI);
+    P.ctx.fillStyle='#F5F7FA'; P.ctx.fill(); P.ctx.lineWidth=2; P.ctx.strokeStyle='#0E0F12'; P.ctx.stroke(); }
 }
 function drawMetaMap(){
   const finish = selectedMeta || (GPS.last?{lat:GPS.last.lat,lon:GPS.last.lon}:null);
   drawMap($('#meta-map'), metaTrack.map(f=>({lat:f.lat,lon:f.lon})), finish, settings.radius);
+}
+
+// mapa de resumen: track completo atenuado + MEJOR vuelta coloreada por velocidad
+function drawSummaryMap(canvas, s){
+  if(!canvas) return;
+  const track=s.track||[];
+  const P=setupCanvas(canvas, track.concat(s.gate?[s.gate]:[])); if(!P) return;
+  // track completo (atenuado)
+  strokeLine(P.ctx, P.toPx, track, 'rgba(138,147,166,.35)', 2);
+  // segmento de la mejor vuelta
+  const bestLap = s.laps.find(l=>l.ms===s.best);
+  let seg=track;
+  if(bestLap && s.crossTimes && s.crossTimes.length>=2){
+    const idx=s.laps.indexOf(bestLap);
+    const t0=s.crossTimes[idx], t1=s.crossTimes[idx+1];
+    if(t0!=null && t1!=null) seg=track.filter(p=>p.t>=t0 && p.t<=t1);
+  }
+  // rango de velocidad para normalizar el color
+  const spds=seg.map(p=>p.spd).filter(v=>v!=null);
+  const vmin=spds.length?Math.min(...spds):0, vmax=spds.length?Math.max(...spds):1, rng=(vmax-vmin)||1;
+  for(let i=1;i<seg.length;i++){
+    const a=P.toPx(seg[i-1]), b=P.toPx(seg[i]);
+    const v=seg[i].spd!=null?seg[i].spd:vmin;
+    P.ctx.beginPath(); P.ctx.moveTo(a.x,a.y); P.ctx.lineTo(b.x,b.y);
+    P.ctx.strokeStyle=speedColor((v-vmin)/rng); P.ctx.lineWidth=3.5; P.ctx.lineJoin='round'; P.ctx.lineCap='round'; P.ctx.stroke();
+  }
+  drawFinish(P.ctx, P.toPx, s.gate, settings.radius, P.scale);
 }
 
 /* ----------------------------- Meta (marcar / elegir) ----------------------------- */
@@ -414,6 +539,7 @@ function markSelectedPreset(){ $all('.preset').forEach(e=>e.classList.remove('se
 function renderSettings(){
   $('#set-radius').textContent=settings.radius+' m';
   $('#set-minlap').textContent=settings.minLap+' s';
+  $('#set-sectors').textContent=settings.sectors;
   $all('#units button').forEach(b=>b.classList.toggle('on', b.dataset.units===settings.units));
   $all('.sw[data-toggle]').forEach(b=>b.classList.toggle('on', !!settings[b.dataset.toggle]));
 }
@@ -422,6 +548,7 @@ function wireSettings(){
     const k=b.dataset.step, d=+b.dataset.d;
     if(k==='radius') settings.radius=Math.min(60,Math.max(15, settings.radius+d*5));
     if(k==='minlap') settings.minLap=Math.min(120,Math.max(5, settings.minLap+d*5));
+    if(k==='sectors') settings.sectors=Math.min(5,Math.max(1, settings.sectors+d));
     saveJSON(LS_SETTINGS,settings); renderSettings();
   }));
   $all('#units button').forEach(b=>b.addEventListener('click',()=>{ settings.units=b.dataset.units; saveJSON(LS_SETTINGS,settings); renderSettings(); }));

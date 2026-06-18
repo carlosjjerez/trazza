@@ -1,116 +1,92 @@
 # Trazza · Cronómetro de pista (MVP PWA)
 
-Cronometraje GPS de vueltas para moto en circuito, en español. Esta es la PWA del
-MVP: usa el **GPS del móvil (~1 Hz)** y detecta el paso por meta con un algoritmo de
-**cruce de segmento + interpolación temporal**, dando tiempos a nivel de **décimas**.
+Cronometraje GPS de vueltas para moto en circuito, en español. Usa el **GPS del
+móvil (~1 Hz)** y detecta el paso por meta por **aproximación al punto + interpolación
+sub-muestra**, dando tiempos a nivel de **décimas**.
 
-> Honestos con los datos: el móvil entrega ~1 Hz, así que esto valida el concepto y
-> da décimas fiables, **no centésimas**. Las centésimas llegan con el hardware v2
-> (ESP32 + u-blox M10 a 10 Hz por WiFi), que alimentará **esta misma app**.
+> Honestos con los datos: el móvil entrega ~1 Hz, así que esto da décimas fiables,
+> **no centésimas**. Las centésimas llegan con el hardware v2 (ESP32 + u-blox M10 a
+> 10 Hz), que alimentará **esta misma app** (mismo modelo de detección).
 
-## Qué hace
-- Captura GPS continua con `watchPosition` (alta precisión).
-- **Marcar meta aquí**: fija la línea de meta en tu posición y rumbo actuales.
-  Preset incluido: **Circuito de Cartagena** (`37.6444, -1.0352`).
-- Detección de vuelta por intersección del segmento entre dos fixes con la línea de
-  meta, con interpolación del instante exacto del cruce (sub-muestra).
-- HUD en vivo: vuelta en curso, última, mejor, delta vs mejor, velocidad y máx.
-- Resumen de sesión con todas las vueltas y la mejor resaltada.
-- Exportación **CSV** (vueltas) y **GPX** (track crudo, red de seguridad).
-- Avisos: pitido, vibración y *wake lock* (pantalla siempre encendida).
-- Funciona **offline** una vez abierta con conexión (service worker).
-- Ajustes: ancho de línea, vuelta mínima (anti-rebote), unidades km/h / mph.
+## Cómo funciona la detección (rediseño function-first)
+La meta es un **punto** con un **radio de captura** (no una línea con rumbo). Cada
+vuelta se cierra en el instante de **máxima aproximación** a ese punto a lo largo de
+la trayectoria:
+
+- **Sin rumbo**: no hay que orientar ninguna línea (antes, marcar parado dejaba la
+  meta mal orientada — bug eliminado).
+- **Interpolación punto-a-segmento**: el tiempo de cruce es exacto aunque a 250 km/h
+  ningún fix caiga dentro del radio (el *segmento* entre fixes sí pasa por la meta).
+- **Bloqueo de sentido**: descarta pasos en dirección contraria (boxes, vuelta de
+  reconocimiento).
+- **Vuelta mínima**: anti-rebote configurable.
+
+Todo el núcleo (`detect.js`) está cubierto por pruebas (ver `test/`).
+
+## Funciones
+- Estado GPS prominente y a color (precisión, frecuencia, calidad de fix).
+- Marcar meta en tu posición o elegir circuito (preset **Cartagena** `37.6444,-1.0352`).
+- **Mini-mapa** en vivo para confirmar posición/meta y el track de la sesión.
+- HUD: vuelta en curso, **delta predictivo por distancia vs mejor**, última, mejor,
+  velocidad y máx.
+- Resumen con todas las vueltas, mejor resaltada, mapa del track y export.
+- Export **CSV** (vueltas) y **GPX** (track crudo, red de seguridad).
+- Avisos: pitido, vibración y *wake lock* (pantalla siempre encendida). km/h o mph.
+- **Modo demo** (GPS simulado) para probar sin pista.
+- Instalable como PWA. **Sin service worker** (decisión consciente: máxima fiabilidad
+  de carga en iOS; a cambio, no hay modo offline — abre la app con cobertura).
 
 ## Probar en local
-Sirve la carpeta `app/` por HTTP (la geolocalización exige contexto seguro:
-`https://` o `http://localhost`).
-
+La geolocalización exige contexto seguro (`https://` o `http://localhost`).
 ```bash
 cd app
-python3 -m http.server 8080
-# abre http://localhost:8080
+python3 -m http.server 8080   # http://localhost:8080
 ```
+En el navegador puedes usar **Ajustes → Pruebas → Modo demo** para ver el HUD dar
+vueltas solo, sin GPS real.
 
-En escritorio puedes simular posiciones desde las DevTools (Sensors → Location),
-pero la prueba real es en el móvil.
-
-## Desplegar en Vercel (para usarlo en el móvil este finde)
-Sin build: son ficheros estáticos y HTTPS es automático. La config de despliegue
-(`vercel.json`) ya fija los headers correctos de PWA (service worker sin caché,
-`Service-Worker-Allowed: /` y el MIME del manifest).
-
-**Opción A — CLI (desde la carpeta `app/`):**
+## Desplegar en Vercel
+Sin build (ficheros estáticos), HTTPS automático. `vercel.json` fija los headers.
 ```bash
 npm i -g vercel
 cd app
 vercel --prod
 ```
-La primera vez confirma el proyecto; despliega el contenido de `app/` tal cual.
-
-**Opción B — Dashboard (conectando el repo de GitHub):**
-1. En vercel.com → *Add New Project* → importa `carlosjjerez/trazza`.
-2. En *Configure Project* pon **Root Directory = `app`**.
-3. Framework Preset: *Other*; sin Build Command ni Output Directory (es estático).
-4. *Deploy*. Te da una URL `https://…vercel.app`.
-
-Para futuras versiones: `git push` y Vercel redespliega solo (Opción B), o repite
-`vercel --prod` (Opción A).
+O dashboard: importa el repo → **Root Directory = `app`** → Framework *Other*.
 
 ## Instalar en el iPhone
-1. Abre la URL **https** en Safari.
+1. Abre la URL **https** en **Safari**.
 2. Compartir → **Añadir a pantalla de inicio**.
-3. Ábrela desde el icono (pantalla completa, sin barra del navegador).
-4. La primera vez, **concede el permiso de ubicación** ("Al usar la app").
+3. Ábrela desde el icono y **concede la ubicación** ("Al usar la app").
 
 ## Protocolo en pista (Cartagena)
-1. Llega con cobertura y **abre la app una vez** para que cachee (luego va offline).
-2. En la zona de meta, espera a **FIX LISTO** (±≤8 m) y pulsa **Marcar meta aquí**
-   mientras avanzas en el sentido de carrera (así fija bien el rumbo). O elige el
-   preset de Cartagena.
-3. **Empezar sesión**, monta el móvil y sal. El crono arranca en tu **primer** paso
-   por meta.
+1. Llega con cobertura (no hay offline) y abre la app.
+2. Espera a **FIX BUENO** (±≤8 m). En la zona de meta, pulsa **Marcar meta en mi
+   posición** (o elige el preset Cartagena).
+3. **Salir a pista**. El crono arranca en tu **primer** paso por meta.
 4. Rueda ≥6–10 vueltas. Para terminar: **FIN**.
 5. Exporta **CSV** y **GPX**.
-6. **Red de seguridad recomendada:** corre en paralelo RaceChrono / Harry's LapTimer
-   y compara, para validar la repetibilidad del MVP.
-
-## Modo demo (probar el HUD sin salir a pista)
-En **Ajustes → Pruebas → Modo demo (GPS simulado)** la app deja de usar el GPS real
-y un simulador da vueltas solo alrededor de la meta, cruzándola en el sentido
-correcto cada ~45 s. Sirve para ver el HUD en vivo, la detección de vueltas, la
-mejor vuelta, el delta y la exportación funcionando antes del finde.
-
-Flujo: activa el modo demo → *Nueva sesión* → elige el preset **Cartagena** (o
-*Marcar meta aquí*) → *Empezar sesión*. Verás registrarse vueltas cada ~45 s.
-
-> Por seguridad, el modo demo **nunca se guarda**: al recargar la app vuelve
-> siempre al GPS real. No lo dejes puesto pensando que cronometra de verdad.
+6. **Red de seguridad:** corre en paralelo RaceChrono / Harry's LapTimer y compara.
 
 ## Estructura
 ```
 app/
-├── index.html      # 5 pantallas (inicio, meta, HUD, resumen, ajustes)
-├── app.css         # estilos según el brief de marca Trazza
-├── app.js          # GPS, geometría de meta, detección de vuelta, estado, export
+├── index.html      # 5 pantallas: inicio, meta, HUD, resumen, ajustes
+├── app.css         # estilos (paleta de marca Trazza)
+├── app.js          # GPS, sesión, delta predictivo, mini-mapa, export, ajustes
+├── detect.js       # núcleo de detección de vueltas (puro, testeable)
 ├── sim.js          # simulador de GPS (modo demo)
-├── sw.js           # service worker (offline app shell)
-├── vercel.json     # config de despliegue estático (headers PWA)
+├── sw.js           # stub que se auto-desinstala (sana versiones antiguas)
+├── vercel.json     # headers de despliegue estático
 ├── manifest.webmanifest
 ├── icons/          # iconos PWA + generador sin dependencias (gen-icons.js)
-└── test/           # pruebas de geometría y del simulador (node, sin deps)
+└── test/           # pruebas (node, sin deps salvo dom-smoke)
 ```
 
 ## Pruebas
 ```bash
 cd app
-node test/geo-test.js   # geometría de detección de meta (10/10)
-node test/sim-test.js   # modo demo de extremo a extremo (vueltas detectadas)
+node test/detect-test.js   # núcleo de detección (incluye caso 250 km/h)
+node test/sim-test.js      # modo demo de extremo a extremo
+npm i jsdom && node test/dom-smoke.js   # arranca la app real y simula una sesión
 ```
-
-## Notas técnicas
-- Geometría en proyección equirectangular local (metros) alrededor de la meta.
-- El cruce solo cuenta en el **sentido de marcha** (producto escalar con la normal),
-  para no contar la vuelta al pasar por la recta en sentido contrario.
-- Intervalo medio abierto en la fracción del segmento para evitar dobles cruces.
-- `Ajustes → Vuelta mínima` descarta rebotes de GPS (por defecto 20 s).
-- La geometría está cubierta por pruebas aisladas (ver historial del repo).

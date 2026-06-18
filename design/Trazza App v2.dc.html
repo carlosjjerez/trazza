@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira:wght@300;400;500;600;700;800&family=Saira+Semi+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  ::selection { background: #B6FF1A; color: #0E0F12; }
+</style>
+</helmet>
+
+<div style="background:#121317; min-width:100%; width:max-content; min-height:100vh; box-sizing:border-box; padding:60px 64px 84px; font-family:'Inter',sans-serif;">
+
+  <!-- TITLE -->
+  <div style="display:flex; align-items:center; gap:16px; margin-bottom:14px;">
+    <svg width="38" height="38" viewBox="0 0 128 128" style="display:block;">
+      <path d="M14 30 L50 104 L122 40 L116 46 L56 90 L40 26 Z" fill="#F5F7FA"></path>
+      <circle cx="51" cy="99" r="13" fill="#B6FF1A"></circle>
+    </svg>
+    <div>
+      <div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:26px; letter-spacing:-0.01em; color:#F5F7FA; line-height:1;">Trazza · App PWA</div>
+      <div style="font-family:'Saira',sans-serif; font-weight:500; font-size:12px; letter-spacing:0.22em; text-transform:uppercase; color:#8A93A6; margin-top:6px;">MVP móvil · GPS ~1 Hz · cronometraje automático</div>
+    </div>
+  </div>
+
+  <!-- MODE LABELS -->
+  <div style="display:flex; gap:52px; margin-bottom:18px;">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span style="width:8px; height:8px; border-radius:50%; background:#1FE0C8;"></span>
+      <span style="font-family:'Saira',sans-serif; font-weight:700; font-size:13px; letter-spacing:0.22em; text-transform:uppercase; color:#1FE0C8;">Modo en marcha · glaceable, sin controles</span>
+    </div>
+  </div>
+
+  <!-- FRAME ROW -->
+  <div style="display:flex; gap:52px; align-items:flex-start;">
+
+    <!-- ============ 01 · HUD EN MARCHA ============ -->
+    <div style="flex:none; width:384px;">
+      <div style="margin-bottom:18px;">
+        <div style="font-family:'Saira',sans-serif; font-weight:700; font-size:13px; letter-spacing:0.24em; text-transform:uppercase; color:#B6FF1A;">01 · HUD en marcha</div>
+        <div style="font-family:'Inter',sans-serif; font-size:13px; color:#8A93A6; margin-top:4px;">El delta manda. Un vistazo de 0,5 s en recta.</div>
+      </div>
+      <div style="width:384px; background:#000; border-radius:54px; padding:13px; box-shadow:0 28px 70px rgba(0,0,0,0.55);">
+        <div style="width:358px; height:786px; background:#0E0F12; border-radius:42px; overflow:hidden; position:relative;">
+          <!-- color wash -->
+          <sc-if value="{{ enMarchaMejor }}" hint-placeholder-val="{{ true }}">
+            <div style="position:absolute; inset:0; background:radial-gradient(125% 70% at 50% 40%, rgba(182,255,26,0.20), rgba(182,255,26,0.04) 55%, transparent 78%); z-index:0;"></div>
+          </sc-if>
+          <sc-if value="{{ enMarchaPeor }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute; inset:0; background:radial-gradient(125% 70% at 50% 40%, rgba(255,59,48,0.22), rgba(255,59,48,0.05) 55%, transparent 78%); z-index:0;"></div>
+          </sc-if>
+          <div style="position:absolute; top:0; left:50%; transform:translateX(-50%); width:122px; height:26px; background:#000; border-radius:0 0 16px 16px; z-index:5;"></div>
+
+          <div style="position:relative; z-index:1; height:100%; display:flex; flex-direction:column; padding:14px 24px 30px;">
+            <!-- status bar -->
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+              <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:14px; color:#F5F7FA;">14:32</span>
+              <div style="display:flex; align-items:center; gap:7px;">
+                <div style="display:flex; align-items:flex-end; gap:2px; height:11px;"><span style="width:3px;height:5px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:7px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:9px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:11px;background:#F5F7FA;border-radius:1px;"></span></div>
+                <div style="display:flex; align-items:center; gap:2px;"><div style="width:22px;height:12px;border:1.5px solid #8A93A6;border-radius:3px;padding:1.5px;"><div style="width:62%;height:100%;background:#F5F7FA;border-radius:1px;"></div></div><div style="width:2px;height:5px;background:#8A93A6;border-radius:0 1px 1px 0;"></div></div>
+              </div>
+            </div>
+
+            <!-- discreet top row -->
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-top:16px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="width:7px; height:7px; border-radius:50%; background:#1FE0C8;"></span>
+                <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:12px; letter-spacing:0.2em; text-transform:uppercase; color:#8A93A6;">En pista</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div style="display:flex; align-items:center; gap:6px;"><span style="width:7px; height:7px; border-radius:50%; background:#B6FF1A;"></span><span style="font-family:'Saira',sans-serif; font-weight:600; font-size:12px; letter-spacing:0.14em; color:#8A93A6;">GPS</span></div>
+                <div style="width:19px; height:14px; border:1.6px solid #8A93A6; border-radius:3px; display:flex; align-items:center; justify-content:center;"><span style="width:5px; height:5px; border-radius:50%; background:#B6FF1A;"></span></div>
+              </div>
+            </div>
+
+            <!-- HERO delta -->
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+              <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:13px; letter-spacing:0.3em; text-transform:uppercase; color:#8A93A6; margin-bottom:6px; white-space:nowrap;">Delta · vs mejor</span>
+              <sc-if value="{{ enMarchaMejor }}" hint-placeholder-val="{{ true }}">
+                <span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:138px; line-height:0.82; letter-spacing:-0.02em; color:#B6FF1A; font-variant-numeric:tabular-nums;">−0,68</span>
+              </sc-if>
+              <sc-if value="{{ enMarchaPeor }}" hint-placeholder-val="{{ false }}">
+                <span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:138px; line-height:0.82; letter-spacing:-0.02em; color:#FF3B30; font-variant-numeric:tabular-nums;">+0,73</span>
+              </sc-if>
+              <div style="display:flex; align-items:baseline; gap:18px; margin-top:34px;">
+                <div style="text-align:center;">
+                  <div style="font-family:'Saira',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.22em; text-transform:uppercase; color:#FF9E1B;">En curso</div>
+                  <div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:40px; line-height:1; color:#F5F7FA; font-variant-numeric:tabular-nums; margin-top:3px;">0:48.2</div>
+                </div>
+                <div style="width:1px; height:38px; background:#262a33; align-self:flex-end;"></div>
+                <div style="text-align:center;">
+                  <div style="font-family:'Saira',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.22em; text-transform:uppercase; color:#8A93A6;">Vuelta</div>
+                  <div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:40px; line-height:1; color:#F5F7FA; font-variant-numeric:tabular-nums; margin-top:3px;">07</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- speed -->
+            <div style="display:flex; align-items:flex-end; justify-content:center; gap:12px;">
+              <span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:78px; line-height:0.8; color:#1FE0C8; font-variant-numeric:tabular-nums;">186</span>
+              <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:17px; letter-spacing:0.14em; color:#1FE0C8; padding-bottom:8px;">KM/H</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 02 · HUD AL CRUZAR META ============ -->
+    <div style="flex:none; width:384px;">
+      <div style="margin-bottom:18px;">
+        <div style="font-family:'Saira',sans-serif; font-weight:700; font-size:13px; letter-spacing:0.24em; text-transform:uppercase; color:#B6FF1A;">02 · Al cruzar meta</div>
+        <div style="font-family:'Inter',sans-serif; font-size:13px; color:#8A93A6; margin-top:4px;">Flash de 3–4 s y vuelve solo al HUD.</div>
+      </div>
+      <div style="width:384px; background:#000; border-radius:54px; padding:13px; box-shadow:0 28px 70px rgba(0,0,0,0.55);">
+        <div style="width:358px; height:786px; background:#0E0F12; border-radius:42px; overflow:hidden; position:relative;">
+          <sc-if value="{{ recordEnMeta }}" hint-placeholder-val="{{ true }}">
+            <div style="position:absolute; inset:0; background:radial-gradient(125% 75% at 50% 42%, rgba(182,255,26,0.26), rgba(182,255,26,0.05) 55%, transparent 80%); z-index:0;"></div>
+          </sc-if>
+          <sc-if value="{{ sinRecord }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute; inset:0; background:radial-gradient(125% 75% at 50% 42%, rgba(182,255,26,0.10), transparent 70%); z-index:0;"></div>
+          </sc-if>
+          <div style="position:absolute; top:0; left:50%; transform:translateX(-50%); width:122px; height:26px; background:#000; border-radius:0 0 16px 16px; z-index:5;"></div>
+
+          <div style="position:relative; z-index:1; height:100%; display:flex; flex-direction:column; padding:14px 24px 30px;">
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+              <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:14px; color:#F5F7FA;">14:33</span>
+              <div style="display:flex; align-items:center; gap:7px;">
+                <div style="display:flex; align-items:flex-end; gap:2px; height:11px;"><span style="width:3px;height:5px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:7px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:9px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:11px;background:#F5F7FA;border-radius:1px;"></span></div>
+                <div style="display:flex; align-items:center; gap:2px;"><div style="width:22px;height:12px;border:1.5px solid #8A93A6;border-radius:3px;padding:1.5px;"><div style="width:62%;height:100%;background:#F5F7FA;border-radius:1px;"></div></div><div style="width:2px;height:5px;background:#8A93A6;border-radius:0 1px 1px 0;"></div></div>
+              </div>
+            </div>
+
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+              <sc-if value="{{ recordEnMeta }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex; align-items:center; gap:10px; background:#B6FF1A; padding:9px 18px; border-radius:999px; margin-bottom:26px;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" style="display:block;"><path d="M5 12 L10 17 L19 7" fill="none" stroke="#0E0F12" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                  <span style="font-family:'Saira',sans-serif; font-weight:700; font-size:15px; letter-spacing:0.18em; text-transform:uppercase; color:#0E0F12; white-space:nowrap;">¡Mejor vuelta!</span>
+                </div>
+              </sc-if>
+              <sc-if value="{{ sinRecord }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-bottom:26px; padding:9px 18px;">
+                  <span style="font-family:'Saira',sans-serif; font-weight:700; font-size:15px; letter-spacing:0.2em; text-transform:uppercase; color:#8A93A6;">Vuelta cerrada</span>
+                </div>
+              </sc-if>
+
+              <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:13px; letter-spacing:0.3em; text-transform:uppercase; color:#8A93A6; white-space:nowrap;">Vuelta 07</span>
+              <sc-if value="{{ recordEnMeta }}" hint-placeholder-val="{{ true }}">
+                <span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:88px; line-height:0.86; letter-spacing:-0.015em; color:#B6FF1A; font-variant-numeric:tabular-nums; margin-top:8px;">1:50<span style="color:#7fb814;">.402</span></span>
+              </sc-if>
+              <sc-if value="{{ sinRecord }}" hint-placeholder-val="{{ false }}">
+                <span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:88px; line-height:0.86; letter-spacing:-0.015em; color:#F5F7FA; font-variant-numeric:tabular-nums; margin-top:8px;">1:52<span style="color:#8A93A6;">.418</span></span>
+              </sc-if>
+
+              <div style="display:flex; align-items:center; gap:12px; margin-top:24px; background:#1C1F26; padding:12px 22px; border-radius:999px;">
+                <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:12px; letter-spacing:0.2em; text-transform:uppercase; color:#8A93A6;">Delta</span>
+                <sc-if value="{{ recordEnMeta }}" hint-placeholder-val="{{ true }}">
+                  <span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:30px; color:#B6FF1A; font-variant-numeric:tabular-nums; line-height:1;">−0,42</span>
+                </sc-if>
+                <sc-if value="{{ sinRecord }}" hint-placeholder-val="{{ false }}">
+                  <span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:30px; color:#FF9E1B; font-variant-numeric:tabular-nums; line-height:1;">+1,58</span>
+                </sc-if>
+              </div>
+            </div>
+
+            <div style="text-align:center;">
+              <span style="font-family:'Inter',sans-serif; font-size:12px; color:#8A93A6;">Vuelve al HUD automáticamente…</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 03 · INICIO / SESIONES ============ -->
+    <div style="flex:none; width:384px;">
+      <div style="margin-bottom:18px;">
+        <div style="font-family:'Saira',sans-serif; font-weight:700; font-size:13px; letter-spacing:0.24em; text-transform:uppercase; color:#1FE0C8;">Modo box · 03 · Inicio</div>
+        <div style="font-family:'Inter',sans-serif; font-size:13px; color:#8A93A6; margin-top:4px;">Sesiones guardadas y arranque.</div>
+      </div>
+      <div style="width:384px; background:#000; border-radius:54px; padding:13px; box-shadow:0 28px 70px rgba(0,0,0,0.55);">
+        <div style="width:358px; height:786px; background:#0E0F12; border-radius:42px; overflow:hidden; position:relative; display:flex; flex-direction:column;">
+          <div style="position:absolute; top:0; left:50%; transform:translateX(-50%); width:122px; height:26px; background:#000; border-radius:0 0 16px 16px; z-index:5;"></div>
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:13px 24px 0;">
+            <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:14px; color:#F5F7FA;">14:32</span>
+            <div style="display:flex; align-items:center; gap:7px;">
+              <div style="display:flex; align-items:flex-end; gap:2px; height:11px;"><span style="width:3px;height:5px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:7px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:9px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:11px;background:#F5F7FA;border-radius:1px;"></span></div>
+              <div style="display:flex; align-items:center; gap:2px;"><div style="width:22px;height:12px;border:1.5px solid #8A93A6;border-radius:3px;padding:1.5px;"><div style="width:62%;height:100%;background:#F5F7FA;border-radius:1px;"></div></div><div style="width:2px;height:5px;background:#8A93A6;border-radius:0 1px 1px 0;"></div></div>
+            </div>
+          </div>
+
+          <div style="flex:1; display:flex; flex-direction:column; padding:22px 22px 26px;">
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+              <div style="display:flex; align-items:center; gap:11px;">
+                <svg width="30" height="30" viewBox="0 0 128 128" style="display:block;"><path d="M14 30 L50 104 L122 40 L116 46 L56 90 L40 26 Z" fill="#F5F7FA"></path><circle cx="51" cy="99" r="13" fill="#B6FF1A"></circle></svg>
+                <span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:26px; color:#F5F7FA;">Trazza</span>
+              </div>
+              <svg width="24" height="24" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="6" r="2" fill="#8A93A6"></circle><circle cx="12" cy="12" r="2" fill="#8A93A6"></circle><circle cx="12" cy="18" r="2" fill="#8A93A6"></circle></svg>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:12px; background:#1C1F26; border-radius:16px; padding:14px 16px; margin-top:20px;">
+              <span style="width:9px; height:9px; border-radius:50%; background:#B6FF1A;"></span>
+              <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:13px; letter-spacing:0.1em; text-transform:uppercase; color:#F5F7FA;">GPS activo · ubicación permitida</span>
+            </div>
+
+            <button style="margin-top:14px; width:100%; border:none; background:#B6FF1A; border-radius:22px; padding:24px; display:flex; align-items:center; justify-content:center; gap:12px; cursor:pointer;">
+              <svg width="22" height="22" viewBox="0 0 24 24" style="display:block;"><path d="M12 5 V19 M5 12 H19" stroke="#0E0F12" stroke-width="2.6" stroke-linecap="round"></path></svg>
+              <span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:23px; color:#0E0F12;">Nueva sesión</span>
+            </button>
+
+            <div style="font-family:'Saira',sans-serif; font-weight:600; font-size:12px; letter-spacing:0.24em; text-transform:uppercase; color:#8A93A6; margin:26px 0 14px;">Sesiones</div>
+
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div style="background:#1C1F26; border-radius:18px; padding:17px 18px;">
+                <div style="display:flex; align-items:center; justify-content:space-between;">
+                  <div style="font-family:'Inter',sans-serif; font-weight:600; font-size:16px; color:#F5F7FA;">Circuito de Cartagena</div>
+                  <span style="font-family:'Saira',sans-serif; font-size:12px; letter-spacing:0.1em; color:#8A93A6;">18 JUN</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:18px; margin-top:12px;">
+                  <div><span style="font-family:'Saira',sans-serif; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:#8A93A6;">Mejor</span><div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:22px; color:#B6FF1A; font-variant-numeric:tabular-nums; line-height:1;">1:50.402</div></div>
+                  <div><span style="font-family:'Saira',sans-serif; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:#8A93A6;">Vueltas</span><div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:22px; color:#F5F7FA; font-variant-numeric:tabular-nums; line-height:1;">9</div></div>
+                </div>
+              </div>
+              <div style="background:#1C1F26; border-radius:18px; padding:17px 18px;">
+                <div style="display:flex; align-items:center; justify-content:space-between;">
+                  <div style="font-family:'Inter',sans-serif; font-weight:600; font-size:16px; color:#F5F7FA;">Circuito de Cartagena</div>
+                  <span style="font-family:'Saira',sans-serif; font-size:12px; letter-spacing:0.1em; color:#8A93A6;">04 JUN</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:18px; margin-top:12px;">
+                  <div><span style="font-family:'Saira',sans-serif; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:#8A93A6;">Mejor</span><div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:22px; color:#B6FF1A; font-variant-numeric:tabular-nums; line-height:1;">1:52.118</div></div>
+                  <div><span style="font-family:'Saira',sans-serif; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:#8A93A6;">Vueltas</span><div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:22px; color:#F5F7FA; font-variant-numeric:tabular-nums; line-height:1;">14</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- empty state note -->
+      <div style="margin-top:18px; width:384px; border:1px dashed #2a2f3a; border-radius:16px; padding:18px;">
+        <div style="font-family:'Saira',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.24em; text-transform:uppercase; color:#8A93A6; margin-bottom:10px;">Estado vacío · primera vez</div>
+        <div style="background:#1C1F26; border-radius:14px; padding:22px; text-align:center;">
+          <svg width="34" height="34" viewBox="0 0 128 128" style="display:block; margin:0 auto 12px; opacity:0.5;"><path d="M14 30 L50 104 L122 40 L116 46 L56 90 L40 26 Z" fill="#8A93A6"></path><circle cx="51" cy="99" r="13" fill="#B6FF1A"></circle></svg>
+          <div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:19px; color:#F5F7FA;">Aún no tienes sesiones</div>
+          <div style="font-family:'Inter',sans-serif; font-size:13px; color:#8A93A6; margin-top:5px;">Sal a pista para empezar a marcar vueltas.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 04 · PREPARAR SESIÓN / META ============ -->
+    <div style="flex:none; width:384px;">
+      <div style="margin-bottom:18px;">
+        <div style="font-family:'Saira',sans-serif; font-weight:700; font-size:13px; letter-spacing:0.24em; text-transform:uppercase; color:#1FE0C8;">Modo box · 04 · Preparar</div>
+        <div style="font-family:'Inter',sans-serif; font-size:13px; color:#8A93A6; margin-top:4px;">Marca la meta y arma el crono automático.</div>
+      </div>
+      <div style="width:384px; background:#000; border-radius:54px; padding:13px; box-shadow:0 28px 70px rgba(0,0,0,0.55);">
+        <div style="width:358px; height:786px; background:#0E0F12; border-radius:42px; overflow:hidden; position:relative; display:flex; flex-direction:column;">
+          <div style="position:absolute; top:0; left:50%; transform:translateX(-50%); width:122px; height:26px; background:#000; border-radius:0 0 16px 16px; z-index:5;"></div>
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:13px 24px 0;">
+            <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:14px; color:#F5F7FA;">14:32</span>
+            <div style="display:flex; align-items:center; gap:7px;">
+              <div style="display:flex; align-items:flex-end; gap:2px; height:11px;"><span style="width:3px;height:5px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:7px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:9px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:11px;background:#F5F7FA;border-radius:1px;"></span></div>
+              <div style="display:flex; align-items:center; gap:2px;"><div style="width:22px;height:12px;border:1.5px solid #8A93A6;border-radius:3px;padding:1.5px;"><div style="width:62%;height:100%;background:#F5F7FA;border-radius:1px;"></div></div><div style="width:2px;height:5px;background:#8A93A6;border-radius:0 1px 1px 0;"></div></div>
+            </div>
+          </div>
+
+          <div style="flex:1; display:flex; flex-direction:column; padding:24px 22px 22px;">
+            <div style="display:flex; align-items:center; gap:14px; margin-bottom:22px;">
+              <svg width="22" height="22" viewBox="0 0 24 24" style="display:block;"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#8A93A6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              <span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:28px; color:#F5F7FA;">Preparar sesión</span>
+            </div>
+
+            <!-- GPS status -->
+            <div style="background:#1C1F26; border-radius:22px; padding:20px;">
+              <div style="display:flex; align-items:center; justify-content:space-between;">
+                <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.22em; text-transform:uppercase; color:#8A93A6;">Precisión GPS</span>
+                <div style="display:flex; align-items:center; gap:7px;"><span style="width:8px;height:8px;border-radius:50%;background:#B6FF1A;"></span><span style="font-family:'Saira',sans-serif; font-weight:700; font-size:13px; letter-spacing:0.1em; color:#B6FF1A;">BUENA</span></div>
+              </div>
+              <div style="display:flex; align-items:flex-end; gap:8px; margin-top:10px;">
+                <span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:52px; line-height:0.85; color:#F5F7FA; font-variant-numeric:tabular-nums;">±5</span>
+                <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:18px; color:#8A93A6; padding-bottom:7px;">m</span>
+              </div>
+              <div style="display:flex; gap:7px; margin-top:16px;">
+                <span style="flex:1; text-align:center; font-family:'Saira',sans-serif; font-weight:700; font-size:11px; letter-spacing:0.14em; color:#0E0F12; background:#B6FF1A; border-radius:8px; padding:6px 0;">BUENA ≤7 m</span>
+                <span style="flex:1; text-align:center; font-family:'Saira',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.14em; color:#8A93A6; background:#0E0F12; border-radius:8px; padding:6px 0;">REGULAR</span>
+                <span style="flex:1; text-align:center; font-family:'Saira',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.14em; color:#8A93A6; background:#0E0F12; border-radius:8px; padding:6px 0;">MALA</span>
+              </div>
+            </div>
+
+            <button style="margin-top:16px; width:100%; border:none; background:#B6FF1A; border-radius:20px; padding:21px; display:flex; align-items:center; justify-content:center; gap:11px; cursor:pointer;">
+              <svg width="21" height="21" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="10" r="3" fill="#0E0F12"></circle><path d="M12 2 C7 2 4 5.5 4 10 C4 15 12 22 12 22 C12 22 20 15 20 10 C20 5.5 17 2 12 2 Z" fill="none" stroke="#0E0F12" stroke-width="2"></path></svg>
+              <span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:22px; color:#0E0F12;">Marcar meta aquí</span>
+            </button>
+
+            <div style="display:flex; align-items:center; gap:14px; margin:24px 0 14px;">
+              <div style="flex:1; height:1px; background:#1C1F26;"></div>
+              <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:#8A93A6;">o meta guardada</span>
+              <div style="flex:1; height:1px; background:#1C1F26;"></div>
+            </div>
+
+            <div style="display:flex; align-items:center; justify-content:space-between; background:#1C1F26; border-radius:16px; padding:16px 18px; border:1px solid #B6FF1A;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="10" r="2.6" fill="#B6FF1A"></circle><path d="M12 2 C7 2 4 5.5 4 10 C4 15 12 22 12 22 C12 22 20 15 20 10 C20 5.5 17 2 12 2 Z" fill="none" stroke="#B6FF1A" stroke-width="2"></path></svg>
+                <div><div style="font-family:'Inter',sans-serif; font-weight:600; font-size:15px; color:#F5F7FA;">Cartagena</div><div style="font-family:'Saira',sans-serif; font-size:12px; letter-spacing:0.08em; color:#8A93A6; margin-top:1px;">Recta de meta · tú</div></div>
+              </div>
+              <svg width="20" height="20" viewBox="0 0 24 24" style="display:block;"><path d="M5 12 L10 17 L19 7" fill="none" stroke="#B6FF1A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            </div>
+
+            <div style="flex:1;"></div>
+
+            <button style="width:100%; border:1.6px solid #B6FF1A; background:rgba(182,255,26,0.06); border-radius:20px; padding:21px; display:flex; align-items:center; justify-content:center; gap:11px; cursor:pointer;">
+              <svg width="20" height="20" viewBox="0 0 24 24" style="display:block;"><path d="M6 3 V21 M6 4 H17 L14 8 L17 12 H6" fill="none" stroke="#B6FF1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              <span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:22px; letter-spacing:0.02em; color:#B6FF1A;">Salir a pista</span>
+            </button>
+            <div style="text-align:center; margin-top:10px;"><span style="font-family:'Inter',sans-serif; font-size:12px; color:#8A93A6;">Arma el cronometraje automático al cruzar.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 05 · RESUMEN DE SESIÓN ============ -->
+    <div style="flex:none; width:384px;">
+      <div style="margin-bottom:18px;">
+        <div style="font-family:'Saira',sans-serif; font-weight:700; font-size:13px; letter-spacing:0.24em; text-transform:uppercase; color:#1FE0C8;">Modo box · 05 · Resumen</div>
+        <div style="font-family:'Inter',sans-serif; font-size:13px; color:#8A93A6; margin-top:4px;">Todas las vueltas, la mejor en hi-viz.</div>
+      </div>
+      <div style="width:384px; background:#000; border-radius:54px; padding:13px; box-shadow:0 28px 70px rgba(0,0,0,0.55);">
+        <div style="width:358px; height:786px; background:#0E0F12; border-radius:42px; overflow:hidden; position:relative; display:flex; flex-direction:column;">
+          <div style="position:absolute; top:0; left:50%; transform:translateX(-50%); width:122px; height:26px; background:#000; border-radius:0 0 16px 16px; z-index:5;"></div>
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:13px 24px 0;">
+            <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:14px; color:#F5F7FA;">14:32</span>
+            <div style="display:flex; align-items:center; gap:7px;">
+              <div style="display:flex; align-items:flex-end; gap:2px; height:11px;"><span style="width:3px;height:5px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:7px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:9px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:11px;background:#F5F7FA;border-radius:1px;"></span></div>
+              <div style="display:flex; align-items:center; gap:2px;"><div style="width:22px;height:12px;border:1.5px solid #8A93A6;border-radius:3px;padding:1.5px;"><div style="width:62%;height:100%;background:#F5F7FA;border-radius:1px;"></div></div><div style="width:2px;height:5px;background:#8A93A6;border-radius:0 1px 1px 0;"></div></div>
+            </div>
+          </div>
+
+          <div style="flex:1; display:flex; flex-direction:column; padding:22px 22px 22px;">
+            <div style="display:flex; align-items:center; gap:13px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" style="display:block;"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#8A93A6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              <div><div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:24px; color:#F5F7FA; line-height:1;">Cartagena</div><div style="font-family:'Saira',sans-serif; font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:#8A93A6; margin-top:2px;">18 jun · 18:04</div></div>
+            </div>
+
+            <div style="background:#1C1F26; border-radius:22px; padding:20px; margin-top:18px;">
+              <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.24em; text-transform:uppercase; color:#B6FF1A;">Mejor vuelta</span>
+              <div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:60px; line-height:0.85; color:#B6FF1A; font-variant-numeric:tabular-nums; margin-top:4px;">1:50<span style="color:#7fb814;">.402</span></div>
+              <div style="display:flex; gap:28px; margin-top:16px;">
+                <div><div style="font-family:'Saira',sans-serif; font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:#8A93A6;">Media</div><div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:24px; color:#F5F7FA; font-variant-numeric:tabular-nums; margin-top:2px;">1:53.094</div></div>
+                <div><div style="font-family:'Saira',sans-serif; font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:#8A93A6;">Vueltas</div><div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:24px; color:#F5F7FA; font-variant-numeric:tabular-nums; margin-top:2px;">9</div></div>
+              </div>
+            </div>
+
+            <div style="display:flex; align-items:center; justify-content:space-between; margin:20px 4px 10px;">
+              <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; color:#8A93A6;">Vuelta</span>
+              <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; color:#8A93A6;">Tiempo · Δ</span>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:7px; flex:1;">
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:11px 16px; border-radius:13px; background:#15171c;"><span style="font-family:'Saira',sans-serif; font-weight:600; font-size:15px; color:#8A93A6; font-variant-numeric:tabular-nums;">05</span><div style="display:flex; align-items:baseline; gap:12px;"><span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:21px; color:#F5F7FA; font-variant-numeric:tabular-nums;">1:53.640</span><span style="font-family:'Saira',sans-serif; font-weight:600; font-size:13px; color:#FF3B30; font-variant-numeric:tabular-nums; width:54px; text-align:right;">+3.24</span></div></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:11px 16px; border-radius:13px; background:#15171c;"><span style="font-family:'Saira',sans-serif; font-weight:600; font-size:15px; color:#8A93A6; font-variant-numeric:tabular-nums;">06</span><div style="display:flex; align-items:baseline; gap:12px;"><span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:21px; color:#F5F7FA; font-variant-numeric:tabular-nums;">1:51.180</span><span style="font-family:'Saira',sans-serif; font-weight:600; font-size:13px; color:#FF9E1B; font-variant-numeric:tabular-nums; width:54px; text-align:right;">+0.78</span></div></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:11px 16px; border-radius:13px; background:rgba(182,255,26,0.1); border:1px solid rgba(182,255,26,0.45);"><div style="display:flex; align-items:center; gap:9px;"><span style="width:6px;height:6px;border-radius:50%;background:#B6FF1A;"></span><span style="font-family:'Saira',sans-serif; font-weight:700; font-size:15px; color:#B6FF1A; font-variant-numeric:tabular-nums;">07</span></div><div style="display:flex; align-items:baseline; gap:12px;"><span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:21px; color:#B6FF1A; font-variant-numeric:tabular-nums;">1:50.402</span><span style="font-family:'Saira',sans-serif; font-weight:600; font-size:13px; color:#B6FF1A; font-variant-numeric:tabular-nums; width:54px; text-align:right;">MEJOR</span></div></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:11px 16px; border-radius:13px; background:#15171c;"><span style="font-family:'Saira',sans-serif; font-weight:600; font-size:15px; color:#8A93A6; font-variant-numeric:tabular-nums;">08</span><div style="display:flex; align-items:baseline; gap:12px;"><span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:21px; color:#F5F7FA; font-variant-numeric:tabular-nums;">1:50.918</span><span style="font-family:'Saira',sans-serif; font-weight:600; font-size:13px; color:#FF9E1B; font-variant-numeric:tabular-nums; width:54px; text-align:right;">+0.52</span></div></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:11px 16px; border-radius:13px; background:#15171c;"><span style="font-family:'Saira',sans-serif; font-weight:600; font-size:15px; color:#8A93A6; font-variant-numeric:tabular-nums;">09</span><div style="display:flex; align-items:baseline; gap:12px;"><span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:21px; color:#F5F7FA; font-variant-numeric:tabular-nums;">1:52.473</span><span style="font-family:'Saira',sans-serif; font-weight:600; font-size:13px; color:#FF3B30; font-variant-numeric:tabular-nums; width:54px; text-align:right;">+2.07</span></div></div>
+            </div>
+
+            <button style="margin-top:14px; width:100%; border:1.5px solid #B6FF1A; background:transparent; border-radius:18px; padding:17px; display:flex; align-items:center; justify-content:center; gap:10px; cursor:pointer;">
+              <svg width="19" height="19" viewBox="0 0 24 24" style="display:block;"><path d="M12 3 V15 M7 10 L12 15 L17 10" fill="none" stroke="#B6FF1A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M5 19 H19" stroke="#B6FF1A" stroke-width="2.2" stroke-linecap="round"></path></svg>
+              <span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:18px; letter-spacing:0.04em; color:#B6FF1A;">Exportar CSV</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 06 · AJUSTES ============ -->
+    <div style="flex:none; width:384px;">
+      <div style="margin-bottom:18px;">
+        <div style="font-family:'Saira',sans-serif; font-weight:700; font-size:13px; letter-spacing:0.24em; text-transform:uppercase; color:#1FE0C8;">Modo box · 06 · Ajustes</div>
+        <div style="font-family:'Inter',sans-serif; font-size:13px; color:#8A93A6; margin-top:4px;">Precisión, meta, unidades y avisos.</div>
+      </div>
+      <div style="width:384px; background:#000; border-radius:54px; padding:13px; box-shadow:0 28px 70px rgba(0,0,0,0.55);">
+        <div style="width:358px; height:786px; background:#0E0F12; border-radius:42px; overflow:hidden; position:relative; display:flex; flex-direction:column;">
+          <div style="position:absolute; top:0; left:50%; transform:translateX(-50%); width:122px; height:26px; background:#000; border-radius:0 0 16px 16px; z-index:5;"></div>
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:13px 24px 0;">
+            <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:14px; color:#F5F7FA;">14:32</span>
+            <div style="display:flex; align-items:center; gap:7px;">
+              <div style="display:flex; align-items:flex-end; gap:2px; height:11px;"><span style="width:3px;height:5px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:7px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:9px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:11px;background:#F5F7FA;border-radius:1px;"></span></div>
+              <div style="display:flex; align-items:center; gap:2px;"><div style="width:22px;height:12px;border:1.5px solid #8A93A6;border-radius:3px;padding:1.5px;"><div style="width:62%;height:100%;background:#F5F7FA;border-radius:1px;"></div></div><div style="width:2px;height:5px;background:#8A93A6;border-radius:0 1px 1px 0;"></div></div>
+            </div>
+          </div>
+
+          <div style="flex:1; display:flex; flex-direction:column; padding:24px 22px 26px;">
+            <div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:30px; color:#F5F7FA; margin-bottom:22px;">Ajustes</div>
+
+            <div style="font-family:'Saira',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.22em; text-transform:uppercase; color:#8A93A6; margin-bottom:10px;">Precisión y meta</div>
+            <div style="background:#1C1F26; border-radius:18px; overflow:hidden; margin-bottom:22px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:17px 18px;">
+                <div style="padding-right:12px;"><div style="font-family:'Inter',sans-serif; font-weight:600; font-size:15px; color:#F5F7FA;">Filtro de precisión</div><div style="font-family:'Saira',sans-serif; font-size:12px; color:#8A93A6; margin-top:2px;">Descarta puntos por encima del umbral</div></div>
+                <div style="width:48px; height:28px; background:#B6FF1A; border-radius:999px; position:relative; flex-shrink:0;"><span style="position:absolute; top:3px; right:3px; width:22px; height:22px; border-radius:50%; background:#0E0F12;"></span></div>
+              </div>
+              <div style="height:1px; background:#0E0F12;"></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:17px 18px;">
+                <div style="font-family:'Inter',sans-serif; font-weight:600; font-size:15px; color:#F5F7FA;">Umbral de descarte</div>
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <span style="width:30px; height:30px; border-radius:9px; background:#0E0F12; display:flex; align-items:center; justify-content:center;"><span style="width:10px; height:2.4px; background:#F5F7FA; border-radius:2px;"></span></span>
+                  <span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:20px; color:#F5F7FA; font-variant-numeric:tabular-nums; min-width:44px; text-align:center;">10 m</span>
+                  <span style="width:30px; height:30px; border-radius:9px; background:#0E0F12; display:flex; align-items:center; justify-content:center; position:relative;"><span style="width:10px; height:2.4px; background:#F5F7FA; border-radius:2px;"></span><span style="position:absolute; width:2.4px; height:10px; background:#F5F7FA; border-radius:2px;"></span></span>
+                </div>
+              </div>
+              <div style="height:1px; background:#0E0F12;"></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:17px 18px;">
+                <div style="font-family:'Inter',sans-serif; font-weight:600; font-size:15px; color:#F5F7FA;">Ancho línea de meta</div>
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <span style="width:30px; height:30px; border-radius:9px; background:#0E0F12; display:flex; align-items:center; justify-content:center;"><span style="width:10px; height:2.4px; background:#F5F7FA; border-radius:2px;"></span></span>
+                  <span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:20px; color:#F5F7FA; font-variant-numeric:tabular-nums; min-width:44px; text-align:center;">8 m</span>
+                  <span style="width:30px; height:30px; border-radius:9px; background:#0E0F12; display:flex; align-items:center; justify-content:center; position:relative;"><span style="width:10px; height:2.4px; background:#F5F7FA; border-radius:2px;"></span><span style="position:absolute; width:2.4px; height:10px; background:#F5F7FA; border-radius:2px;"></span></span>
+                </div>
+              </div>
+            </div>
+
+            <div style="font-family:'Saira',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.22em; text-transform:uppercase; color:#8A93A6; margin-bottom:10px;">Pantalla y unidades</div>
+            <div style="background:#1C1F26; border-radius:18px; overflow:hidden; margin-bottom:22px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:17px 18px;">
+                <div style="font-family:'Inter',sans-serif; font-weight:600; font-size:15px; color:#F5F7FA;">Velocidad</div>
+                <div style="display:flex; background:#0E0F12; border-radius:10px; padding:3px;"><span style="font-family:'Saira',sans-serif; font-weight:700; font-size:13px; color:#0E0F12; background:#B6FF1A; border-radius:8px; padding:6px 14px;">km/h</span><span style="font-family:'Saira',sans-serif; font-weight:600; font-size:13px; color:#8A93A6; padding:6px 14px;">mph</span></div>
+              </div>
+              <div style="height:1px; background:#0E0F12;"></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:17px 18px;">
+                <div style="padding-right:12px;"><div style="font-family:'Inter',sans-serif; font-weight:600; font-size:15px; color:#F5F7FA;">Mantener pantalla encendida</div><div style="font-family:'Saira',sans-serif; font-size:12px; color:#8A93A6; margin-top:2px;">Imprescindible en el manillar</div></div>
+                <div style="width:48px; height:28px; background:#B6FF1A; border-radius:999px; position:relative; flex-shrink:0;"><span style="position:absolute; top:3px; right:3px; width:22px; height:22px; border-radius:50%; background:#0E0F12;"></span></div>
+              </div>
+            </div>
+
+            <div style="font-family:'Saira',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.22em; text-transform:uppercase; color:#8A93A6; margin-bottom:10px;">Avisos</div>
+            <div style="background:#1C1F26; border-radius:18px; overflow:hidden;">
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:17px 18px;">
+                <div style="font-family:'Inter',sans-serif; font-weight:600; font-size:15px; color:#F5F7FA;">Aviso sonoro de vuelta</div>
+                <div style="width:48px; height:28px; background:#B6FF1A; border-radius:999px; position:relative;"><span style="position:absolute; top:3px; right:3px; width:22px; height:22px; border-radius:50%; background:#0E0F12;"></span></div>
+              </div>
+              <div style="height:1px; background:#0E0F12;"></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:17px 18px;">
+                <div style="font-family:'Inter',sans-serif; font-weight:600; font-size:15px; color:#F5F7FA;">Vibración</div>
+                <div style="width:48px; height:28px; background:#2a2f3a; border-radius:999px; position:relative;"><span style="position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:#8A93A6;"></span></div>
+              </div>
+              <div style="height:1px; background:#0E0F12;"></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:17px 18px;">
+                <div style="font-family:'Inter',sans-serif; font-weight:600; font-size:15px; color:#F5F7FA;">Aviso de mejor vuelta</div>
+                <div style="width:48px; height:28px; background:#B6FF1A; border-radius:999px; position:relative;"><span style="position:absolute; top:3px; right:3px; width:22px; height:22px; border-radius:50%; background:#0E0F12;"></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;enMarchaMejor&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;recordEnMeta&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const mejor = this.props.enMarchaMejor ?? true;
+    const record = this.props.recordEnMeta ?? true;
+    return {
+      enMarchaMejor: mejor,
+      enMarchaPeor: !mejor,
+      recordEnMeta: record,
+      sinRecord: !record,
+    };
+  }
+}
+</script>
+</body>
+</html>

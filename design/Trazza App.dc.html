@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira:wght@300;400;500;600;700;800&family=Saira+Semi+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  ::selection { background: #B6FF1A; color: #0E0F12; }
+</style>
+</helmet>
+
+<div style="background:#121317; min-width:100%; width:max-content; min-height:100vh; box-sizing:border-box; padding:60px 64px 84px; font-family:'Inter',sans-serif;">
+
+  <!-- TITLE -->
+  <div style="display:flex; align-items:center; gap:16px; margin-bottom:54px;">
+    <svg width="38" height="38" viewBox="0 0 128 128" style="display:block;">
+      <path d="M14 30 L50 104 L122 40 L116 46 L56 90 L40 26 Z" fill="#F5F7FA"></path>
+      <circle cx="51" cy="99" r="13" fill="#B6FF1A"></circle>
+    </svg>
+    <div>
+      <div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:26px; letter-spacing:-0.01em; color:#F5F7FA; line-height:1;">Trazza · App PWA</div>
+      <div style="font-family:'Saira',sans-serif; font-weight:500; font-size:12px; letter-spacing:0.22em; text-transform:uppercase; color:#8A93A6; margin-top:6px;">Cronometraje GPS de vueltas · móvil · vertical</div>
+    </div>
+  </div>
+
+  <!-- FRAME ROW -->
+  <div style="display:flex; gap:52px; align-items:flex-start;">
+
+    <!-- ============ 01 · HUD EN VIVO ============ -->
+    <div style="flex:none; width:384px;">
+      <div style="margin-bottom:18px;">
+        <div style="font-family:'Saira',sans-serif; font-weight:700; font-size:13px; letter-spacing:0.24em; text-transform:uppercase; color:#B6FF1A;">01 · HUD en vivo</div>
+        <div style="font-family:'Inter',sans-serif; font-size:13px; color:#8A93A6; margin-top:4px;">Pantalla héroe — lectura en 0,5 s desde el manillar.</div>
+      </div>
+      <div style="width:384px; background:#000; border-radius:54px; padding:13px; box-shadow:0 28px 70px rgba(0,0,0,0.55);">
+        <div style="width:358px; height:786px; background:#0E0F12; border-radius:42px; overflow:hidden; position:relative; display:flex; flex-direction:column;">
+          <div style="position:absolute; top:0; left:50%; transform:translateX(-50%); width:122px; height:26px; background:#000; border-radius:0 0 16px 16px; z-index:5;"></div>
+          <!-- status bar -->
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:13px 24px 0;">
+            <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:14px; color:#F5F7FA; letter-spacing:0.02em;">14:32</span>
+            <div style="display:flex; align-items:center; gap:7px;">
+              <div style="display:flex; align-items:flex-end; gap:2px; height:11px;"><span style="width:3px;height:5px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:7px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:9px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:11px;background:#F5F7FA;border-radius:1px;"></span></div>
+              <div style="display:flex; align-items:center; gap:2px;"><div style="width:22px;height:12px;border:1.5px solid #8A93A6;border-radius:3px;padding:1.5px;"><div style="width:62%;height:100%;background:#F5F7FA;border-radius:1px;"></div></div><div style="width:2px;height:5px;background:#8A93A6;border-radius:0 1px 1px 0;"></div></div>
+            </div>
+          </div>
+
+          <div style="flex:1; display:flex; flex-direction:column; padding:18px 24px 26px;">
+            <!-- chips: GPS + lock -->
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+              <div style="display:flex; align-items:center; gap:8px; background:#1C1F26; padding:7px 12px; border-radius:999px; flex-shrink:0;">
+                <div style="display:flex; align-items:flex-end; gap:2px; height:11px;"><span style="width:3px;height:5px;background:#1FE0C8;border-radius:1px;"></span><span style="width:3px;height:8px;background:#1FE0C8;border-radius:1px;"></span><span style="width:3px;height:11px;background:#1FE0C8;border-radius:1px;"></span></div>
+                <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:12px; letter-spacing:0.12em; color:#1FE0C8; white-space:nowrap;">GPS ±1,2 m</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:7px; background:#1C1F26; padding:7px 13px; border-radius:999px; flex-shrink:0;">
+                <span style="width:7px; height:7px; border-radius:50%; background:#B6FF1A;"></span>
+                <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:12px; letter-spacing:0.16em; color:#B6FF1A;">ACTIVA</span>
+              </div>
+            </div>
+
+            <!-- current lap -->
+            <div style="margin-top:34px;">
+              <div style="display:flex; align-items:baseline; justify-content:space-between;">
+                <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:#FF9E1B; white-space:nowrap;">Vuelta en curso</span>
+                <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:#8A93A6; white-space:nowrap;">Vuelta 07</span>
+              </div>
+              <div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:74px; line-height:0.9; letter-spacing:-0.015em; color:#F5F7FA; font-variant-numeric:tabular-nums; margin-top:4px;">0:48<span style="color:#8A93A6;">.214</span></div>
+            </div>
+
+            <!-- delta -->
+            <div style="margin-top:30px; background:#1C1F26; border-radius:22px; padding:20px 22px;">
+              <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:12px; letter-spacing:0.24em; text-transform:uppercase; color:#8A93A6;">Delta · vs mejor vuelta</span>
+              <sc-if value="{{ mejorando }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex; align-items:center; gap:14px; margin-top:6px;">
+                  <svg width="34" height="34" viewBox="0 0 24 24" style="display:block;"><path d="M12 5 L20 18 L4 18 Z" fill="#B6FF1A"></path></svg>
+                  <span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:68px; line-height:0.85; color:#B6FF1A; font-variant-numeric:tabular-nums;">−0,68</span>
+                </div>
+              </sc-if>
+              <sc-if value="{{ noMejorando }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex; align-items:center; gap:14px; margin-top:6px;">
+                  <svg width="34" height="34" viewBox="0 0 24 24" style="display:block;"><path d="M12 19 L20 6 L4 6 Z" fill="#FF3B30"></path></svg>
+                  <span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:68px; line-height:0.85; color:#FF3B30; font-variant-numeric:tabular-nums;">+0,42</span>
+                </div>
+              </sc-if>
+            </div>
+
+            <!-- last / best -->
+            <div style="display:flex; gap:12px; margin-top:14px;">
+              <div style="flex:1; background:#1C1F26; border-radius:18px; padding:16px 18px;">
+                <div style="font-family:'Saira',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.22em; text-transform:uppercase; color:#8A93A6;">Última</div>
+                <div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:34px; line-height:1; color:#F5F7FA; font-variant-numeric:tabular-nums; margin-top:6px;">1:42<span style="color:#8A93A6;">.318</span></div>
+              </div>
+              <div style="flex:1; background:#1C1F26; border-radius:18px; padding:16px 18px; border:1px solid rgba(182,255,26,0.35);">
+                <div style="font-family:'Saira',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.22em; text-transform:uppercase; color:#B6FF1A;">Mejor</div>
+                <div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:34px; line-height:1; color:#B6FF1A; font-variant-numeric:tabular-nums; margin-top:6px;">1:41<span style="color:#7fb814;">.902</span></div>
+              </div>
+            </div>
+
+            <div style="flex:1;"></div>
+
+            <!-- speed -->
+            <div style="display:flex; align-items:flex-end; justify-content:space-between; padding-top:18px; border-top:1px solid #1C1F26;">
+              <div style="display:flex; align-items:baseline; gap:10px;">
+                <span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:74px; line-height:0.82; color:#1FE0C8; font-variant-numeric:tabular-nums;">214</span>
+                <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:15px; letter-spacing:0.14em; color:#1FE0C8;">KM/H</span>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-family:'Saira',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; color:#8A93A6;">Máx</div>
+                <div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:30px; line-height:1; color:#F5F7FA; font-variant-numeric:tabular-nums;">228</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 02 · CONFIGURAR META ============ -->
+    <div style="flex:none; width:384px;">
+      <div style="margin-bottom:18px;">
+        <div style="font-family:'Saira',sans-serif; font-weight:700; font-size:13px; letter-spacing:0.24em; text-transform:uppercase; color:#8A93A6;">02 · Configurar meta</div>
+        <div style="font-family:'Inter',sans-serif; font-size:13px; color:#8A93A6; margin-top:4px;">Marca la línea de meta y revisa el GPS antes de salir.</div>
+      </div>
+      <div style="width:384px; background:#000; border-radius:54px; padding:13px; box-shadow:0 28px 70px rgba(0,0,0,0.55);">
+        <div style="width:358px; height:786px; background:#0E0F12; border-radius:42px; overflow:hidden; position:relative; display:flex; flex-direction:column;">
+          <div style="position:absolute; top:0; left:50%; transform:translateX(-50%); width:122px; height:26px; background:#000; border-radius:0 0 16px 16px; z-index:5;"></div>
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:13px 24px 0;">
+            <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:14px; color:#F5F7FA;">14:32</span>
+            <div style="display:flex; align-items:center; gap:7px;">
+              <div style="display:flex; align-items:flex-end; gap:2px; height:11px;"><span style="width:3px;height:5px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:7px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:9px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:11px;background:#F5F7FA;border-radius:1px;"></span></div>
+              <div style="display:flex; align-items:center; gap:2px;"><div style="width:22px;height:12px;border:1.5px solid #8A93A6;border-radius:3px;padding:1.5px;"><div style="width:62%;height:100%;background:#F5F7FA;border-radius:1px;"></div></div><div style="width:2px;height:5px;background:#8A93A6;border-radius:0 1px 1px 0;"></div></div>
+            </div>
+          </div>
+
+          <div style="flex:1; display:flex; flex-direction:column; padding:24px 22px 26px;">
+            <div style="display:flex; align-items:center; gap:14px; margin-bottom:26px;">
+              <svg width="22" height="22" viewBox="0 0 24 24" style="display:block;"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#8A93A6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              <span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:30px; color:#F5F7FA;">Meta</span>
+            </div>
+
+            <!-- GPS status card -->
+            <div style="background:#1C1F26; border-radius:24px; padding:22px; border:1px solid rgba(182,255,26,0.3);">
+              <div style="display:flex; align-items:center; justify-content:space-between;">
+                <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:12px; letter-spacing:0.22em; text-transform:uppercase; color:#8A93A6;">Estado GPS</span>
+                <div style="display:flex; align-items:center; gap:7px;"><span style="width:8px;height:8px;border-radius:50%;background:#B6FF1A;"></span><span style="font-family:'Saira',sans-serif; font-weight:600; font-size:13px; letter-spacing:0.1em; color:#B6FF1A;">FIX LISTO</span></div>
+              </div>
+              <div style="display:flex; align-items:flex-end; gap:8px; margin-top:16px;">
+                <span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:58px; line-height:0.85; color:#F5F7FA; font-variant-numeric:tabular-nums;">±1,2</span>
+                <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:18px; color:#8A93A6; padding-bottom:8px;">m</span>
+              </div>
+              <div style="display:flex; gap:24px; margin-top:18px;">
+                <div><div style="font-family:'Saira',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:#8A93A6;">Satélites</div><div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:24px; color:#F5F7FA; font-variant-numeric:tabular-nums; margin-top:2px;">11</div></div>
+                <div><div style="font-family:'Saira',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:#8A93A6;">Frecuencia</div><div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:24px; color:#1FE0C8; font-variant-numeric:tabular-nums; margin-top:2px;">10 Hz</div></div>
+              </div>
+            </div>
+
+            <!-- primary CTA -->
+            <button style="margin-top:18px; width:100%; border:none; background:#B6FF1A; border-radius:20px; padding:22px; display:flex; align-items:center; justify-content:center; gap:12px; cursor:pointer;">
+              <svg width="22" height="22" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="10" r="3" fill="#0E0F12"></circle><path d="M12 2 C7 2 4 5.5 4 10 C4 15 12 22 12 22 C12 22 20 15 20 10 C20 5.5 17 2 12 2 Z" fill="none" stroke="#0E0F12" stroke-width="2"></path></svg>
+              <span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:22px; letter-spacing:0.01em; color:#0E0F12;">Marcar meta aquí</span>
+            </button>
+
+            <div style="display:flex; align-items:center; gap:14px; margin:26px 0 14px;">
+              <div style="flex:1; height:1px; background:#1C1F26;"></div>
+              <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; color:#8A93A6;">o meta guardada</span>
+              <div style="flex:1; height:1px; background:#1C1F26;"></div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; background:#1C1F26; border-radius:16px; padding:16px 18px; border:1px solid #B6FF1A;">
+                <div><div style="font-family:'Inter',sans-serif; font-weight:600; font-size:16px; color:#F5F7FA;">Circuito de Jerez</div><div style="font-family:'Saira',sans-serif; font-size:12px; letter-spacing:0.1em; color:#8A93A6; margin-top:2px;">Meta recta principal</div></div>
+                <svg width="22" height="22" viewBox="0 0 24 24" style="display:block;"><path d="M5 12 L10 17 L19 7" fill="none" stroke="#B6FF1A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              </div>
+              <div style="display:flex; align-items:center; justify-content:space-between; background:#1C1F26; border-radius:16px; padding:16px 18px;">
+                <div><div style="font-family:'Inter',sans-serif; font-weight:600; font-size:16px; color:#F5F7FA;">Circuito del Jarama</div><div style="font-family:'Saira',sans-serif; font-size:12px; letter-spacing:0.1em; color:#8A93A6; margin-top:2px;">Meta S/F</div></div>
+                <svg width="20" height="20" viewBox="0 0 24 24" style="display:block;"><path d="M9 6 L15 12 L9 18" fill="none" stroke="#8A93A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              </div>
+              <div style="display:flex; align-items:center; justify-content:space-between; background:#1C1F26; border-radius:16px; padding:16px 18px;">
+                <div><div style="font-family:'Inter',sans-serif; font-weight:600; font-size:16px; color:#F5F7FA;">Kartódromo Recas</div><div style="font-family:'Saira',sans-serif; font-size:12px; letter-spacing:0.1em; color:#8A93A6; margin-top:2px;">Meta box</div></div>
+                <svg width="20" height="20" viewBox="0 0 24 24" style="display:block;"><path d="M9 6 L15 12 L9 18" fill="none" stroke="#8A93A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 03 · INICIO / SESIONES ============ -->
+    <div style="flex:none; width:384px;">
+      <div style="margin-bottom:18px;">
+        <div style="font-family:'Saira',sans-serif; font-weight:700; font-size:13px; letter-spacing:0.24em; text-transform:uppercase; color:#8A93A6;">03 · Inicio / Sesiones</div>
+        <div style="font-family:'Inter',sans-serif; font-size:13px; color:#8A93A6; margin-top:4px;">Tus sesiones guardadas y el arranque rápido.</div>
+      </div>
+      <div style="width:384px; background:#000; border-radius:54px; padding:13px; box-shadow:0 28px 70px rgba(0,0,0,0.55);">
+        <div style="width:358px; height:786px; background:#0E0F12; border-radius:42px; overflow:hidden; position:relative; display:flex; flex-direction:column;">
+          <div style="position:absolute; top:0; left:50%; transform:translateX(-50%); width:122px; height:26px; background:#000; border-radius:0 0 16px 16px; z-index:5;"></div>
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:13px 24px 0;">
+            <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:14px; color:#F5F7FA;">14:32</span>
+            <div style="display:flex; align-items:center; gap:7px;">
+              <div style="display:flex; align-items:flex-end; gap:2px; height:11px;"><span style="width:3px;height:5px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:7px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:9px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:11px;background:#F5F7FA;border-radius:1px;"></span></div>
+              <div style="display:flex; align-items:center; gap:2px;"><div style="width:22px;height:12px;border:1.5px solid #8A93A6;border-radius:3px;padding:1.5px;"><div style="width:62%;height:100%;background:#F5F7FA;border-radius:1px;"></div></div><div style="width:2px;height:5px;background:#8A93A6;border-radius:0 1px 1px 0;"></div></div>
+            </div>
+          </div>
+
+          <div style="flex:1; display:flex; flex-direction:column; padding:22px 22px 26px;">
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+              <div style="display:flex; align-items:center; gap:11px;">
+                <svg width="30" height="30" viewBox="0 0 128 128" style="display:block;"><path d="M14 30 L50 104 L122 40 L116 46 L56 90 L40 26 Z" fill="#F5F7FA"></path><circle cx="51" cy="99" r="13" fill="#B6FF1A"></circle></svg>
+                <span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:26px; color:#F5F7FA;">Trazza</span>
+              </div>
+              <svg width="24" height="24" viewBox="0 0 24 24" style="display:block;"><circle cx="12" cy="6" r="2" fill="#8A93A6"></circle><circle cx="12" cy="12" r="2" fill="#8A93A6"></circle><circle cx="12" cy="18" r="2" fill="#8A93A6"></circle></svg>
+            </div>
+
+            <!-- GPS permission banner -->
+            <div style="display:flex; align-items:center; gap:12px; background:#1C1F26; border-radius:16px; padding:14px 16px; margin-top:20px;">
+              <span style="width:9px; height:9px; border-radius:50%; background:#B6FF1A;"></span>
+              <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:13px; letter-spacing:0.12em; text-transform:uppercase; color:#F5F7FA;">GPS activo · ubicación permitida</span>
+            </div>
+
+            <!-- New session CTA -->
+            <button style="margin-top:14px; width:100%; border:none; background:#B6FF1A; border-radius:22px; padding:24px; display:flex; align-items:center; justify-content:center; gap:12px; cursor:pointer;">
+              <svg width="22" height="22" viewBox="0 0 24 24" style="display:block;"><path d="M12 5 V19 M5 12 H19" stroke="#0E0F12" stroke-width="2.6" stroke-linecap="round"></path></svg>
+              <span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:23px; color:#0E0F12;">Nueva sesión</span>
+            </button>
+
+            <div style="font-family:'Saira',sans-serif; font-weight:600; font-size:12px; letter-spacing:0.24em; text-transform:uppercase; color:#8A93A6; margin:26px 0 14px;">Sesiones</div>
+
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div style="background:#1C1F26; border-radius:18px; padding:17px 18px;">
+                <div style="display:flex; align-items:center; justify-content:space-between;">
+                  <div style="font-family:'Inter',sans-serif; font-weight:600; font-size:16px; color:#F5F7FA;">Circuito de Jerez</div>
+                  <span style="font-family:'Saira',sans-serif; font-size:12px; letter-spacing:0.1em; color:#8A93A6;">12 JUN</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:18px; margin-top:12px;">
+                  <div><span style="font-family:'Saira',sans-serif; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:#8A93A6;">Mejor</span><div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:22px; color:#B6FF1A; font-variant-numeric:tabular-nums; line-height:1;">1:41.902</div></div>
+                  <div><span style="font-family:'Saira',sans-serif; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:#8A93A6;">Vueltas</span><div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:22px; color:#F5F7FA; font-variant-numeric:tabular-nums; line-height:1;">8</div></div>
+                </div>
+              </div>
+              <div style="background:#1C1F26; border-radius:18px; padding:17px 18px;">
+                <div style="display:flex; align-items:center; justify-content:space-between;">
+                  <div style="font-family:'Inter',sans-serif; font-weight:600; font-size:16px; color:#F5F7FA;">Circuito del Jarama</div>
+                  <span style="font-family:'Saira',sans-serif; font-size:12px; letter-spacing:0.1em; color:#8A93A6;">05 JUN</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:18px; margin-top:12px;">
+                  <div><span style="font-family:'Saira',sans-serif; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:#8A93A6;">Mejor</span><div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:22px; color:#B6FF1A; font-variant-numeric:tabular-nums; line-height:1;">1:38.540</div></div>
+                  <div><span style="font-family:'Saira',sans-serif; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:#8A93A6;">Vueltas</span><div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:22px; color:#F5F7FA; font-variant-numeric:tabular-nums; line-height:1;">12</div></div>
+                </div>
+              </div>
+              <div style="background:#1C1F26; border-radius:18px; padding:17px 18px;">
+                <div style="display:flex; align-items:center; justify-content:space-between;">
+                  <div style="font-family:'Inter',sans-serif; font-weight:600; font-size:16px; color:#F5F7FA;">Kartódromo Recas</div>
+                  <span style="font-family:'Saira',sans-serif; font-size:12px; letter-spacing:0.1em; color:#8A93A6;">28 MAY</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:18px; margin-top:12px;">
+                  <div><span style="font-family:'Saira',sans-serif; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:#8A93A6;">Mejor</span><div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:22px; color:#B6FF1A; font-variant-numeric:tabular-nums; line-height:1;">0:52.118</div></div>
+                  <div><span style="font-family:'Saira',sans-serif; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:#8A93A6;">Vueltas</span><div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:22px; color:#F5F7FA; font-variant-numeric:tabular-nums; line-height:1;">21</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 04 · RESUMEN DE SESIÓN ============ -->
+    <div style="flex:none; width:384px;">
+      <div style="margin-bottom:18px;">
+        <div style="font-family:'Saira',sans-serif; font-weight:700; font-size:13px; letter-spacing:0.24em; text-transform:uppercase; color:#8A93A6;">04 · Resumen de sesión</div>
+        <div style="font-family:'Inter',sans-serif; font-size:13px; color:#8A93A6; margin-top:4px;">Todas las vueltas, con la mejor en hi-viz.</div>
+      </div>
+      <div style="width:384px; background:#000; border-radius:54px; padding:13px; box-shadow:0 28px 70px rgba(0,0,0,0.55);">
+        <div style="width:358px; height:786px; background:#0E0F12; border-radius:42px; overflow:hidden; position:relative; display:flex; flex-direction:column;">
+          <div style="position:absolute; top:0; left:50%; transform:translateX(-50%); width:122px; height:26px; background:#000; border-radius:0 0 16px 16px; z-index:5;"></div>
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:13px 24px 0;">
+            <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:14px; color:#F5F7FA;">14:32</span>
+            <div style="display:flex; align-items:center; gap:7px;">
+              <div style="display:flex; align-items:flex-end; gap:2px; height:11px;"><span style="width:3px;height:5px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:7px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:9px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:11px;background:#F5F7FA;border-radius:1px;"></span></div>
+              <div style="display:flex; align-items:center; gap:2px;"><div style="width:22px;height:12px;border:1.5px solid #8A93A6;border-radius:3px;padding:1.5px;"><div style="width:62%;height:100%;background:#F5F7FA;border-radius:1px;"></div></div><div style="width:2px;height:5px;background:#8A93A6;border-radius:0 1px 1px 0;"></div></div>
+            </div>
+          </div>
+
+          <div style="flex:1; display:flex; flex-direction:column; padding:22px 22px 22px;">
+            <div style="display:flex; align-items:center; gap:13px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" style="display:block;"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#8A93A6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              <div><div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:24px; color:#F5F7FA; line-height:1;">Jerez</div><div style="font-family:'Saira',sans-serif; font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:#8A93A6; margin-top:2px;">12 jun · 18:04</div></div>
+            </div>
+
+            <!-- summary stats -->
+            <div style="background:#1C1F26; border-radius:22px; padding:20px; margin-top:18px;">
+              <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.24em; text-transform:uppercase; color:#B6FF1A;">Mejor vuelta</span>
+              <div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:60px; line-height:0.85; color:#B6FF1A; font-variant-numeric:tabular-nums; margin-top:4px;">1:41<span style="color:#7fb814;">.902</span></div>
+              <div style="display:flex; gap:28px; margin-top:16px;">
+                <div><div style="font-family:'Saira',sans-serif; font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:#8A93A6;">Media</div><div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:24px; color:#F5F7FA; font-variant-numeric:tabular-nums; margin-top:2px;">1:42.871</div></div>
+                <div><div style="font-family:'Saira',sans-serif; font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:#8A93A6;">Vueltas</div><div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:24px; color:#F5F7FA; font-variant-numeric:tabular-nums; margin-top:2px;">8</div></div>
+              </div>
+            </div>
+
+            <div style="display:flex; align-items:center; justify-content:space-between; margin:20px 4px 10px;">
+              <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; color:#8A93A6;">Vuelta</span>
+              <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; color:#8A93A6;">Tiempo · Δ</span>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:7px; flex:1;">
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:11px 16px; border-radius:13px; background:#15171c;"><span style="font-family:'Saira',sans-serif; font-weight:600; font-size:15px; color:#8A93A6; font-variant-numeric:tabular-nums;">01</span><div style="display:flex; align-items:baseline; gap:12px;"><span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:21px; color:#F5F7FA; font-variant-numeric:tabular-nums;">1:44.602</span><span style="font-family:'Saira',sans-serif; font-weight:600; font-size:13px; color:#FF3B30; font-variant-numeric:tabular-nums; width:54px; text-align:right;">+2.70</span></div></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:11px 16px; border-radius:13px; background:#15171c;"><span style="font-family:'Saira',sans-serif; font-weight:600; font-size:15px; color:#8A93A6; font-variant-numeric:tabular-nums;">02</span><div style="display:flex; align-items:baseline; gap:12px;"><span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:21px; color:#F5F7FA; font-variant-numeric:tabular-nums;">1:42.318</span><span style="font-family:'Saira',sans-serif; font-weight:600; font-size:13px; color:#FF3B30; font-variant-numeric:tabular-nums; width:54px; text-align:right;">+0.42</span></div></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:11px 16px; border-radius:13px; background:rgba(182,255,26,0.1); border:1px solid rgba(182,255,26,0.45);"><div style="display:flex; align-items:center; gap:9px;"><span style="width:6px;height:6px;border-radius:50%;background:#B6FF1A;"></span><span style="font-family:'Saira',sans-serif; font-weight:700; font-size:15px; color:#B6FF1A; font-variant-numeric:tabular-nums;">03</span></div><div style="display:flex; align-items:baseline; gap:12px;"><span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:21px; color:#B6FF1A; font-variant-numeric:tabular-nums;">1:41.902</span><span style="font-family:'Saira',sans-serif; font-weight:600; font-size:13px; color:#B6FF1A; font-variant-numeric:tabular-nums; width:54px; text-align:right;">MEJOR</span></div></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:11px 16px; border-radius:13px; background:#15171c;"><span style="font-family:'Saira',sans-serif; font-weight:600; font-size:15px; color:#8A93A6; font-variant-numeric:tabular-nums;">04</span><div style="display:flex; align-items:baseline; gap:12px;"><span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:21px; color:#F5F7FA; font-variant-numeric:tabular-nums;">1:42.044</span><span style="font-family:'Saira',sans-serif; font-weight:600; font-size:13px; color:#FF9E1B; font-variant-numeric:tabular-nums; width:54px; text-align:right;">+0.14</span></div></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:11px 16px; border-radius:13px; background:#15171c;"><span style="font-family:'Saira',sans-serif; font-weight:600; font-size:15px; color:#8A93A6; font-variant-numeric:tabular-nums;">05</span><div style="display:flex; align-items:baseline; gap:12px;"><span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:21px; color:#F5F7FA; font-variant-numeric:tabular-nums;">1:43.117</span><span style="font-family:'Saira',sans-serif; font-weight:600; font-size:13px; color:#FF3B30; font-variant-numeric:tabular-nums; width:54px; text-align:right;">+1.21</span></div></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:11px 16px; border-radius:13px; background:#15171c;"><span style="font-family:'Saira',sans-serif; font-weight:600; font-size:15px; color:#8A93A6; font-variant-numeric:tabular-nums;">06</span><div style="display:flex; align-items:baseline; gap:12px;"><span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:21px; color:#F5F7FA; font-variant-numeric:tabular-nums;">1:42.560</span><span style="font-family:'Saira',sans-serif; font-weight:600; font-size:13px; color:#FF9E1B; font-variant-numeric:tabular-nums; width:54px; text-align:right;">+0.66</span></div></div>
+            </div>
+
+            <button style="margin-top:14px; width:100%; border:1.5px solid #B6FF1A; background:transparent; border-radius:18px; padding:17px; display:flex; align-items:center; justify-content:center; gap:10px; cursor:pointer;">
+              <svg width="19" height="19" viewBox="0 0 24 24" style="display:block;"><path d="M12 3 V15 M7 10 L12 15 L17 10" fill="none" stroke="#B6FF1A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M5 19 H19" stroke="#B6FF1A" stroke-width="2.2" stroke-linecap="round"></path></svg>
+              <span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:18px; letter-spacing:0.04em; color:#B6FF1A;">Exportar CSV</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 05 · AJUSTES ============ -->
+    <div style="flex:none; width:384px;">
+      <div style="margin-bottom:18px;">
+        <div style="font-family:'Saira',sans-serif; font-weight:700; font-size:13px; letter-spacing:0.24em; text-transform:uppercase; color:#8A93A6;">05 · Ajustes</div>
+        <div style="font-family:'Inter',sans-serif; font-size:13px; color:#8A93A6; margin-top:4px;">GPS, línea de meta, unidades y avisos.</div>
+      </div>
+      <div style="width:384px; background:#000; border-radius:54px; padding:13px; box-shadow:0 28px 70px rgba(0,0,0,0.55);">
+        <div style="width:358px; height:786px; background:#0E0F12; border-radius:42px; overflow:hidden; position:relative; display:flex; flex-direction:column;">
+          <div style="position:absolute; top:0; left:50%; transform:translateX(-50%); width:122px; height:26px; background:#000; border-radius:0 0 16px 16px; z-index:5;"></div>
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:13px 24px 0;">
+            <span style="font-family:'Saira',sans-serif; font-weight:600; font-size:14px; color:#F5F7FA;">14:32</span>
+            <div style="display:flex; align-items:center; gap:7px;">
+              <div style="display:flex; align-items:flex-end; gap:2px; height:11px;"><span style="width:3px;height:5px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:7px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:9px;background:#F5F7FA;border-radius:1px;"></span><span style="width:3px;height:11px;background:#F5F7FA;border-radius:1px;"></span></div>
+              <div style="display:flex; align-items:center; gap:2px;"><div style="width:22px;height:12px;border:1.5px solid #8A93A6;border-radius:3px;padding:1.5px;"><div style="width:62%;height:100%;background:#F5F7FA;border-radius:1px;"></div></div><div style="width:2px;height:5px;background:#8A93A6;border-radius:0 1px 1px 0;"></div></div>
+            </div>
+          </div>
+
+          <div style="flex:1; display:flex; flex-direction:column; padding:24px 22px 26px;">
+            <div style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:30px; color:#F5F7FA; margin-bottom:22px;">Ajustes</div>
+
+            <div style="font-family:'Saira',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.22em; text-transform:uppercase; color:#8A93A6; margin-bottom:10px;">GPS y precisión</div>
+            <div style="background:#1C1F26; border-radius:18px; overflow:hidden; margin-bottom:22px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:17px 18px;">
+                <div><div style="font-family:'Inter',sans-serif; font-weight:600; font-size:15px; color:#F5F7FA;">Frecuencia GPS</div><div style="font-family:'Saira',sans-serif; font-size:12px; color:#8A93A6; margin-top:2px;">Móvil 1 Hz · Dispositivo 10 Hz</div></div>
+                <div style="display:flex; background:#0E0F12; border-radius:10px; padding:3px;"><span style="font-family:'Saira',sans-serif; font-weight:600; font-size:13px; color:#8A93A6; padding:6px 12px;">1 Hz</span><span style="font-family:'Saira',sans-serif; font-weight:700; font-size:13px; color:#0E0F12; background:#1FE0C8; border-radius:8px; padding:6px 12px;">10 Hz</span></div>
+              </div>
+              <div style="height:1px; background:#0E0F12;"></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:17px 18px;">
+                <div><div style="font-family:'Inter',sans-serif; font-weight:600; font-size:15px; color:#F5F7FA;">Filtro de precisión</div><div style="font-family:'Saira',sans-serif; font-size:12px; color:#8A93A6; margin-top:2px;">Descarta puntos por debajo del umbral</div></div>
+                <div style="width:48px; height:28px; background:#B6FF1A; border-radius:999px; position:relative;"><span style="position:absolute; top:3px; right:3px; width:22px; height:22px; border-radius:50%; background:#0E0F12;"></span></div>
+              </div>
+            </div>
+
+            <div style="font-family:'Saira',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.22em; text-transform:uppercase; color:#8A93A6; margin-bottom:10px;">Línea de meta</div>
+            <div style="background:#1C1F26; border-radius:18px; padding:17px 18px; margin-bottom:22px;">
+              <div style="display:flex; align-items:center; justify-content:space-between;">
+                <div style="font-family:'Inter',sans-serif; font-weight:600; font-size:15px; color:#F5F7FA;">Ancho de la línea</div>
+                <div style="display:flex; align-items:center; gap:14px;">
+                  <span style="width:34px; height:34px; border-radius:10px; background:#0E0F12; display:flex; align-items:center; justify-content:center;"><span style="width:12px; height:2.4px; background:#F5F7FA; border-radius:2px;"></span></span>
+                  <span style="font-family:'Saira Semi Condensed',sans-serif; font-weight:700; font-size:22px; color:#F5F7FA; font-variant-numeric:tabular-nums; min-width:42px; text-align:center;">8 m</span>
+                  <span style="width:34px; height:34px; border-radius:10px; background:#0E0F12; display:flex; align-items:center; justify-content:center; position:relative;"><span style="width:12px; height:2.4px; background:#F5F7FA; border-radius:2px;"></span><span style="position:absolute; width:2.4px; height:12px; background:#F5F7FA; border-radius:2px;"></span></span>
+                </div>
+              </div>
+            </div>
+
+            <div style="font-family:'Saira',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.22em; text-transform:uppercase; color:#8A93A6; margin-bottom:10px;">Unidades</div>
+            <div style="background:#1C1F26; border-radius:18px; padding:17px 18px; margin-bottom:22px;">
+              <div style="display:flex; align-items:center; justify-content:space-between;">
+                <div style="font-family:'Inter',sans-serif; font-weight:600; font-size:15px; color:#F5F7FA;">Velocidad</div>
+                <div style="display:flex; background:#0E0F12; border-radius:10px; padding:3px;"><span style="font-family:'Saira',sans-serif; font-weight:700; font-size:13px; color:#0E0F12; background:#B6FF1A; border-radius:8px; padding:6px 14px;">km/h</span><span style="font-family:'Saira',sans-serif; font-weight:600; font-size:13px; color:#8A93A6; padding:6px 14px;">mph</span></div>
+              </div>
+            </div>
+
+            <div style="font-family:'Saira',sans-serif; font-weight:600; font-size:11px; letter-spacing:0.22em; text-transform:uppercase; color:#8A93A6; margin-bottom:10px;">Avisos</div>
+            <div style="background:#1C1F26; border-radius:18px; overflow:hidden;">
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:17px 18px;">
+                <div style="font-family:'Inter',sans-serif; font-weight:600; font-size:15px; color:#F5F7FA;">Aviso sonoro de vuelta</div>
+                <div style="width:48px; height:28px; background:#B6FF1A; border-radius:999px; position:relative;"><span style="position:absolute; top:3px; right:3px; width:22px; height:22px; border-radius:50%; background:#0E0F12;"></span></div>
+              </div>
+              <div style="height:1px; background:#0E0F12;"></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:17px 18px;">
+                <div style="font-family:'Inter',sans-serif; font-weight:600; font-size:15px; color:#F5F7FA;">Vibración háptica</div>
+                <div style="width:48px; height:28px; background:#2a2f3a; border-radius:999px; position:relative;"><span style="position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:#8A93A6;"></span></div>
+              </div>
+              <div style="height:1px; background:#0E0F12;"></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:17px 18px;">
+                <div style="font-family:'Inter',sans-serif; font-weight:600; font-size:15px; color:#F5F7FA;">Aviso de mejor vuelta</div>
+                <div style="width:48px; height:28px; background:#B6FF1A; border-radius:999px; position:relative;"><span style="position:absolute; top:3px; right:3px; width:22px; height:22px; border-radius:50%; background:#0E0F12;"></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;mejorando&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const mejorando = this.props.mejorando ?? true;
+    return {
+      mejorando: mejorando,
+      noMejorando: !mejorando,
+    };
+  }
+}
+</script>
+</body>
+</html>

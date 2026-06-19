@@ -97,6 +97,11 @@
     </button>
     <div class="cta-reason" id="mark-reason">Esperando señal GPS…</div>
 
+    <button class="ghost full" id="btn-create-circuit" style="margin-top:14px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2"><path d="M3 17c4-1 5-9 9-9s5 8 9 7" stroke-linecap="round"/><circle cx="3" cy="17" r="1.6" fill="#B6FF1A"/></svg>
+      <span>Crear circuito (grabar o punto a punto)</span>
+    </button>
+
     <div class="divider"><span>circuitos</span></div>
     <div id="preset-list" class="stack"></div>
 
@@ -109,6 +114,48 @@
   </div>
 </section>
 
+<!-- ===================== CONSTRUCTOR DE CIRCUITO ===================== -->
+<section id="screen-builder" class="screen">
+  <header class="appbar">
+    <button class="icon-btn" data-go="meta" aria-label="Atrás">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F5F7FA" stroke-width="2.2"><path d="M15 6l-6 6 6 6"/></svg>
+    </button>
+    <span class="appbar-title">Crear circuito</span>
+    <span class="appbar-spacer"></span>
+  </header>
+
+  <div class="scroll">
+    <canvas id="builder-map" class="map"></canvas>
+    <div class="bld-stats">
+      <div><span class="k">Puntos</span><span class="v" id="bld-points">0</span></div>
+      <div><span class="k">Distancia</span><span class="v" id="bld-dist">0 m</span></div>
+      <div><span class="k">GPS</span><span class="v" id="bld-gps">±-- m</span></div>
+    </div>
+
+    <div class="pills wide" id="bld-mode">
+      <button data-mode="record" class="on">Grabar por GPS</button>
+      <button data-mode="manual">Punto a punto</button>
+    </div>
+
+    <!-- modo grabar -->
+    <div id="bld-record">
+      <p class="help" id="bld-record-help">Ponte en la línea de meta y dale a grabar. Da una vuelta completa y para. La app dibuja el trazado sola.</p>
+      <button class="cta" id="btn-rec-toggle" disabled><span>Empezar a grabar</span></button>
+    </div>
+
+    <!-- modo punto a punto -->
+    <div id="bld-manual" hidden>
+      <p class="help">Fija la meta y ve pineando puntos del trazado (en boxes, andando o despacio). Cierra cuando vuelvas a la meta.</p>
+      <button class="cta" id="btn-pin" disabled><span>Fijar meta aquí</span></button>
+      <button class="ghost full" id="btn-undo" style="margin-top:10px" disabled><span>Deshacer último punto</span></button>
+    </div>
+  </div>
+
+  <div class="dock">
+    <button class="cta" id="btn-save-circuit" disabled><span>Cerrar y guardar circuito</span></button>
+  </div>
+</section>
+
 <!-- ===================== HUD ===================== -->
 <section id="screen-hud" class="screen hud">
   <div class="hud-top">
@@ -118,6 +165,7 @@
   </div>
 
   <div class="hud-body">
+    <canvas id="hud-map" class="hud-map"></canvas>
     <div class="hud-block">
       <span class="kicker amber">Vuelta en curso</span>
       <div class="hero" id="hud-cur">0:00<span class="ms">.000</span></div>

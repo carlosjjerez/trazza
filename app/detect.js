@@ -99,6 +99,16 @@
     return { lat:a.lat+(b.lat-a.lat)*f, lon:a.lon+(b.lon-a.lon)*f };
   }
 
+  /* Añade un punto [lat,lon] a un trazado grabado solo si se ha movido más de
+     minGap metros respecto al último (filtra ruido GPS al grabar conduciendo).
+     Devuelve true si se añadió. */
+  function appendIfMoved(points, lat, lon, minGap){
+    if(!points.length){ points.push([lat,lon]); return true; }
+    const last=points[points.length-1];
+    if(haversine(last[0],last[1],lat,lon) >= (minGap||5)){ points.push([lat,lon]); return true; }
+    return false;
+  }
+
   /* Detector de cruces de meta. Acumula candidatos durante un "paso" (fixes
      consecutivos dentro del radio) y, al terminar el paso, elige el de menor
      distancia (la aproximación real) para máxima precisión también a alta
@@ -160,7 +170,7 @@
     }
   }
 
-  const api={ R, projFactory, haversine, angDiff, segApproach, interpProfile, sectorSplits, buildPath, pointAt, LapDetector };
+  const api={ R, projFactory, haversine, angDiff, segApproach, interpProfile, sectorSplits, buildPath, pointAt, appendIfMoved, LapDetector };
   if(typeof module!=='undefined' && module.exports) module.exports=api;
   global.TrazzaDetect=api;
 })(typeof self!=='undefined' ? self : globalThis);

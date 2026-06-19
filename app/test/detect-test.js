@@ -139,5 +139,19 @@ function run(det, fixes){
   ok('9: se cierran n-1 sectores en vivo', closed.length===n-1);
 }
 
+// ---- CASO 10: grabar trazado (appendIfMoved filtra ruido) ----
+{
+  const { appendIfMoved } = D;
+  const pts=[];
+  appendIfMoved(pts, CLAT, CLON, 5);                       // primer punto
+  const j=offset(CLAT,CLON,2,0);                           // +2 m: ruido, no añade
+  const added2=appendIfMoved(pts, j.lat, j.lon, 5);
+  const f=offset(CLAT,CLON,20,0);                          // +20 m: añade
+  const added3=appendIfMoved(pts, f.lat, f.lon, 5);
+  ok('10: primer punto añadido', pts.length>=1);
+  ok('10: ruido <minGap descartado', added2===false);
+  ok('10: movimiento >minGap añadido', added3===true && pts.length===2);
+}
+
 console.log(`\nDETECT TESTS: ${pass} pass, ${fail} fail`);
 process.exit(fail?1:0);

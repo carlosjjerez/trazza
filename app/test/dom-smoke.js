@@ -68,6 +68,28 @@ ok('resumen muestra chips de sector', window.document.querySelectorAll('#sum-lap
 click('[data-go="home"]');
 ok('sesión listada en home', window.document.querySelectorAll('#session-list .sess').length>=1);
 
+// ---- Constructor de circuito (punto a punto) + mapa del HUD ----
+const qsActive=s=>window.document.querySelector(s).classList.contains('active');
+click('#meta-card');
+click('#btn-create-circuit');
+ok('pantalla constructor activa', qsActive('#screen-builder'));
+click('#bld-mode button[data-mode="manual"]');
+feed(CART.lat,CART.lon,4,t,1); t+=1000; click('#btn-pin');            // meta
+for(const [e,n] of [[60,0],[60,60],[0,60],[0,5]]){ const ll=offset(CART.lat,CART.lon,e,n); feed(ll.lat,ll.lon,4,t,5); t+=1000; click('#btn-pin'); }
+ok('constructor cuenta >=5 puntos', parseInt(txt('#bld-points'))>=5);
+window.prompt=()=>'Circuito Test';
+click('#btn-save-circuit');
+ok('vuelve a meta tras guardar', qsActive('#screen-meta'));
+ok('confirmar habilitado tras guardar', window.document.querySelector('#btn-confirm-meta').disabled===false);
+ok('circuito en lista guardadas', window.document.querySelectorAll('#saved-list .preset').length>=1);
+click('#btn-confirm-meta');
+ok('meta seleccionada = circuito', txt('#meta-name').includes('Circuito'));
+click('#btn-start');
+ok('HUD tiene mapa en vivo', !!window.document.querySelector('#hud-map'));
+feed(CART.lat,CART.lon,4,t,10); t+=1000;
+ok('sigue en HUD tras fix (mapa no rompe)', qsActive('#screen-hud'));
+click('#btn-stop');
+
 console.log('\nresumen mejor:', txt('#sum-best'), '| vueltas:', count);
 console.log(`DOM SMOKE: ${pass} pass, ${fail} fail`);
 process.exit(fail?1:0);

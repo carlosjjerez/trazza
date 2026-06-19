@@ -39,7 +39,7 @@ const CART_OUTLINE = makeOutline(CART.lat, CART.lon, CART_CTRL, 0.75);
 const TRACK_PRESETS = [
   { id:'cartagena', name:'Circuito de Cartagena', sub:'Recta principal · 3.506 m', lat:CART.lat, lon:CART.lon, length:3506, outline:CART_OUTLINE },
 ];
-const LS_SETTINGS='trazza.settings.v2', LS_SESSIONS='trazza.sessions.v2', LS_METAS='trazza.metas.v2';
+const LS_SETTINGS='trazza.settings.v2', LS_SESSIONS='trazza.sessions.v2', LS_METAS='trazza.metas.v2', LS_CIRCUITS='trazza.circuits.v1';
 
 let settings = Object.assign({}, DEFAULTS, loadJSON(LS_SETTINGS, {}));
 settings.sim = false; // el modo demo nunca persiste
@@ -56,6 +56,7 @@ const live = {
   nSectors:3, refDist:null, crossTimes:[], curSectorIdx:0, lastSplitT:0, curSectors:[], bestSectors:[],
 };
 let metaTrack = []; // traza reciente para el mini-mapa de meta
+const builder = { mode:'record', recording:false, points:[], started:false };
 
 /* ----------------------------- utils ----------------------------- */
 function loadJSON(k,f){ try{ const v=JSON.parse(localStorage.getItem(k)); return v??f; }catch(e){ return f; } }
@@ -115,6 +116,7 @@ const GPS = {
       metaTrack.push(fix); if(metaTrack.length>80) metaTrack.shift();
       drawMetaMap();
     }
+    if($('#screen-builder').classList.contains('active')) builderFix(fix);
     refreshStartState();
   },
   error(e){
@@ -224,6 +226,9 @@ function liveFix(fix){
     updateLiveSectors(elapsed);
   }
   live.prevFix=fix;
+
+  // mapa en vivo (circuito + posición moviéndose)
+  drawHudMap();
 
   // detección de cruce
   const ev=live.detector.update(fix);
@@ -505,6 +510,22 @@ function speedColor(frac){
   return `rgb(${Math.round(a[0]+(b[0]-a[0])*t)},${Math.round(a[1]+(b[1]-a[1])*t)},${Math.round(a[2]+(b[2]-a[2])*t)})`;
 }
 
+// mapa EN VIVO del HUD: trazado del circuito + tu posición moviéndose
+function drawHudMap(){
+  const canvas=$('#hud-map'); if(!canvas) return;
+  const outline = live.gate && live.gate.outline ? live.gate.outline.map(p=>({lat:p[0],lon:p[1]})) : null;
+  const trail = live.track.map(p=>({lat:p.lat,lon:p.lon}));
+  const pos = live.prevFix || (GPS.last?{lat:GPS.last.lat,lon:GPS.last.lon}:null);
+  const all=(outline||[]).concat(trail); if(live.gate) all.push(live.gate); if(pos) all.push(pos);
+  const P=setupCanvas(canvas, all); if(!P) return;
+  if(outline){ strokeLine(P.ctx, P.toPx, outline, 'rgba(138,147,166,.45)', 2); placeSectorMarkers(P, outline, live.nSectors); }
+  else { placeSectorMarkers(P, trail, live.nSectors); }
+  strokeLine(P.ctx, P.toPx, trail, '#1FE0C8', 2.5);
+  drawFinish(P.ctx, P.toPx, live.gate, settings.radius, P.scale);
+  if(pos){ const c=P.toPx(pos); P.ctx.beginPath(); P.ctx.arc(c.x,c.y,6,0,2*Math.PI);
+    P.ctx.fillStyle='#F5F7FA'; P.ctx.fill(); P.ctx.lineWidth=2; P.ctx.strokeStyle='#0E0F12'; P.ctx.stroke(); }
+}
+
 // mapa simple (meta): traza + meta + posición actual
 function drawMap(canvas, pts, finish, radiusM){
   if(!canvas) return;
@@ -587,16 +608,108 @@ function renderPresets(){
   });
 }
 function renderSaved(){
-  const list=$('#saved-list'), metas=loadJSON(LS_METAS,[]);
-  $('#saved-divider').hidden = metas.length===0;
+  const list=$('#saved-list'), circuits=loadJSON(LS_CIRCUITS,[]), metas=loadJSON(LS_METAS,[]);
+  $('#saved-divider').hidden = (circuits.length+metas.length)===0;
   list.innerHTML='';
+  circuits.forEach(c=>{
+    const el=document.createElement('div'); el.className='preset';
+    el.innerHTML=`<div><div class="nm">${esc(c.name)}</div><div class="sub">circuito · ${(c.length/1000).toFixed(2).replace('.',',')} km · ${c.outline.length} pts</div></div>
+      <button class="mini-del" data-id="${c.id}" aria-label="Borrar">✕</button>`;
+    el.addEventListener('click',(e)=>{ if(e.target.closest('.mini-del')) return; chooseMeta(c,c.name); });
+    el.querySelector('.mini-del').addEventListener('click',(e)=>{ e.stopPropagation();
+      if(confirm('¿Borrar este circuito?')){ saveJSON(LS_CIRCUITS, loadJSON(LS_CIRCUITS,[]).filter(x=>x.id!==c.id)); renderSaved(); } });
+    list.appendChild(el);
+  });
   metas.forEach(m=>{
     const el=document.createElement('div'); el.className='preset';
-    el.innerHTML=`<div><div class="nm">${esc(m.name)}</div><div class="sub">${m.lat.toFixed(5)}, ${m.lon.toFixed(5)}</div></div>
+    el.innerHTML=`<div><div class="nm">${esc(m.name)}</div><div class="sub">meta · ${m.lat.toFixed(5)}, ${m.lon.toFixed(5)}</div></div>
       <svg class="tick" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2.4"><path d="M5 12l5 5 9-9"/></svg>`;
     el.addEventListener('click',()=>{ chooseMeta(m,m.name); });
     list.appendChild(el);
   });
+}
+
+/* ----------------------------- Constructor de circuito ----------------------------- */
+function openBuilder(){
+  builder.mode='record'; builder.recording=false; builder.points=[]; builder.started=false;
+  $all('#bld-mode button').forEach(b=>b.classList.toggle('on', b.dataset.mode==='record'));
+  $('#bld-record').hidden=false; $('#bld-manual').hidden=true;
+  $('#btn-rec-toggle').classList.remove('rec-on'); $('#btn-rec-toggle').querySelector('span').textContent='Empezar a grabar';
+  updateBuilderUI();
+  show('builder'); GPS.start(); requestAnimationFrame(drawBuilderMap);
+}
+function setBuilderMode(mode){
+  if(builder.recording) return; // no cambiar mientras grabas
+  builder.mode=mode; builder.points=[]; builder.started=false;
+  $all('#bld-mode button').forEach(b=>b.classList.toggle('on', b.dataset.mode===mode));
+  $('#bld-record').hidden = mode!=='record';
+  $('#bld-manual').hidden = mode!=='manual';
+  updateBuilderUI(); drawBuilderMap();
+}
+function builderFix(fix){
+  $('#bld-gps').textContent='±'+fix.acc.toFixed(1)+' m';
+  if(builder.mode==='record' && builder.recording){
+    if(TrazzaDetect.appendIfMoved(builder.points, fix.lat, fix.lon, 5)) { /* añadido */ }
+  }
+  updateBuilderUI(); drawBuilderMap();
+}
+function recToggle(){
+  if(!builder.recording){
+    if(!GPS.last){ toast('Esperando GPS'); return; }
+    builder.recording=true; builder.started=true; builder.points=[[GPS.last.lat,GPS.last.lon]];
+    $('#btn-rec-toggle').classList.add('rec-on'); $('#btn-rec-toggle').querySelector('span').textContent='Detener grabación';
+    toast('Grabando… da una vuelta y vuelve a meta'); haptic(50);
+  } else {
+    builder.recording=false;
+    $('#btn-rec-toggle').classList.remove('rec-on'); $('#btn-rec-toggle').querySelector('span').textContent='Empezar a grabar';
+    toast('Grabación detenida');
+  }
+  updateBuilderUI();
+}
+function pinPoint(){
+  if(!GPS.last){ toast('Esperando GPS'); return; }
+  if(!builder.started){ builder.points=[[GPS.last.lat,GPS.last.lon]]; builder.started=true; toast('Meta fijada · ahora añade puntos'); }
+  else { builder.points.push([GPS.last.lat,GPS.last.lon]); toast('Punto '+builder.points.length); }
+  haptic(40); updateBuilderUI(); drawBuilderMap();
+}
+function undoPoint(){ if(builder.points.length>1){ builder.points.pop(); updateBuilderUI(); drawBuilderMap(); } }
+function builderLength(){ return builder.points.length>1 ? TrazzaDetect.buildPath(builder.points.map(p=>p)).length : 0; }
+function updateBuilderUI(){
+  $('#bld-points').textContent=builder.points.length;
+  $('#bld-dist').textContent=Math.round(builderLength())+' m';
+  $('#btn-rec-toggle').disabled = !GPS.last;
+  const can = GPS.last && GPS.last.acc<=25;
+  $('#btn-pin').disabled=!can;
+  $('#btn-pin').querySelector('span').textContent = builder.started ? 'Añadir punto' : 'Fijar meta aquí';
+  $('#btn-undo').disabled = builder.points.length<=1;
+  // guardar: al menos 4 puntos y no estar grabando
+  $('#btn-save-circuit').disabled = builder.points.length<4 || builder.recording;
+}
+function saveCircuit(){
+  if(builder.points.length<4){ toast('Necesitas más puntos'); return; }
+  if(builder.recording) recToggle();
+  // cierra el bucle volviendo a la meta
+  const pts=builder.points.slice();
+  const first=pts[0], last=pts[pts.length-1];
+  if(TrazzaDetect.haversine(first[0],first[1],last[0],last[1])>3) pts.push([first[0],first[1]]);
+  const length=TrazzaDetect.buildPath(pts).length;
+  const def='Circuito '+new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'short'});
+  const name=(prompt('Nombre del circuito:', def)||def).trim().slice(0,40);
+  const circuit={ id:'c'+Date.now(), name, lat:first[0], lon:first[1], outline:pts, length, createdAt:Date.now() };
+  const circuits=loadJSON(LS_CIRCUITS,[]); circuits.unshift(circuit); saveJSON(LS_CIRCUITS, circuits.slice(0,30));
+  selectedMeta={ lat:circuit.lat, lon:circuit.lon, name:circuit.name, length:circuit.length, outline:circuit.outline };
+  $('#btn-confirm-meta').disabled=false;
+  toast('Circuito guardado · '+name); haptic([60,40,60]);
+  renderSaved(); show('meta'); drawMetaMap();
+}
+function drawBuilderMap(){
+  const pts=builder.points.map(p=>({lat:p[0],lon:p[1]}));
+  const all=pts.slice(); if(GPS.last) all.push({lat:GPS.last.lat,lon:GPS.last.lon});
+  const P=setupCanvas($('#builder-map'), all); if(!P) return;
+  strokeLine(P.ctx, P.toPx, pts, '#1FE0C8', 2.5);
+  if(pts.length) drawFinish(P.ctx, P.toPx, pts[0], settings.radius, P.scale);  // meta = primer punto
+  if(GPS.last){ const c=P.toPx({lat:GPS.last.lat,lon:GPS.last.lon}); P.ctx.beginPath(); P.ctx.arc(c.x,c.y,6,0,2*Math.PI);
+    P.ctx.fillStyle='#F5F7FA'; P.ctx.fill(); P.ctx.lineWidth=2; P.ctx.strokeStyle='#0E0F12'; P.ctx.stroke(); }
 }
 
 /* ----------------------------- Ajustes ----------------------------- */
@@ -627,11 +740,17 @@ function wireSettings(){
 function show(id){ $all('.screen').forEach(s=>s.classList.remove('active')); $('#screen-'+id).classList.add('active'); }
 
 function init(){
-  $all('[data-go]').forEach(b=>b.addEventListener('click',()=>{ const d=b.dataset.go; if(d==='home'){ renderSessions(); } show(d); }));
+  $all('[data-go]').forEach(b=>b.addEventListener('click',()=>{ const d=b.dataset.go; if(d==='home'){ renderSessions(); } if(d==='meta'){ renderPresets(); renderSaved(); } show(d); }));
   $('#btn-settings').addEventListener('click',()=>{ renderSettings(); show('settings'); });
   $('#gps-card').addEventListener('click',()=>GPS.start());
   $('#meta-card').addEventListener('click',()=>{ metaTrack=[]; renderPresets(); renderSaved(); show('meta'); GPS.start(); requestAnimationFrame(drawMetaMap); });
   $('#btn-mark-here').addEventListener('click', markHere);
+  $('#btn-create-circuit').addEventListener('click', openBuilder);
+  $all('#bld-mode button').forEach(b=>b.addEventListener('click',()=>setBuilderMode(b.dataset.mode)));
+  $('#btn-rec-toggle').addEventListener('click', recToggle);
+  $('#btn-pin').addEventListener('click', pinPoint);
+  $('#btn-undo').addEventListener('click', undoPoint);
+  $('#btn-save-circuit').addEventListener('click', saveCircuit);
   $('#btn-confirm-meta').addEventListener('click', confirmMeta);
   $('#btn-start').addEventListener('click', startSession);
   $('#btn-stop').addEventListener('click',()=>{ if(confirm('¿Terminar la sesión?')) stopSession(); });

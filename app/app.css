@@ -106,6 +106,18 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .preset .sub{font-family:var(--num);font-size:12px;letter-spacing:.06em;color:var(--niebla);margin-top:2px;}
 .preset .tick{color:var(--hiviz);opacity:0;}
 .preset.sel .tick{opacity:1;}
+.mini-del{width:30px;height:30px;border-radius:9px;background:var(--asfalto);color:var(--niebla);font-size:14px;flex:none;}
+.mini-del:active{background:#000;color:var(--rojo);}
+
+/* constructor de circuito */
+.ghost.full{width:100%;}
+.bld-stats{display:flex;gap:22px;margin-top:12px;padding:0 2px;}
+.bld-stats .k{display:block;font-family:var(--num);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--niebla);}
+.bld-stats .v{font-family:var(--display);font-weight:700;font-size:20px;font-variant-numeric:tabular-nums;}
+.pills.wide{margin-top:16px;}
+.pills.wide button{flex:1;text-align:center;padding:10px 0;}
+.help{color:var(--niebla);font-size:13px;line-height:1.5;margin:16px 2px;}
+.rec-on{background:var(--rojo) !important;color:#fff !important;}
 
 /* dock (bottom fixed action) */
 .dock{padding:12px 18px calc(env(safe-area-inset-bottom) + 14px);background:linear-gradient(to top,var(--asfalto) 60%,transparent);}
@@ -119,9 +131,10 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .hud-fin{border:1.6px solid var(--rojo);color:var(--rojo);border-radius:999px;padding:8px 18px;font-family:var(--num);font-weight:700;font-size:13px;letter-spacing:.16em;}
 .hud-fin:active{background:rgba(255,59,48,.12);}
 
-.hud-body{flex:1;display:flex;flex-direction:column;padding:14px 22px calc(env(safe-area-inset-bottom) + 20px);}
-.hud-block{margin-top:6px;}
-.hero{font-family:var(--display);font-weight:700;font-size:76px;line-height:.86;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-top:2px;}
+.hud-body{flex:1;display:flex;flex-direction:column;padding:10px 20px calc(env(safe-area-inset-bottom) + 16px);}
+.hud-map{width:100%;height:104px;background:var(--grafito-2);border-radius:14px;display:block;border:1px solid var(--linea);}
+.hud-block{margin-top:10px;}
+.hero{font-family:var(--display);font-weight:700;font-size:68px;line-height:.86;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-top:2px;}
 .hero .ms{color:var(--niebla);}
 
 .delta{margin-top:16px;background:var(--grafito);border-radius:20px;padding:14px 18px;transition:background .15s;}

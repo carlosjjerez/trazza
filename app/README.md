@@ -25,6 +25,10 @@ Todo el núcleo (`detect.js`) está cubierto por pruebas (ver `test/`).
 
 ## Funciones
 - Estado GPS prominente y a color (precisión, frecuencia, calidad de fix).
+- **Crear circuitos**: grabándolos por GPS (das una vuelta y se dibuja solo) o
+  **punto a punto** (fijas meta y pineas puntos). Se guardan y se reutilizan.
+- **Mapa del circuito en vivo en el HUD**: al cronometrar, arriba se ve el
+  trazado y tu posición moviéndose por él en tiempo real, con los puntos de sector.
 - Marcar meta en tu posición o elegir circuito (preset **Cartagena** `37.6444,-1.0352`).
 - **Mini-mapa** en vivo para confirmar posición/meta y el track de la sesión.
 - HUD: vuelta en curso, **delta predictivo por distancia vs mejor**, última, mejor,

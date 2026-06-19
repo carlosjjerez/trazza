@@ -13,6 +13,7 @@ body{background:var(--asfalto);color:var(--blanco);font-family:var(--ui);overflo
   -webkit-user-select:none;user-select:none;overscroll-behavior:none;}
 ::selection{background:var(--hiviz);color:var(--asfalto);}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;padding:0;}
+[hidden]{display:none!important;}   /* el atributo hidden siempre gana sobre display:flex/block */
 
 /* layout base */
 .screen{position:fixed;inset:0;display:none;flex-direction:column;
@@ -164,7 +165,10 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 
 @media (orientation:landscape){
   #screen-hud.active .hud-top, #screen-hud.active .hud-body{display:none;}
-  #screen-hud.active #track-mode{display:flex;flex-direction:column;height:100%;width:100%;}
+  #screen-hud.active #track-mode{display:flex;flex-direction:column;height:100%;width:100%;
+    padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);padding-bottom:env(safe-area-inset-bottom);}
+  /* el aviso de recordatorio, en horizontal, no tapa el tiempo */
+  #screen-hud.active .hud-reminder{top:auto;bottom:10px;left:auto;right:14px;max-width:46%;}
 }
 
 /* constructor de circuito */

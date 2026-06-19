@@ -9,7 +9,7 @@
 (function(){
   'use strict';
   const R=6378137;
-  const CART={ lat:37.6444, lon:-1.0352 };
+  const CART=(window.CART_TRACK&&window.CART_TRACK.finish)||{ lat:37.6444, lon:-1.0352 };
   const A=200, B=110;                          // óvalo de respaldo (m)
   const DURS=[45,43.6,44.4,46.1,43.9,45.3];    // s/vuelta del óvalo de respaldo
   const VARF=[1,0.985,1.02,0.99,1.01,0.975];   // variación por vuelta

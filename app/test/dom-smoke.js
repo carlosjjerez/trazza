@@ -18,7 +18,7 @@ window.navigator.geolocation={ watchPosition:(s)=>{ success=s; return 1; }, clea
 window.confirm=()=>true; window.alert=()=>{};
 window.HTMLCanvasElement.prototype.getContext=()=>null;
 
-for(const f of ['detect.js','sim.js','app.js']) window.eval(fs.readFileSync(path.join(APP,f),'utf8'));
+for(const f of ['detect.js','cartagena-track.js','sim.js','app.js']) window.eval(fs.readFileSync(path.join(APP,f),'utf8'));
 window.document.dispatchEvent(new window.Event('DOMContentLoaded'));
 
 const R=6378137, CART={lat:37.6444,lon:-1.0352};

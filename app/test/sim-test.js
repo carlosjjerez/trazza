@@ -27,23 +27,24 @@ const near=(a,b,t)=>Math.abs(a-b)<=t;
   ok('A: vueltas ~objetivo', laps.every(lt=>[45,43.6,44.4,46.1,43.9,45.3].some(d=>near(d,lt,2.5))));
 }
 
-/* ---- B) trazado de Cartagena (replica makeOutline + sim.js) ---- */
+/* ---- B) trazado REAL de Cartagena (OSM) + modelo de sim.js ---- */
 {
-  function m2ll(la,lo,e,n){ return [la+n/111320, lo+e/(111320*Math.cos(la*Math.PI/180))]; }
-  function makeOutline(la,lo,ctrl,scale){ const c=ctrl.map(p=>[p[0]*scale,p[1]*scale]); const pts=c.concat([c[0]]); const out=[];
-    for(let i=0;i<pts.length-1;i++){const[x0,y0]=pts[i],[x1,y1]=pts[i+1];const d=Math.hypot(x1-x0,y1-y0),st=Math.max(1,Math.round(d/12));
-      for(let k=0;k<st;k++){const f=k/st;out.push(m2ll(la,lo,x0+(x1-x0)*f,y0+(y1-y0)*f));}}
-    out.push(m2ll(la,lo,c[0][0],c[0][1])); return out; }
-  const CART_CTRL=[[0,0],[0,640],[40,760],[170,820],[300,795],[385,680],[400,535],[330,430],[385,300],[505,210],[520,55],[440,-45],[300,-25],[235,-150],[300,-260],[200,-345],[40,-335],[-60,-235],[-165,-265],[-285,-200],[-305,-60],[-245,80],[-300,245],[-220,365],[-60,385],[-25,180],[0,-190]];
-  const outline=makeOutline(CART.lat,CART.lon,CART_CTRL,0.75);
+  global.window = global.window || {};
+  require('../cartagena-track.js');
+  const CART_T = global.window.CART_TRACK;
+  const outline = CART_T.outline;
   const path=D.buildPath(outline);
-  ok('B: longitud del trazado ~3.5 km', near(path.length,3506,400));
+  const N=outline.length;
+  ok('B: longitud real ~3.497 km', near(path.length,3497,150));
+  ok('B: lazo cerrado (empieza/acaba en meta)', near(outline[0][0],outline[N-1][0],1e-6)&&near(outline[0][1],outline[N-1][1],1e-6));
+  ok('B: el trazado arranca en la línea de meta', near(outline[0][0],CART_T.finish.lat,3e-4)&&near(outline[0][1],CART_T.finish.lon,3e-4));
 
-  const OUT_DURS=[103,100,106,101,104,99];
-  const det=new LapDetector({lat:outline[0][0],lon:outline[0][1],radius:30,minLapMs:20000});
-  let s=-40, lapIdx=0, laps=[];
-  for(let t=0;t<400;t++){
-    const dur=OUT_DURS[lapIdx%OUT_DURS.length], L=path.length, base=L/dur;
+  const VARF=[1,0.985,1.02,0.99,1.01,0.975];
+  const durFor=(L,i)=>Math.max(30,Math.min(130,L/30))*VARF[i%VARF.length];
+  const det=new LapDetector({lat:CART_T.finish.lat,lon:CART_T.finish.lon,radius:30,minLapMs:20000});
+  let s=-Math.min(40,path.length*0.1), lapIdx=0, laps=[];
+  for(let t=0;t<600;t++){
+    const L=path.length, dur=durFor(L,lapIdx), base=L/dur;
     const frac=(((s%L)+L)%L)/L, step=base*(1+0.4*Math.sin(frac*2*Math.PI*3));
     const p=D.pointAt(path,s);
     const ev=det.update({lat:p.lat,lon:p.lon,t:t*1000});
@@ -51,8 +52,8 @@ const near=(a,b,t)=>Math.abs(a-b)<=t;
     const before=Math.floor(s/L); s+=step; if(Math.floor(s/L)>before) lapIdx++;
   }
   ok('B: trazado registra >=2 vueltas', laps.length>=2);
-  ok('B: vueltas realistas (~1:50, no 0:45 ni absurdo)', laps.every(lt=>lt>90 && lt<130));
-  console.log('   vueltas trazado:', laps.map(x=>x.toFixed(1)).join(', '), '| longitud m:', Math.round(path.length));
+  ok('B: vueltas realistas (~1:57, no 0:45 ni absurdo)', laps.every(lt=>lt>90 && lt<130));
+  console.log('   vueltas Cartagena:', laps.map(x=>x.toFixed(1)).join(', '), '| longitud m:', Math.round(path.length));
 }
 
 /* ---- C) circuito de maniobras (plantilla relativa anclada en una posición) ---- */

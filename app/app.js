@@ -7,34 +7,12 @@
 
 const DEFAULTS = { radius:30, minLap:20, sectors:3, units:'kmh', sound:true, haptic:true, wakelock:true, sim:false };
 
-// Convierte puntos de control en metros (E,N) relativos a un origen en un
-// trazado cerrado denso [lat,lon]. NOTA: el trazado de Cartagena es una
-// APROXIMACIÓN para el demo y la previsualización; la coordenada de meta y la
-// longitud (3506 m) sí son reales. En pista, el mapa usa tu traza GPS real.
 function metersToLatLon(lat0,lon0,e,n){ return [lat0+n/111320, lon0+e/(111320*Math.cos(lat0*Math.PI/180))]; }
-function makeOutline(lat0,lon0,ctrl,scale){
-  scale=scale||1;
-  const c=ctrl.map(p=>[p[0]*scale,p[1]*scale]);
-  const pts=c.concat([c[0]]); const out=[];
-  for(let i=0;i<pts.length-1;i++){
-    const [x0,y0]=pts[i], [x1,y1]=pts[i+1];
-    const d=Math.hypot(x1-x0,y1-y0), steps=Math.max(1,Math.round(d/12));
-    for(let k=0;k<steps;k++){ const f=k/steps; out.push(metersToLatLon(lat0,lon0,x0+(x1-x0)*f,y0+(y1-y0)*f)); }
-  }
-  out.push(metersToLatLon(lat0,lon0,c[0][0],c[0][1]));
-  return out;
-}
-// puntos de control aproximados (forma de circuito técnico, no el Cartagena exacto)
-const CART_CTRL=[
-  [0,0],[0,640],[40,760],[170,820],[300,795],[385,680],
-  [400,535],[330,430],[385,300],[505,210],[520,55],[440,-45],
-  [300,-25],[235,-150],[300,-260],[200,-345],[40,-335],[-60,-235],
-  [-165,-265],[-285,-200],[-305,-60],[-245,80],[-300,245],[-220,365],
-  [-60,385],[-25,180],[0,-190]
-];
-const CART = { lat:37.6444, lon:-1.0352 };
-// escala el trazado aprox. a ~3.5 km (longitud real) para velocidades realistas
-const CART_OUTLINE = makeOutline(CART.lat, CART.lon, CART_CTRL, 0.75);
+// Trazado REAL del Circuito de Cartagena (OpenStreetMap, lat/lon reales): forma
+// exacta, lazo cerrado que empieza en la línea de meta, longitud 3.497 m.
+const CART_T = window.CART_TRACK;
+const CART = { lat:CART_T.finish.lat, lon:CART_T.finish.lon };
+const CART_OUTLINE = CART_T.outline;
 
 // Circuito de maniobras (conos) reconstruido desde las cotas del dibujo:
 // 90 m de largo (40 recta + slalom 7×4 + 22), 11 m de ancho (carriles ±2,5),
@@ -59,7 +37,7 @@ const MANIOBRAS_REL = genManiobras();
 const MANIOBRAS_LEN = relLength(MANIOBRAS_REL);
 
 const TRACK_PRESETS = [
-  { id:'cartagena', name:'Circuito de Cartagena', sub:'Recta principal · 3.506 m', lat:CART.lat, lon:CART.lon, length:3506, outline:CART_OUTLINE },
+  { id:'cartagena', name:'Circuito de Cartagena', sub:'Trazado real (OSM) · 3.497 m', lat:CART.lat, lon:CART.lon, length:CART_T.length, outline:CART_OUTLINE },
   { id:'maniobras', name:'Circuito de maniobras', template:true, relative:MANIOBRAS_REL, length:Math.round(MANIOBRAS_LEN) },
 ];
 const LS_SETTINGS='trazza.settings.v2', LS_SESSIONS='trazza.sessions.v2', LS_METAS='trazza.metas.v2', LS_CIRCUITS='trazza.circuits.v1';

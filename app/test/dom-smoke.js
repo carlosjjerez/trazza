@@ -90,6 +90,17 @@ feed(CART.lat,CART.lon,4,t,10); t+=1000;
 ok('sigue en HUD tras fix (mapa no rompe)', qsActive('#screen-hud'));
 click('#btn-stop');
 
+// ---- Plantilla "Circuito de maniobras" (se ancla en tu posición) ----
+click('[data-go="home"]');
+click('#meta-card');
+const presetEls=[...window.document.querySelectorAll('#preset-list .preset')];
+ok('preset plantilla maniobras presente', presetEls.some(e=>e.textContent.toLowerCase().includes('maniobras')));
+feed(CART.lat,CART.lon,4,t,1); t+=1000;
+presetEls.find(e=>e.textContent.toLowerCase().includes('maniobras')).dispatchEvent(new window.Event('click',{bubbles:true}));
+ok('plantilla anclada habilita confirmar', window.document.querySelector('#btn-confirm-meta').disabled===false);
+click('#btn-confirm-meta');
+ok('meta = circuito de maniobras', txt('#meta-name').toLowerCase().includes('maniobras'));
+
 console.log('\nresumen mejor:', txt('#sum-best'), '| vueltas:', count);
 console.log(`DOM SMOKE: ${pass} pass, ${fail} fail`);
 process.exit(fail?1:0);

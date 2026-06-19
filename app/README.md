@@ -30,6 +30,8 @@ Todo el núcleo (`detect.js`) está cubierto por pruebas (ver `test/`).
 - **Mapa del circuito en vivo en el HUD**: al cronometrar, arriba se ve el
   trazado y tu posición moviéndose por él en tiempo real, con los puntos de sector.
 - Marcar meta en tu posición o elegir circuito (preset **Cartagena** `37.6444,-1.0352`).
+- Plantilla **Circuito de maniobras** (conos, reconstruida desde sus cotas): se
+  coloca en tu posición al marcar la meta; solo hay que asignar la meta y rodar.
 - **Mini-mapa** en vivo para confirmar posición/meta y el track de la sesión.
 - HUD: vuelta en curso, **delta predictivo por distancia vs mejor**, última, mejor,
   velocidad y máx.

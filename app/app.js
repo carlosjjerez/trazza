@@ -36,8 +36,31 @@ const CART = { lat:37.6444, lon:-1.0352 };
 // escala el trazado aprox. a ~3.5 km (longitud real) para velocidades realistas
 const CART_OUTLINE = makeOutline(CART.lat, CART.lon, CART_CTRL, 0.75);
 
+// Circuito de maniobras (conos) reconstruido desde las cotas del dibujo:
+// 90 m de largo (40 recta + slalom 7×4 + 22), 11 m de ancho (carriles ±2,5),
+// slalom amplitud 3, recta inferior 60, sección F (10/8/12) amplitud ~1,3.
+// Geometría RELATIVA en metros [x,y] con la meta/salida en (0,0).
+function genManiobras(){
+  const pts=[]; const topY=2.5, botY=-2.5, r=2.5;
+  const push=(x,y)=>pts.push([x,y]);
+  for(let x=90;x>=50;x-=2) push(x,topY);                                   // recta C (40)
+  for(let x=50;x>=22;x-=1) push(x, topY+3*Math.sin((50-x)/7*Math.PI));     // slalom 7×4 (amp 3)
+  for(let x=22;x>=0;x-=2) push(x,topY);                                    // recta (22)
+  for(let a=Math.PI/12;a<Math.PI;a+=Math.PI/12) push(-r*Math.sin(a), r*Math.cos(a)); // U izq
+  for(let x=0;x<=60;x+=2) push(x,botY);                                    // recta D (60)
+  for(let x=60;x<=78;x+=1) push(x, botY+1.3*Math.sin((x-60)/6*Math.PI));   // sección F (amp 1,3)
+  for(let x=78;x<=90;x+=2) push(x,botY);
+  for(let a=Math.PI/12;a<Math.PI;a+=Math.PI/12) push(90+r*Math.sin(a), -r*Math.cos(a)); // U der
+  // traslada para que la salida (90,topY) sea el origen (0,0)
+  return pts.map(([x,y])=>[x-90, y-topY]);
+}
+function relLength(rel){ let L=0; for(let i=1;i<rel.length;i++){ L+=Math.hypot(rel[i][0]-rel[i-1][0], rel[i][1]-rel[i-1][1]); } return L; }
+const MANIOBRAS_REL = genManiobras();
+const MANIOBRAS_LEN = relLength(MANIOBRAS_REL);
+
 const TRACK_PRESETS = [
   { id:'cartagena', name:'Circuito de Cartagena', sub:'Recta principal · 3.506 m', lat:CART.lat, lon:CART.lon, length:3506, outline:CART_OUTLINE },
+  { id:'maniobras', name:'Circuito de maniobras', template:true, relative:MANIOBRAS_REL, length:Math.round(MANIOBRAS_LEN) },
 ];
 const LS_SETTINGS='trazza.settings.v2', LS_SESSIONS='trazza.sessions.v2', LS_METAS='trazza.metas.v2', LS_CIRCUITS='trazza.circuits.v1';
 
@@ -582,15 +605,29 @@ function drawSummaryMap(canvas, s){
 }
 
 /* ----------------------------- Meta (marcar / elegir) ----------------------------- */
+let pendingTemplate=null;
+// coloca una plantilla (geometría relativa en metros) en una posición real
+function anchorTemplateAt(p, lat, lon){
+  const outline=p.relative.map(([x,y])=>metersToLatLon(lat,lon,x,y));
+  const length=TrazzaDetect.buildPath(outline).length;
+  selectedMeta={ lat, lon, name:p.name, outline, length };
+  $('#btn-confirm-meta').disabled=false; drawMetaMap();
+}
+function selectTemplate(p){
+  pendingTemplate=p;
+  if(GPS.last){ anchorTemplateAt(p, GPS.last.lat, GPS.last.lon); toast(p.name+' colocado en tu posición'); }
+  else toast('Esperando GPS para colocar el circuito');
+}
 function markHere(){
   if(!GPS.last){ toast('Esperando GPS'); return; }
+  if(pendingTemplate){ anchorTemplateAt(pendingTemplate, GPS.last.lat, GPS.last.lon); toast('Circuito recolocado en tu posición'); haptic(40); return; }
   selectedMeta={ lat:GPS.last.lat, lon:GPS.last.lon, name:'Mi posición' };
   const metas=loadJSON(LS_METAS,[]); metas.unshift({...selectedMeta, name:'Meta '+new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}), at:Date.now()});
   saveJSON(LS_METAS, metas.slice(0,8));
   $('#btn-confirm-meta').disabled=false; renderSaved(); drawMetaMap();
   toast('Meta marcada en tu posición'); haptic(40);
 }
-function chooseMeta(m, name){ selectedMeta={ lat:m.lat, lon:m.lon, name:name||m.name, length:m.length||null, outline:m.outline||null }; $('#btn-confirm-meta').disabled=false; drawMetaMap(); }
+function chooseMeta(m, name){ pendingTemplate=null; selectedMeta={ lat:m.lat, lon:m.lon, name:name||m.name, length:m.length||null, outline:m.outline||null }; $('#btn-confirm-meta').disabled=false; drawMetaMap(); }
 function confirmMeta(){
   if(!selectedMeta){ toast('Elige o marca una meta'); return; }
   $('#meta-name').textContent=selectedMeta.name;
@@ -601,9 +638,11 @@ function renderPresets(){
   const list=$('#preset-list'); list.innerHTML='';
   TRACK_PRESETS.forEach(p=>{
     const el=document.createElement('div'); el.className='preset'+(selectedMeta&&selectedMeta.name===p.name?' sel':'');
-    el.innerHTML=`<div><div class="nm">${esc(p.name)}</div><div class="sub">${esc(p.sub)} · ${p.lat.toFixed(4)}, ${p.lon.toFixed(4)}</div></div>
+    const sub = p.template ? `plantilla · ${p.length} m · se coloca en tu posición`
+                           : `${esc(p.sub)} · ${p.lat.toFixed(4)}, ${p.lon.toFixed(4)}`;
+    el.innerHTML=`<div><div class="nm">${esc(p.name)}</div><div class="sub">${sub}</div></div>
       <svg class="tick" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2.4"><path d="M5 12l5 5 9-9"/></svg>`;
-    el.addEventListener('click',()=>{ chooseMeta(p,p.name); $all('.preset').forEach(e=>e.classList.remove('sel')); el.classList.add('sel'); });
+    el.addEventListener('click',()=>{ if(p.template) selectTemplate(p); else chooseMeta(p,p.name); $all('.preset').forEach(e=>e.classList.remove('sel')); el.classList.add('sel'); });
     list.appendChild(el);
   });
 }

@@ -12,7 +12,9 @@
   const CART={ lat:37.6444, lon:-1.0352 };
   const A=200, B=110;                          // óvalo de respaldo (m)
   const DURS=[45,43.6,44.4,46.1,43.9,45.3];    // s/vuelta del óvalo de respaldo
-  const OUT_DURS=[103,100,106,101,104,99];     // s/vuelta sobre un trazado real (~3.5 km)
+  const VARF=[1,0.985,1.02,0.99,1.01,0.975];   // variación por vuelta
+  // duración realista según longitud del trazado (grande ~rápido, corto ~lento)
+  function durFor(L, idx){ return Math.max(30, Math.min(130, L/30)) * VARF[idx%VARF.length]; }
 
   function offset(lat,lon,e,n){ return { lat:lat+n/R*180/Math.PI, lon:lon+e/(R*Math.cos(lat*Math.PI/180))*180/Math.PI }; }
   function haversine(aLat,aLon,bLat,bLon){ const dLat=(bLat-aLat)*Math.PI/180,dLon=(bLon-aLon)*Math.PI/180,la1=aLat*Math.PI/180,la2=bLat*Math.PI/180;
@@ -34,9 +36,8 @@
       const now=Date.now(); const c=center(); let ll, acc, session=inSession();
       if(session && c.outline && window.TrazzaDetect){
         // recorrer el trazado a velocidad variable (frena en curvas)
-        if(this.pathRef!==c.outline){ this.path=window.TrazzaDetect.buildPath(c.outline); this.pathRef=c.outline; if(this.s<0) this.s=-40; }
-        const dur=OUT_DURS[this.lapIdx%OUT_DURS.length];
-        const L=this.path.length, base=L/dur;
+        if(this.pathRef!==c.outline){ this.path=window.TrazzaDetect.buildPath(c.outline); this.pathRef=c.outline; if(this.s<0) this.s=-Math.min(40, this.path.length*0.1); }
+        const L=this.path.length, dur=durFor(L, this.lapIdx), base=L/dur;
         const frac=(((this.s%L)+L)%L)/L;
         const step=base*(1+0.4*Math.sin(frac*2*Math.PI*3)); // 3 zonas rápidas/lentas
         const before=Math.floor(this.s/L);

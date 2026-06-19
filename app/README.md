@@ -37,6 +37,9 @@ Todo el núcleo (`detect.js`) está cubierto por pruebas (ver `test/`).
   mejor de la sesión si aún no hay récord), última, mejor, velocidad y máx.
 - **Récord histórico (PB) por circuito**: guarda tu mejor marca de siempre, avisa
   al batirla en pista y la compara en el resumen y en la pantalla de meta.
+- **Recordatorios por vuelta**: antes de la tanda apunta avisos (texto + nº de
+  vuelta, p. ej. «mirar temperatura en la vuelta 3») y saltan en el HUD al entrar
+  en esa vuelta.
 - Resumen con todas las vueltas, mejor resaltada, mapa del track (con zoom) y export.
 - Export **CSV** (vueltas) y **GPX** (track crudo, red de seguridad).
 - Avisos: pitido, vibración y *wake lock* (pantalla siempre encendida). km/h o mph.

@@ -61,6 +61,21 @@
       <svg class="chev" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8A93A6" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
     </button>
 
+    <!-- Recordatorios -->
+    <div class="card rem-card">
+      <div class="card-head">
+        <span class="kicker">Recordatorios</span>
+        <span class="rem-count" id="rem-count"></span>
+      </div>
+      <p class="row-sub" id="rem-empty">Avísame de algo en una vuelta concreta (p. ej. mirar temperatura en la vuelta 3).</p>
+      <div id="rem-list" class="rem-list"></div>
+      <div class="rem-add">
+        <input type="number" id="rem-lap" min="1" max="99" inputmode="numeric" placeholder="Vta." aria-label="Vuelta" />
+        <input type="text" id="rem-text" maxlength="60" placeholder="Recordatorio (ej. mirar temperatura)" aria-label="Texto del recordatorio" />
+        <button class="ghost" id="rem-add-btn" type="button">Añadir</button>
+      </div>
+    </div>
+
     <!-- Arranque -->
     <button class="cta" id="btn-start" disabled>
       <svg width="22" height="22" viewBox="0 0 24 24" fill="#0E0F12"><path d="M8 5v14l11-7z"/></svg>
@@ -158,6 +173,7 @@
 
 <!-- ===================== HUD ===================== -->
 <section id="screen-hud" class="screen hud">
+  <div class="hud-reminder" id="hud-reminder" hidden role="alert"></div>
   <div class="hud-top">
     <span class="hud-lapnum" id="hud-lapnum">VUELTA 00</span>
     <span class="fixpill sm" id="hud-gps"><i class="dot"></i><span id="hud-gps-text">±-- m</span></span>

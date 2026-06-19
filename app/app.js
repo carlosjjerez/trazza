@@ -40,7 +40,33 @@ const TRACK_PRESETS = [
   { id:'cartagena', name:'Circuito de Cartagena', sub:'Trazado real (OSM) · 3.497 m', lat:CART.lat, lon:CART.lon, length:CART_T.length, outline:CART_OUTLINE },
   { id:'maniobras', name:'Circuito de maniobras', template:true, relative:MANIOBRAS_REL, length:Math.round(MANIOBRAS_LEN) },
 ];
-const LS_SETTINGS='trazza.settings.v2', LS_SESSIONS='trazza.sessions.v2', LS_METAS='trazza.metas.v2', LS_CIRCUITS='trazza.circuits.v1', LS_RECORDS='trazza.records.v1';
+const LS_SETTINGS='trazza.settings.v2', LS_SESSIONS='trazza.sessions.v2', LS_METAS='trazza.metas.v2', LS_CIRCUITS='trazza.circuits.v1', LS_RECORDS='trazza.records.v1', LS_REMINDERS='trazza.reminders.v1';
+
+// Recordatorios por vuelta: [{lap, text}]. Se configuran antes de la tanda y
+// saltan en el HUD al entrar en esa vuelta.
+function loadReminders(){ return loadJSON(LS_REMINDERS, []).filter(r=>r&&r.lap>=1&&r.text); }
+function saveReminders(arr){ saveJSON(LS_REMINDERS, arr.slice(0,20)); }
+function renderReminders(){
+  const list=$('#rem-list'); if(!list) return;
+  const rems=loadReminders().sort((a,b)=>a.lap-b.lap);
+  list.innerHTML='';
+  $('#rem-empty').hidden = rems.length>0;
+  $('#rem-count').textContent = rems.length ? rems.length+(rems.length===1?' aviso':' avisos') : '';
+  rems.forEach((r,i)=>{
+    const el=document.createElement('div'); el.className='rem-item';
+    el.innerHTML=`<span class="lap">V${r.lap}</span><span class="tx">${esc(r.text)}</span><button class="del" aria-label="Borrar">✕</button>`;
+    el.querySelector('.del').addEventListener('click',()=>{ const a=loadReminders().sort((x,y)=>x.lap-y.lap); a.splice(i,1); saveReminders(a); renderReminders(); });
+    list.appendChild(el);
+  });
+}
+function addReminderFromInputs(){
+  const lapEl=$('#rem-lap'), txEl=$('#rem-text');
+  const lap=parseInt(lapEl.value,10), text=(txEl.value||'').trim();
+  if(!lap||lap<1){ toast('Indica el número de vuelta'); lapEl.focus(); return; }
+  if(!text){ toast('Escribe el recordatorio'); txEl.focus(); return; }
+  const a=loadReminders(); a.push({ lap, text }); saveReminders(a);
+  lapEl.value=''; txEl.value=''; renderReminders(); toast('Recordatorio añadido · vuelta '+lap); haptic(30);
+}
 
 // Récord histórico (PB) por circuito: identificado por nombre + coords de meta.
 function recordKey(m){ if(!m||m.lat==null||m.lon==null) return null; const n=(m.name||'meta').trim().toLowerCase(); return n+'@'+(+m.lat).toFixed(4)+','+(+m.lon).toFixed(4); }
@@ -211,6 +237,10 @@ function startSession(){
   live.refMs = live.record ? live.record.bestMs : null;
   live.newRecord = false;
   const dk=$('#hud-delta .kicker'); if(dk) dk.textContent = live.record ? 'Delta · predictivo vs récord' : 'Delta · predictivo vs mejor';
+  // recordatorios de esta tanda (copia, para no afectar a ediciones posteriores)
+  live.reminders = loadReminders();
+  live.firedReminders = {};
+  hideHudReminder();
   renderSectorStrip(settings.sectors);
   viewingSessionId=null;
   resetHud();
@@ -256,6 +286,7 @@ function onCrossing(ev){
     live.crossTimes=[ev.t];
     $('#hud-lapnum').textContent='VUELTA 01';
     haptic(60); beep('lap'); toast('¡Cronómetro en marcha!');
+    checkReminders(1);
     return;
   }
   // cierra vuelta
@@ -289,6 +320,7 @@ function onCrossing(ev){
   startLapState(ev.t, ev.lapNum+1);
   $('#hud-lapnum').textContent='VUELTA '+String(live.lapNum).padStart(2,'0');
   renderHudLastBest();
+  checkReminders(live.lapNum);
   persistSession(false);
 }
 
@@ -335,6 +367,27 @@ function paintSector(i, secT){
 }
 function highlightSector(idx){ $all('#hud-sectors .sec').forEach((c,i)=>c.classList.toggle('cur', i===idx)); }
 function showLapSectors(secs){ secs.forEach((s,i)=>paintSector(i,s)); highlightSector(-1); }
+
+/* ---- recordatorios por vuelta (aviso en el HUD) ---- */
+let hudRemTimer=null;
+function checkReminders(n){
+  if(!live.reminders || !live.reminders.length) return;
+  const due=live.reminders.filter(r=>r.lap===n && !live.firedReminders[r.lap+'|'+r.text]);
+  if(!due.length) return;
+  due.forEach(r=>{ live.firedReminders[r.lap+'|'+r.text]=true; });
+  showHudReminder(n, due.map(r=>r.text));
+  haptic([120,60,120]); beep('best');
+}
+function showHudReminder(lap, texts){
+  const el=$('#hud-reminder'); if(!el) return;
+  el.innerHTML=`<button class="rx" aria-label="Cerrar">✕</button><span class="rk">RECORDATORIO · VUELTA ${lap}</span>`
+    + texts.map(t=>`<span class="rt">${esc(t)}</span>`).join('');
+  el.hidden=false;
+  el.querySelector('.rx').addEventListener('click', hideHudReminder);
+  if(hudRemTimer) clearTimeout(hudRemTimer);
+  hudRemTimer=setTimeout(hideHudReminder, 9000);
+}
+function hideHudReminder(){ const el=$('#hud-reminder'); if(el) el.hidden=true; if(hudRemTimer){ clearTimeout(hudRemTimer); hudRemTimer=null; } }
 function setDelta(ms){
   const card=$('#hud-delta'), num=$('#hud-delta-num');
   card.classList.remove('good','bad'); num.classList.remove('good','bad');
@@ -848,7 +901,11 @@ function wireSettings(){
 function show(id){ $all('.screen').forEach(s=>s.classList.remove('active')); $('#screen-'+id).classList.add('active'); }
 
 function init(){
-  $all('[data-go]').forEach(b=>b.addEventListener('click',()=>{ const d=b.dataset.go; if(d==='home'){ renderSessions(); } if(d==='meta'){ renderPresets(); renderSaved(); } show(d); }));
+  $all('[data-go]').forEach(b=>b.addEventListener('click',()=>{ const d=b.dataset.go; if(d==='home'){ renderSessions(); renderReminders(); } if(d==='meta'){ renderPresets(); renderSaved(); } show(d); }));
+  $('#rem-add-btn').addEventListener('click', addReminderFromInputs);
+  $('#rem-text').addEventListener('keydown',e=>{ if(e.key==='Enter') addReminderFromInputs(); });
+  $('#rem-lap').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#rem-text').focus(); });
+  renderReminders();
   $('#btn-settings').addEventListener('click',()=>{ renderSettings(); show('settings'); });
   $('#gps-card').addEventListener('click',()=>GPS.start());
   $('#meta-card').addEventListener('click',()=>{ metaTrack=[]; renderPresets(); renderSaved(); show('meta'); GPS.start(); requestAnimationFrame(drawMetaMap); });

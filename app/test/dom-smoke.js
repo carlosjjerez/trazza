@@ -37,6 +37,12 @@ click('#meta-card'); click('#btn-mark-here'); click('#btn-confirm-meta');
 ok('meta seleccionada en home', txt('#meta-name').trim()!=='Sin meta');
 ok('botón salir habilitado', window.document.querySelector('#btn-start').disabled===false);
 
+// recordatorio para la vuelta 2
+window.document.querySelector('#rem-lap').value='2';
+window.document.querySelector('#rem-text').value='mirar temperatura';
+click('#rem-add-btn');
+ok('recordatorio añadido a la lista', window.document.querySelectorAll('#rem-list .rem-item').length===1);
+
 click('#btn-start');
 ok('pantalla HUD activa', window.document.querySelector('#screen-hud').classList.contains('active'));
 
@@ -56,6 +62,11 @@ ok('contador de vuelta avanzó', txt('#hud-lapnum')!=='VUELTA 00');
 ok('velocidad máx > 0 en HUD', parseInt(txt('#hud-spdmax'))>0);
 ok('strip de 3 sectores en HUD', window.document.querySelectorAll('#hud-sectors .sec').length===3);
 ok('algún sector con tiempo', [...window.document.querySelectorAll('#hud-sectors .sd')].some(e=>e.textContent.trim()!=='—'));
+
+// recordatorio saltó en el HUD al llegar a la vuelta 2
+const remEl=window.document.querySelector('#hud-reminder');
+ok('aviso de recordatorio visible en el HUD', remEl.hidden===false);
+ok('aviso muestra el texto y la vuelta', remEl.textContent.includes('mirar temperatura') && remEl.textContent.includes('VUELTA 2'));
 
 click('#btn-stop');
 ok('pantalla resumen activa', window.document.querySelector('#screen-summary').classList.contains('active'));

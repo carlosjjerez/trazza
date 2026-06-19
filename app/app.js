@@ -447,7 +447,9 @@ function renderSummary(s){
 
   $('#btn-csv').onclick=()=>exportCSV(s);
   $('#btn-gpx').onclick=()=>exportGPX(s);
-  requestAnimationFrame(()=>drawSummaryMap($('#sum-map'), s));
+  const sm=$('#sum-map');
+  if(sm){ sm._view={zoom:1,panX:0,panY:0}; attachMapZoom(sm, ()=>drawSummaryMap(sm, s)); }
+  requestAnimationFrame(()=>drawSummaryMap(sm, s));
 }
 
 /* ----------------------------- Export ----------------------------- */
@@ -477,7 +479,7 @@ function exportGPX(s){
 
 /* ----------------------------- Mini-mapa ----------------------------- */
 // prepara canvas + proyección que encuadra todos los puntos
-function setupCanvas(canvas, allPts){
+function setupCanvas(canvas, allPts, view){
   const dpr=window.devicePixelRatio||1;
   const W=canvas.clientWidth, H=canvas.clientHeight;
   if(!W||!H) return null;
@@ -494,8 +496,48 @@ function setupCanvas(canvas, allPts){
   const pad=22, spanX=maxX-minX, spanY=maxY-minY;
   const scale=Math.min((W-2*pad)/spanX,(H-2*pad)/spanY);
   const offX=(W-spanX*scale)/2, offY=(H-spanY*scale)/2;
-  return { ctx, W, H, k, scale,
-    toPx:p=>({ x:offX+(p.lon*k-minX)*scale, y:H-(offY+(p.lat-minY)*scale) }) };
+  // transform de vista (zoom/pan), centrado en el canvas
+  const z=(view&&view.zoom)||1, px=(view&&view.panX)||0, py=(view&&view.panY)||0, cx=W/2, cy=H/2;
+  return { ctx, W, H, k, scale:scale*z, zoom:z,
+    toPx:p=>{ const bx=offX+(p.lon*k-minX)*scale, by=H-(offY+(p.lat-minY)*scale);
+      return { x:(bx-cx)*z+cx+px, y:(by-cy)*z+cy+py }; } };
+}
+// Zoom/pan en un canvas de mapa: rueda, arrastrar, pellizco (móvil) y doble toque para reset.
+function attachMapZoom(canvas, redraw){
+  if(!canvas || canvas._zoomBound){ if(canvas) canvas._redraw=redraw; return; }
+  canvas._zoomBound=true; canvas._redraw=redraw;
+  const v=()=>canvas._view||(canvas._view={zoom:1,panX:0,panY:0});
+  const MIN=1, MAX=10;
+  const draw=()=>{ const o=v(), W=canvas.clientWidth,H=canvas.clientHeight;
+    const mx=W*(o.zoom-1)/2, my=H*(o.zoom-1)/2;                 // límites de paneo
+    o.panX=Math.max(-mx,Math.min(mx,o.panX)); o.panY=Math.max(-my,Math.min(my,o.panY));
+    (canvas._redraw||redraw)(); };
+  const rel=(cx,cy)=>{ const r=canvas.getBoundingClientRect(); return [cx-r.left-r.width/2, cy-r.top-r.height/2]; };
+  const zoomAt=(rx,ry,factor)=>{ const o=v(); const nz=Math.max(MIN,Math.min(MAX,o.zoom*factor)); const k=nz/o.zoom;
+    o.panX=rx-(rx-o.panX)*k; o.panY=ry-(ry-o.panY)*k; o.zoom=nz; draw(); };
+  const reset=()=>{ canvas._view={zoom:1,panX:0,panY:0}; draw(); };
+  canvas._zoomReset=reset; canvas._zoomBtn=(f)=>zoomAt(0,0,f);
+  canvas.addEventListener('wheel',e=>{ e.preventDefault(); const [rx,ry]=rel(e.clientX,e.clientY); zoomAt(rx,ry,e.deltaY<0?1.18:1/1.18); },{passive:false});
+  canvas.addEventListener('dblclick',e=>{ e.preventDefault(); reset(); });
+  // arrastrar con ratón
+  let drag=null;
+  canvas.addEventListener('mousedown',e=>{ drag={x:e.clientX,y:e.clientY}; });
+  window.addEventListener('mousemove',e=>{ if(!drag)return; const o=v(); o.panX+=e.clientX-drag.x; o.panY+=e.clientY-drag.y; drag={x:e.clientX,y:e.clientY}; draw(); });
+  window.addEventListener('mouseup',()=>{ drag=null; });
+  // táctil: 1 dedo paneo, 2 dedos pellizco
+  let tPan=null, tDist=0, lastTap=0;
+  const dist=(a,b)=>Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);
+  canvas.addEventListener('touchstart',e=>{
+    if(e.touches.length===1){ const now=Date.now(); if(now-lastTap<300){ reset(); lastTap=0; } else lastTap=now; tPan={x:e.touches[0].clientX,y:e.touches[0].clientY}; }
+    else if(e.touches.length===2){ tDist=dist(e.touches[0],e.touches[1]); tPan=null; }
+  },{passive:true});
+  canvas.addEventListener('touchmove',e=>{
+    if(e.touches.length===2){ e.preventDefault(); const nd=dist(e.touches[0],e.touches[1]);
+      const mx=(e.touches[0].clientX+e.touches[1].clientX)/2, my=(e.touches[0].clientY+e.touches[1].clientY)/2;
+      const [rx,ry]=rel(mx,my); if(tDist>0) zoomAt(rx,ry,nd/tDist); tDist=nd; }
+    else if(e.touches.length===1 && tPan){ const o=v(); o.panX+=e.touches[0].clientX-tPan.x; o.panY+=e.touches[0].clientY-tPan.y; tPan={x:e.touches[0].clientX,y:e.touches[0].clientY}; draw(); }
+  },{passive:false});
+  canvas.addEventListener('touchend',e=>{ if(e.touches.length===0){ tPan=null; tDist=0; } });
 }
 function strokeLine(ctx, toPx, pts, color, width){
   if(pts.length<2) return; ctx.beginPath();
@@ -579,7 +621,7 @@ function drawMetaMap(){
 function drawSummaryMap(canvas, s){
   if(!canvas) return;
   const track=s.track||[];
-  const P=setupCanvas(canvas, track.concat(s.gate?[s.gate]:[])); if(!P) return;
+  const P=setupCanvas(canvas, track.concat(s.gate?[s.gate]:[]), canvas._view); if(!P) return;
   // track completo (atenuado)
   strokeLine(P.ctx, P.toPx, track, 'rgba(138,147,166,.35)', 2);
   // segmento de la mejor vuelta
@@ -784,6 +826,10 @@ function init(){
   $('#gps-card').addEventListener('click',()=>GPS.start());
   $('#meta-card').addEventListener('click',()=>{ metaTrack=[]; renderPresets(); renderSaved(); show('meta'); GPS.start(); requestAnimationFrame(drawMetaMap); });
   $('#btn-mark-here').addEventListener('click', markHere);
+  const sm=$('#sum-map');
+  $('#zoom-in') && $('#zoom-in').addEventListener('click',()=>sm._zoomBtn&&sm._zoomBtn(1.4));
+  $('#zoom-out') && $('#zoom-out').addEventListener('click',()=>sm._zoomBtn&&sm._zoomBtn(1/1.4));
+  $('#zoom-reset') && $('#zoom-reset').addEventListener('click',()=>sm._zoomReset&&sm._zoomReset());
   $('#btn-create-circuit').addEventListener('click', openBuilder);
   $all('#bld-mode button').forEach(b=>b.addEventListener('click',()=>setBuilderMode(b.dataset.mode)));
   $('#btn-rec-toggle').addEventListener('click', recToggle);

@@ -223,7 +223,14 @@
       <div class="opt-note">Óptima = suma de tus mejores sectores</div>
     </div>
 
-    <canvas id="sum-map" class="map"></canvas>
+    <div class="map-wrap">
+      <canvas id="sum-map" class="map"></canvas>
+      <div class="map-zoom">
+        <button id="zoom-in" aria-label="Acercar">＋</button>
+        <button id="zoom-out" aria-label="Alejar">－</button>
+        <button id="zoom-reset" aria-label="Restablecer">⟲</button>
+      </div>
+    </div>
     <div class="map-legend">
       <span><i class="lg" style="background:#FF3B30"></i>Lento</span>
       <span><i class="lg" style="background:#FF9E1B"></i>Medio</span>

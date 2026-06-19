@@ -65,6 +65,16 @@ ok('resumen mejor vuelta válida', txt('#sum-best').trim()!=='--');
 ok('resumen vuelta óptima válida', txt('#sum-opt').trim()!=='--');
 ok('resumen muestra chips de sector', window.document.querySelectorAll('#sum-laps .lap-secs .sc').length>0);
 
+// ---- Zoom del trazado en el resumen ----
+const sm=window.document.querySelector('#sum-map');
+window.document.querySelector('#zoom-in').dispatchEvent(new window.Event('click',{bubbles:true}));
+ok('botón + acerca el trazado', !!sm._view && sm._view.zoom>1);
+window.document.querySelector('#zoom-in').dispatchEvent(new window.Event('click',{bubbles:true}));
+const z2=sm._view.zoom;
+ok('segundo + sigue acercando', z2>1.3);
+window.document.querySelector('#zoom-reset').dispatchEvent(new window.Event('click',{bubbles:true}));
+ok('botón reset vuelve a zoom 1', sm._view.zoom===1 && sm._view.panX===0);
+
 click('[data-go="home"]');
 ok('sesión listada en home', window.document.querySelectorAll('#session-list .sess').length>=1);
 

@@ -40,7 +40,7 @@ const near=(a,b,t)=>Math.abs(a-b)<=t;
   ok('B: el trazado arranca en la línea de meta', near(outline[0][0],CART_T.finish.lat,3e-4)&&near(outline[0][1],CART_T.finish.lon,3e-4));
 
   const VARF=[1,0.985,1.02,0.99,1.01,0.975];
-  const durFor=(L,i)=>Math.max(30,Math.min(130,L/30))*VARF[i%VARF.length];
+  const durFor=(L,i)=>Math.max(30,Math.min(150,L/36))*VARF[i%VARF.length];
   const det=new LapDetector({lat:CART_T.finish.lat,lon:CART_T.finish.lon,radius:30,minLapMs:20000});
   let s=-Math.min(40,path.length*0.1), lapIdx=0, laps=[];
   for(let t=0;t<600;t++){
@@ -52,7 +52,7 @@ const near=(a,b,t)=>Math.abs(a-b)<=t;
     const before=Math.floor(s/L); s+=step; if(Math.floor(s/L)>before) lapIdx++;
   }
   ok('B: trazado registra >=2 vueltas', laps.length>=2);
-  ok('B: vueltas realistas (~1:57, no 0:45 ni absurdo)', laps.every(lt=>lt>90 && lt<130));
+  ok('B: vueltas realistas (~1:46 track-day)', laps.every(lt=>lt>95 && lt<120));
   console.log('   vueltas Cartagena:', laps.map(x=>x.toFixed(1)).join(', '), '| longitud m:', Math.round(path.length));
 }
 

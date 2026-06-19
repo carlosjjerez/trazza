@@ -89,6 +89,12 @@ click('#btn-mark-here'); click('#btn-confirm-meta'); click('#btn-start');
   for(let s=0;s<150;s++){ const x=B*(Math.cos(theta)-1),y=A*Math.sin(theta); const ll=offset(CART.lat,CART.lon,x,y);
     feed(ll.lat,ll.lon,3,t,45); t+=1000;
     const dur=DURS[lapIdx%DURS.length]; const before=Math.floor(theta/(2*Math.PI)); theta+=2*Math.PI/dur; if(Math.floor(theta/(2*Math.PI))>before) lapIdx++; } }
+// ---- Modo track (horizontal): info mínima + delta a pantalla completa ----
+ok('modo track: contador de vueltas', parseInt(txt('#tk-laps'))>=1);
+ok('modo track: mejor vuelta fijada', txt('#tk-best')!=='--');
+const tm=window.document.querySelector('#track-mode');
+ok('modo track: pantalla verde/rojo según delta', tm.className.includes('faster')||tm.className.includes('slower'));
+ok('modo track: muestra segundos y décimas', /[−+]\d/.test(txt('#tk-delta')));
 click('#btn-stop');
 ok('2ª sesión marca NUEVO récord', window.document.querySelector('#sum-record').className.indexOf('new')>=0);
 ok('banner indica mejora vs anterior', txt('#sum-record').includes('vs anterior'));

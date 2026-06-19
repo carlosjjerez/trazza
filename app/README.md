@@ -40,6 +40,10 @@ Todo el núcleo (`detect.js`) está cubierto por pruebas (ver `test/`).
 - **Recordatorios por vuelta**: antes de la tanda apunta avisos (texto + nº de
   vuelta, p. ej. «mirar temperatura en la vuelta 3») y saltan en el HUD al entrar
   en esa vuelta.
+- **Modo track (horizontal)**: al girar el móvil, el HUD se simplifica — tiempo en
+  curso grande arriba, vueltas/tanda/anterior/mejor pequeños, y la pantalla entera
+  se pone **verde si vas más rápido** o **roja si más lento** que tu vuelta rápida,
+  con la diferencia en segundos y décimas, recalculada al cruzar cada sector.
 - Resumen con todas las vueltas, mejor resaltada, mapa del track (con zoom) y export.
 - Export **CSV** (vueltas) y **GPX** (track crudo, red de seguridad).
 - Avisos: pitido, vibración y *wake lock* (pantalla siempre encendida). km/h o mph.

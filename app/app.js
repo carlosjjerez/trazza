@@ -106,6 +106,17 @@ function fmtLap(ms){
 }
 function splitLap(ms){ const f=fmtLap(ms); const i=f.lastIndexOf('.'); return i<0?{main:f,ms:''}:{main:f.slice(0,i),ms:f.slice(i)}; }
 function fmtDelta(ms){ const s=ms/1000; return (s>=0?'+':'−')+Math.abs(s).toFixed(2).replace('.',','); }
+// modo track: tiempo en curso con décimas (M:SS.d) y tiempo de tanda (M:SS)
+function fmtTenths(ms){ if(ms==null||ms<0) ms=0; const t=Math.floor(ms/100), te=t%10, tot=Math.floor(t/10); return Math.floor(tot/60)+':'+String(tot%60).padStart(2,'0')+'.'+te; }
+function fmtMMSS(ms){ if(ms==null||ms<0) ms=0; const s=Math.floor(ms/1000); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+// delta a pantalla completa vs la vuelta rápida: verde si vas más rápido, rojo si más lento
+function setTrackDelta(ms){
+  const tm=$('#track-mode'), d=$('#tk-delta'); if(!tm||!d) return;
+  tm.classList.remove('faster','slower');
+  if(ms==null){ d.textContent='—'; return; }
+  if(ms<-20) tm.classList.add('faster'); else if(ms>20) tm.classList.add('slower');
+  d.textContent=fmtDelta(ms);
+}
 function fmtSecShort(ms){ if(ms==null||!isFinite(ms)) return '—'; return ms<60000 ? (ms/1000).toFixed(2).replace('.',',') : fmtLap(ms); }
 function sectorClass(delta){ if(delta==null) return ''; const s=delta/1000; return s<=-0.02?'good':s>=0.5?'bad':s>=0.05?'warn':'good'; }
 function speedFactor(){ return settings.units==='mph'?2.23694:3.6; }
@@ -301,10 +312,13 @@ function onCrossing(ev){
   secs.forEach((s,i)=>{ if(live.bestSectors[i]==null || s<live.bestSectors[i]) live.bestSectors[i]=s; });
 
   const isBest = live.best==null || lapMs<live.best;
+  const prevRefMs = live.refMs;
   live.laps.push({ n:ev.lapNum, ms:lapMs, sectors:secs });
   if(isBest){ live.best=lapMs; live.bestProfile=live.samples.slice(); }
   // la referencia del delta es la vuelta más rápida conocida (récord o sesión)
   if(live.refMs==null || lapMs<live.refMs){ live.refMs=lapMs; live.refProfile=live.samples.slice(); }
+  // modo track: delta final de la vuelta vs la vuelta rápida previa
+  setTrackDelta(prevRefMs!=null ? lapMs-prevRefMs : null);
   // ¿récord histórico del circuito? (sólo si ya había uno previo que batir)
   let isRecord=false, improved=0;
   if(live.record && lapMs<live.record.bestMs){ isRecord=true; live.newRecord=true; improved=live.record.bestMs-lapMs; live.record.bestMs=lapMs; }
@@ -339,6 +353,8 @@ function updateLiveSectors(elapsed){
     const secT=splitT-live.lastSplitT;
     live.curSectors[live.curSectorIdx]=secT;
     paintSector(live.curSectorIdx, secT);
+    // modo track: delta acumulado al cruzar el sector vs la vuelta rápida
+    if(live.refProfile){ const ref=TrazzaDetect.interpProfile(live.refProfile, boundary); if(ref!=null) setTrackDelta(splitT-ref); }
     live.lastSplitT=splitT;
     live.curSectorIdx++;
   }
@@ -349,6 +365,10 @@ function renderHudLastBest(){
   const last=live.laps.length?live.laps[live.laps.length-1].ms:null;
   const sl=splitLap(last); $('#hud-last').innerHTML = last==null?'--':`${sl.main}<span class="ms">${sl.ms}</span>`;
   const sb=splitLap(live.best); $('#hud-best').innerHTML = live.best==null?'--':`${sb.main}<span class="ms">${sb.ms}</span>`;
+  // modo track
+  $('#tk-laps').textContent = live.laps.length;
+  $('#tk-last').textContent = last==null?'--':fmtLap(last);
+  $('#tk-best').textContent = live.best==null?'--':fmtLap(live.best);
 }
 
 /* ---- sectores en el HUD ---- */
@@ -404,13 +424,18 @@ function resetHud(){
   $('#hud-spd-unit').textContent=speedUnit().toUpperCase();
   setDelta(null);
   $all('#hud-sectors .sec').forEach(c=>{ c.classList.remove('good','warn','bad','cur'); const sd=c.querySelector('.sd'); if(sd) sd.textContent='—'; });
+  // modo track
+  $('#tk-laps').textContent='0'; $('#tk-elapsed').textContent='0:00';
+  $('#tk-last').textContent='--'; $('#tk-best').textContent='--';
+  $('#tk-cur').textContent='0:00.0'; setTrackDelta(null);
 }
 function flashHud(){ const h=$('#screen-hud'); h.classList.remove('flash'); void h.offsetWidth; h.classList.add('flash'); }
 function startClock(){
   cancelAnimationFrame(live.rafId);
   const tick=()=>{
     if(!live.running) return;
-    if(live.lapStartT!=null){ const sl=splitLap(Date.now()-live.lapStartT); $('#hud-cur').innerHTML=`${sl.main}<span class="ms">${sl.ms}</span>`; }
+    if(live.lapStartT!=null){ const cur=Date.now()-live.lapStartT; const sl=splitLap(cur); $('#hud-cur').innerHTML=`${sl.main}<span class="ms">${sl.ms}</span>`; $('#tk-cur').textContent=fmtTenths(cur); }
+    if(live.startedAt!=null) $('#tk-elapsed').textContent=fmtMMSS(Date.now()-live.startedAt);
     live.rafId=requestAnimationFrame(tick);
   };
   live.rafId=requestAnimationFrame(tick);
@@ -923,6 +948,7 @@ function init(){
   $('#btn-confirm-meta').addEventListener('click', confirmMeta);
   $('#btn-start').addEventListener('click', startSession);
   $('#btn-stop').addEventListener('click',()=>{ if(confirm('¿Terminar la sesión?')) stopSession(); });
+  $('#tk-stop').addEventListener('click',()=>{ if(confirm('¿Terminar la sesión?')) stopSession(); });
   $('#btn-del-session').addEventListener('click',()=>{
     if(!viewingSessionId) return;
     if(confirm('¿Borrar esta sesión?')){ const s=loadJSON(LS_SESSIONS,[]).filter(x=>x.id!==viewingSessionId); saveJSON(LS_SESSIONS,s); renderSessions(); show('home'); toast('Sesión borrada'); }

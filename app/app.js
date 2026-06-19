@@ -6,8 +6,38 @@
 'use strict';
 
 const DEFAULTS = { radius:30, minLap:20, sectors:3, units:'kmh', sound:true, haptic:true, wakelock:true, sim:false };
+
+// Convierte puntos de control en metros (E,N) relativos a un origen en un
+// trazado cerrado denso [lat,lon]. NOTA: el trazado de Cartagena es una
+// APROXIMACIÓN para el demo y la previsualización; la coordenada de meta y la
+// longitud (3506 m) sí son reales. En pista, el mapa usa tu traza GPS real.
+function metersToLatLon(lat0,lon0,e,n){ return [lat0+n/111320, lon0+e/(111320*Math.cos(lat0*Math.PI/180))]; }
+function makeOutline(lat0,lon0,ctrl,scale){
+  scale=scale||1;
+  const c=ctrl.map(p=>[p[0]*scale,p[1]*scale]);
+  const pts=c.concat([c[0]]); const out=[];
+  for(let i=0;i<pts.length-1;i++){
+    const [x0,y0]=pts[i], [x1,y1]=pts[i+1];
+    const d=Math.hypot(x1-x0,y1-y0), steps=Math.max(1,Math.round(d/12));
+    for(let k=0;k<steps;k++){ const f=k/steps; out.push(metersToLatLon(lat0,lon0,x0+(x1-x0)*f,y0+(y1-y0)*f)); }
+  }
+  out.push(metersToLatLon(lat0,lon0,c[0][0],c[0][1]));
+  return out;
+}
+// puntos de control aproximados (forma de circuito técnico, no el Cartagena exacto)
+const CART_CTRL=[
+  [0,0],[0,640],[40,760],[170,820],[300,795],[385,680],
+  [400,535],[330,430],[385,300],[505,210],[520,55],[440,-45],
+  [300,-25],[235,-150],[300,-260],[200,-345],[40,-335],[-60,-235],
+  [-165,-265],[-285,-200],[-305,-60],[-245,80],[-300,245],[-220,365],
+  [-60,385],[-25,180],[0,-190]
+];
+const CART = { lat:37.6444, lon:-1.0352 };
+// escala el trazado aprox. a ~3.5 km (longitud real) para velocidades realistas
+const CART_OUTLINE = makeOutline(CART.lat, CART.lon, CART_CTRL, 0.75);
+
 const TRACK_PRESETS = [
-  { id:'cartagena', name:'Circuito de Cartagena', sub:'Recta principal', lat:37.6444, lon:-1.0352 },
+  { id:'cartagena', name:'Circuito de Cartagena', sub:'Recta principal · 3.506 m', lat:CART.lat, lon:CART.lon, length:3506, outline:CART_OUTLINE },
 ];
 const LS_SETTINGS='trazza.settings.v2', LS_SESSIONS='trazza.sessions.v2', LS_METAS='trazza.metas.v2';
 
@@ -159,6 +189,11 @@ function startSession(){
     track:[], speedMax:0, startedAt:Date.now(),
     nSectors:settings.sectors, refDist:null, crossTimes:[], curSectorIdx:0, lastSplitT:0, curSectors:[], bestSectors:[],
   });
+  // referencia para sectores en vivo desde la vuelta 1:
+  //  - demo con trazado: longitud del trazado dibujado (coherente con el mapa)
+  //  - pista real con circuito conocido: longitud oficial (p. ej. Cartagena)
+  if(settings.sim && selectedMeta.outline) live.refDist=TrazzaDetect.buildPath(selectedMeta.outline).length;
+  else if(selectedMeta.length) live.refDist=selectedMeta.length;
   renderSectorStrip(settings.sectors);
   viewingSessionId=null;
   resetHud();
@@ -443,6 +478,23 @@ function drawFinish(ctx, toPx, finish, radiusM, scale){
   if(!finish) return; const f=toPx(finish); const rpx=(radiusM/111320)*scale;
   ctx.beginPath(); ctx.arc(f.x,f.y,Math.max(rpx,5),0,2*Math.PI); ctx.strokeStyle='rgba(31,224,200,.55)'; ctx.lineWidth=1.5; ctx.stroke();
   ctx.beginPath(); ctx.arc(f.x,f.y,6,0,2*Math.PI); ctx.fillStyle='#B6FF1A'; ctx.fill();
+  ctx.fillStyle='#B6FF1A'; ctx.font='700 11px Saira, sans-serif'; ctx.textAlign='center'; ctx.fillText('META', f.x, f.y-10);
+}
+// marca los puntos donde se toma el tiempo de sector (a k/n de la distancia)
+function placeSectorMarkers(P, pts, n){
+  if(!pts || pts.length<2 || n<2) return;
+  let total=0; const cum=[0];
+  for(let i=1;i<pts.length;i++){ total+=TrazzaDetect.haversine(pts[i-1].lat,pts[i-1].lon,pts[i].lat,pts[i].lon); cum.push(total); }
+  if(!total) return;
+  const ctx=P.ctx;
+  for(let kk=1;kk<n;kk++){
+    const target=(kk/n)*total; let i=1; while(i<cum.length && cum[i]<target) i++; if(i>=cum.length) i=cum.length-1;
+    const a=pts[i-1], b=pts[i], seg=(cum[i]-cum[i-1])||1, f=(target-cum[i-1])/seg;
+    const q=P.toPx({lat:a.lat+(b.lat-a.lat)*f, lon:a.lon+(b.lon-a.lon)*f});
+    ctx.beginPath(); ctx.arc(q.x,q.y,5,0,2*Math.PI); ctx.fillStyle='#FF9E1B'; ctx.fill();
+    ctx.lineWidth=2; ctx.strokeStyle='#0E0F12'; ctx.stroke();
+    ctx.fillStyle='#FF9E1B'; ctx.font='700 11px Saira, sans-serif'; ctx.textAlign='center'; ctx.fillText('S'+(kk+1), q.x, q.y-9);
+  }
 }
 // color por velocidad: lento (rojo) -> medio (ámbar) -> rápido (cian)
 function speedColor(frac){
@@ -464,7 +516,18 @@ function drawMap(canvas, pts, finish, radiusM){
     P.ctx.fillStyle='#F5F7FA'; P.ctx.fill(); P.ctx.lineWidth=2; P.ctx.strokeStyle='#0E0F12'; P.ctx.stroke(); }
 }
 function drawMetaMap(){
-  const finish = selectedMeta || (GPS.last?{lat:GPS.last.lat,lon:GPS.last.lon}:null);
+  const m=selectedMeta;
+  if(m && m.outline){
+    const pts=m.outline.map(p=>({lat:p[0],lon:p[1]}));
+    const P=setupCanvas($('#meta-map'), pts); if(!P) return;
+    strokeLine(P.ctx, P.toPx, pts, '#1FE0C8', 2.5);
+    placeSectorMarkers(P, pts, settings.sectors);
+    drawFinish(P.ctx, P.toPx, {lat:m.lat,lon:m.lon}, settings.radius, P.scale);
+    if(GPS.last){ const c=P.toPx({lat:GPS.last.lat,lon:GPS.last.lon}); P.ctx.beginPath(); P.ctx.arc(c.x,c.y,6,0,2*Math.PI);
+      P.ctx.fillStyle='#F5F7FA'; P.ctx.fill(); P.ctx.lineWidth=2; P.ctx.strokeStyle='#0E0F12'; P.ctx.stroke(); }
+    return;
+  }
+  const finish = m || (GPS.last?{lat:GPS.last.lat,lon:GPS.last.lon}:null);
   drawMap($('#meta-map'), metaTrack.map(f=>({lat:f.lat,lon:f.lon})), finish, settings.radius);
 }
 
@@ -492,6 +555,8 @@ function drawSummaryMap(canvas, s){
     P.ctx.beginPath(); P.ctx.moveTo(a.x,a.y); P.ctx.lineTo(b.x,b.y);
     P.ctx.strokeStyle=speedColor((v-vmin)/rng); P.ctx.lineWidth=3.5; P.ctx.lineJoin='round'; P.ctx.lineCap='round'; P.ctx.stroke();
   }
+  // puntos de sector sobre la mejor vuelta
+  placeSectorMarkers(P, seg.map(p=>({lat:p.lat,lon:p.lon})), s.nSectors||0);
   drawFinish(P.ctx, P.toPx, s.gate, settings.radius, P.scale);
 }
 
@@ -504,7 +569,7 @@ function markHere(){
   $('#btn-confirm-meta').disabled=false; renderSaved(); drawMetaMap();
   toast('Meta marcada en tu posición'); haptic(40);
 }
-function chooseMeta(m, name){ selectedMeta={ lat:m.lat, lon:m.lon, name:name||m.name }; $('#btn-confirm-meta').disabled=false; drawMetaMap(); }
+function chooseMeta(m, name){ selectedMeta={ lat:m.lat, lon:m.lon, name:name||m.name, length:m.length||null, outline:m.outline||null }; $('#btn-confirm-meta').disabled=false; drawMetaMap(); }
 function confirmMeta(){
   if(!selectedMeta){ toast('Elige o marca una meta'); return; }
   $('#meta-name').textContent=selectedMeta.name;
@@ -517,7 +582,7 @@ function renderPresets(){
     const el=document.createElement('div'); el.className='preset'+(selectedMeta&&selectedMeta.name===p.name?' sel':'');
     el.innerHTML=`<div><div class="nm">${esc(p.name)}</div><div class="sub">${esc(p.sub)} · ${p.lat.toFixed(4)}, ${p.lon.toFixed(4)}</div></div>
       <svg class="tick" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2.4"><path d="M5 12l5 5 9-9"/></svg>`;
-    el.addEventListener('click',()=>{ chooseMeta(p,p.name); markSelectedPreset(); });
+    el.addEventListener('click',()=>{ chooseMeta(p,p.name); $all('.preset').forEach(e=>e.classList.remove('sel')); el.classList.add('sel'); });
     list.appendChild(el);
   });
 }
@@ -533,7 +598,6 @@ function renderSaved(){
     list.appendChild(el);
   });
 }
-function markSelectedPreset(){ $all('.preset').forEach(e=>e.classList.remove('sel')); }
 
 /* ----------------------------- Ajustes ----------------------------- */
 function renderSettings(){

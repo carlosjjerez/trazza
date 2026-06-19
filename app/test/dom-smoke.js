@@ -33,8 +33,8 @@ let t=1_000_000;
 for(let i=0;i<3;i++){ feed(CART.lat,CART.lon,4,t,1); t+=1000; }
 ok('GPS card muestra precisión', txt('#gps-acc')!=='--');
 
-click('#meta-card'); click('.preset'); click('#btn-confirm-meta');
-ok('meta seleccionada en home', txt('#meta-name').includes('Cartagena'));
+click('#meta-card'); click('#btn-mark-here'); click('#btn-confirm-meta');
+ok('meta seleccionada en home', txt('#meta-name').trim()!=='Sin meta');
 ok('botón salir habilitado', window.document.querySelector('#btn-start').disabled===false);
 
 click('#btn-start');

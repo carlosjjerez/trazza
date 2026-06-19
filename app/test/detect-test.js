@@ -104,5 +104,40 @@ function run(det, fixes){
   ok('7: variable s1<s2<s3', s2[0]<s2[1] && s2[1]<s2[2]);
 }
 
+// ---- CASO 8: trayectoria (buildPath / pointAt) ----
+{
+  const { buildPath, pointAt } = D;
+  // cuadrado de 100 m de lado alrededor de Cartagena
+  const o=(e,n)=>offset(CLAT,CLON,e,n);
+  const sq=[[CLAT,CLON],[o(100,0).lat,o(100,0).lon],[o(100,100).lat,o(100,100).lon],[o(0,100).lat,o(0,100).lon]];
+  const path=buildPath(sq);
+  ok('8: longitud ~300 m (sin cerrar)', near(path.length,300,5));
+  const mid=pointAt(path,50); // a 50 m: mitad del primer lado (este)
+  const dd=D.haversine(CLAT,CLON,mid.lat,mid.lon);
+  ok('8: punto a 50 m está a ~50 m del inicio', near(dd,50,3));
+  const wrap=pointAt(path, path.length+25); // envoltura modular
+  const dd2=D.haversine(CLAT,CLON,wrap.lat,wrap.lon);
+  ok('8: envoltura modular (s>L)', near(dd2,25,3));
+}
+
+// ---- CASO 9: sectores EN VIVO (se cierran durante la vuelta, no al final) ----
+{
+  const { interpProfile } = D;
+  const refDist=300, n=3;            // 3 sectores de 100 m
+  const samples=[{d:0,t:0}];
+  let curIdx=0, lastSplit=0; const closed=[];
+  for(let i=1;i<=30;i++){            // vuelta de 300 m en 30 s, 1 Hz
+    const cum=i*10, t=i*1000; samples.push({d:cum,t});
+    while(curIdx<n-1){
+      const b=((curIdx+1)/n)*refDist; if(cum<b) break;
+      const splitT=interpProfile(samples,b);
+      closed.push({ idx:curIdx, sampleT:t, secT:splitT-lastSplit }); lastSplit=splitT; curIdx++;
+    }
+  }
+  ok('9: sector 1 cierra a mitad de vuelta (no al final)', closed[0] && closed[0].sampleT<=11000);
+  ok('9: sector 1 ~10 s', closed[0] && near(closed[0].secT,10000,100));
+  ok('9: se cierran n-1 sectores en vivo', closed.length===n-1);
+}
+
 console.log(`\nDETECT TESTS: ${pass} pass, ${fail} fail`);
 process.exit(fail?1:0);

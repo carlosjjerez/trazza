@@ -79,6 +79,26 @@
     return out;
   }
 
+  /* Construye una trayectoria a partir de pares [lat,lon]: puntos, distancias
+     acumuladas y longitud total. */
+  function buildPath(pairs){
+    const pts=pairs.map(p=>({lat:p[0],lon:p[1]}));
+    const cum=[0];
+    for(let i=1;i<pts.length;i++) cum[i]=cum[i-1]+haversine(pts[i-1].lat,pts[i-1].lon,pts[i].lat,pts[i].lon);
+    return { pts, cum, length:cum[cum.length-1]||0 };
+  }
+  /* Punto sobre la trayectoria a la distancia s (con envoltura modular). */
+  function pointAt(path, s){
+    const L=path.length; if(!L) return path.pts[0];
+    s=((s%L)+L)%L;
+    const cum=path.cum;
+    let i=1; while(i<cum.length && cum[i]<s) i++;
+    if(i>=cum.length) return path.pts[path.pts.length-1];
+    const a=path.pts[i-1], b=path.pts[i];
+    const seg=(cum[i]-cum[i-1])||1, f=(s-cum[i-1])/seg;
+    return { lat:a.lat+(b.lat-a.lat)*f, lon:a.lon+(b.lon-a.lon)*f };
+  }
+
   /* Detector de cruces de meta. Acumula candidatos durante un "paso" (fixes
      consecutivos dentro del radio) y, al terminar el paso, elige el de menor
      distancia (la aproximación real) para máxima precisión también a alta
@@ -140,7 +160,7 @@
     }
   }
 
-  const api={ R, projFactory, haversine, angDiff, segApproach, interpProfile, sectorSplits, LapDetector };
+  const api={ R, projFactory, haversine, angDiff, segApproach, interpProfile, sectorSplits, buildPath, pointAt, LapDetector };
   if(typeof module!=='undefined' && module.exports) module.exports=api;
   global.TrazzaDetect=api;
 })(typeof self!=='undefined' ? self : globalThis);

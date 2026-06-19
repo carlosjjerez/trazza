@@ -1,20 +1,18 @@
 /* =====================================================================
    Trazza — Simulador de GPS (modo demo)
-   Emite fixes sintéticos a ~1 Hz para ver el HUD y la detección de vueltas
-   sin salir a pista. Se activa en Ajustes → Pruebas.
-     - Sin sesión: posición casi fija (Cartagena o la meta elegida) para poder
-       marcar/elegir meta.
-     - En sesión: bucle elíptico alrededor de la meta, pasando por ella una vez
-       por vuelta (~45 s, con variación).
-   El modelo de detección es por aproximación al PUNTO, así que el bucle no
-   necesita rumbo de línea.
+   Emite fixes sintéticos a ~1 Hz para ver el HUD y la detección sin pista.
+     - Sin sesión: posición casi fija (meta elegida o Cartagena) para marcar.
+     - En sesión con TRAZADO (outline): recorre el circuito real-ish pasando
+       por la meta una vez por vuelta.
+     - En sesión sin trazado: óvalo alrededor de la meta.
    ===================================================================== */
 (function(){
   'use strict';
   const R=6378137;
   const CART={ lat:37.6444, lon:-1.0352 };
-  const A=200, B=110;                         // semiejes del óvalo (m)
-  const DURS=[45,43.6,44.4,46.1,43.9,45.3];   // s por vuelta (varía)
+  const A=200, B=110;                          // óvalo de respaldo (m)
+  const DURS=[45,43.6,44.4,46.1,43.9,45.3];    // s/vuelta del óvalo de respaldo
+  const OUT_DURS=[103,100,106,101,104,99];     // s/vuelta sobre un trazado real (~3.5 km)
 
   function offset(lat,lon,e,n){ return { lat:lat+n/R*180/Math.PI, lon:lon+e/(R*Math.cos(lat*Math.PI/180))*180/Math.PI }; }
   function haversine(aLat,aLon,bLat,bLon){ const dLat=(bLat-aLat)*Math.PI/180,dLon=(bLon-aLon)*Math.PI/180,la1=aLat*Math.PI/180,la2=bLat*Math.PI/180;
@@ -28,20 +26,34 @@
   function inSession(){ try{ return typeof live!=='undefined' && live.running; }catch(e){ return false; } }
 
   const Sim={
-    active:false, onFix:null, timer:null, theta:-0.6, lapIdx:0, prev:null, t0:0,
-    start(onFix){ this.onFix=onFix; this.active=true; this.theta=-0.6; this.lapIdx=0; this.prev=null; this.t0=Date.now();
+    active:false, onFix:null, timer:null, theta:-0.6, s:0, lapIdx:0, prev:null, t0:0, path:null, pathRef:null,
+    start(onFix){ this.onFix=onFix; this.active=true; this.theta=-0.6; this.s=-40; this.lapIdx=0; this.prev=null; this.t0=Date.now(); this.path=null; this.pathRef=null;
       this.tick(); this.timer=setInterval(()=>this.tick(),1000); },
     stop(){ this.active=false; if(this.timer){ clearInterval(this.timer); this.timer=null; } },
     tick(){
       const now=Date.now(); const c=center(); let ll, acc, session=inSession();
-      if(session){
-        const x=B*(Math.cos(this.theta)-1), y=A*Math.sin(this.theta); // pasa por el centro en theta=0
+      if(session && c.outline && window.TrazzaDetect){
+        // recorrer el trazado a velocidad variable (frena en curvas)
+        if(this.pathRef!==c.outline){ this.path=window.TrazzaDetect.buildPath(c.outline); this.pathRef=c.outline; if(this.s<0) this.s=-40; }
+        const dur=OUT_DURS[this.lapIdx%OUT_DURS.length];
+        const L=this.path.length, base=L/dur;
+        const frac=(((this.s%L)+L)%L)/L;
+        const step=base*(1+0.4*Math.sin(frac*2*Math.PI*3)); // 3 zonas rápidas/lentas
+        const before=Math.floor(this.s/L);
+        this.s+=step;
+        if(Math.floor(this.s/L)>before) this.lapIdx++;
+        ll=window.TrazzaDetect.pointAt(this.path, this.s);
+        acc=2.5+Math.random()*2;
+      } else if(session){
+        const dur=DURS[this.lapIdx%DURS.length];
+        // óvalo de respaldo
+        const x=B*(Math.cos(this.theta)-1), y=A*Math.sin(this.theta);
         ll=offset(c.lat,c.lon,x,y); acc=2.5+Math.random()*2;
-        const dur=DURS[this.lapIdx%DURS.length], dtheta=2*Math.PI/dur;
-        const before=Math.floor(this.theta/(2*Math.PI)); this.theta+=dtheta;
+        const before=Math.floor(this.theta/(2*Math.PI)); this.theta+=2*Math.PI/dur;
         if(Math.floor(this.theta/(2*Math.PI))>before) this.lapIdx++;
       } else {
-        const ph=((now-this.t0)/1000)%20, creep=ph<10?ph:20-ph; // 0..10 m suave
+        // configuración: casi parado, rumbo norte
+        const ph=((now-this.t0)/1000)%20, creep=ph<10?ph:20-ph;
         ll=offset(c.lat,c.lon,0,creep); acc=3.0;
       }
       let spd=session?null:1.0;

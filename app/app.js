@@ -40,7 +40,13 @@ const TRACK_PRESETS = [
   { id:'cartagena', name:'Circuito de Cartagena', sub:'Trazado real (OSM) · 3.497 m', lat:CART.lat, lon:CART.lon, length:CART_T.length, outline:CART_OUTLINE },
   { id:'maniobras', name:'Circuito de maniobras', template:true, relative:MANIOBRAS_REL, length:Math.round(MANIOBRAS_LEN) },
 ];
-const LS_SETTINGS='trazza.settings.v2', LS_SESSIONS='trazza.sessions.v2', LS_METAS='trazza.metas.v2', LS_CIRCUITS='trazza.circuits.v1';
+const LS_SETTINGS='trazza.settings.v2', LS_SESSIONS='trazza.sessions.v2', LS_METAS='trazza.metas.v2', LS_CIRCUITS='trazza.circuits.v1', LS_RECORDS='trazza.records.v1';
+
+// Récord histórico (PB) por circuito: identificado por nombre + coords de meta.
+function recordKey(m){ if(!m||m.lat==null||m.lon==null) return null; const n=(m.name||'meta').trim().toLowerCase(); return n+'@'+(+m.lat).toFixed(4)+','+(+m.lon).toFixed(4); }
+function loadRecords(){ return loadJSON(LS_RECORDS, {}); }
+function loadRecord(k){ if(!k) return null; return loadRecords()[k] || null; }
+function saveRecord(k, rec){ if(!k) return; const r=loadRecords(); r[k]=rec; saveJSON(LS_RECORDS, r); }
 
 let settings = Object.assign({}, DEFAULTS, loadJSON(LS_SETTINGS, {}));
 settings.sim = false; // el modo demo nunca persiste
@@ -197,6 +203,14 @@ function startSession(){
   //  - pista real con circuito conocido: longitud oficial (p. ej. Cartagena)
   if(settings.sim && selectedMeta.outline) live.refDist=TrazzaDetect.buildPath(selectedMeta.outline).length;
   else if(selectedMeta.length) live.refDist=selectedMeta.length;
+  // récord histórico del circuito: referencia del delta desde la vuelta 1
+  live.recordKey = recordKey(selectedMeta);
+  const rec = loadRecord(live.recordKey);
+  live.record = rec ? { bestMs:rec.bestMs, profile:rec.profile||null, sectors:rec.sectors||null, date:rec.date } : null;
+  live.refProfile = live.record && live.record.profile ? live.record.profile : null;
+  live.refMs = live.record ? live.record.bestMs : null;
+  live.newRecord = false;
+  const dk=$('#hud-delta .kicker'); if(dk) dk.textContent = live.record ? 'Delta · predictivo vs récord' : 'Delta · predictivo vs mejor';
   renderSectorStrip(settings.sectors);
   viewingSessionId=null;
   resetHud();
@@ -220,8 +234,8 @@ function liveFix(fix){
     if(d>1.5){ live.cumDist+=d; }
     const elapsed=fix.t-live.lapStartT;
     live.samples.push({ d:live.cumDist, t:elapsed });
-    if(live.bestProfile){
-      const ref=TrazzaDetect.interpProfile(live.bestProfile, live.cumDist);
+    if(live.refProfile){
+      const ref=TrazzaDetect.interpProfile(live.refProfile, live.cumDist);
       if(ref!=null) setDelta(elapsed-ref);
     }
     updateLiveSectors(elapsed);
@@ -258,9 +272,15 @@ function onCrossing(ev){
   const isBest = live.best==null || lapMs<live.best;
   live.laps.push({ n:ev.lapNum, ms:lapMs, sectors:secs });
   if(isBest){ live.best=lapMs; live.bestProfile=live.samples.slice(); }
+  // la referencia del delta es la vuelta más rápida conocida (récord o sesión)
+  if(live.refMs==null || lapMs<live.refMs){ live.refMs=lapMs; live.refProfile=live.samples.slice(); }
+  // ¿récord histórico del circuito? (sólo si ya había uno previo que batir)
+  let isRecord=false, improved=0;
+  if(live.record && lapMs<live.record.bestMs){ isRecord=true; live.newRecord=true; improved=live.record.bestMs-lapMs; live.record.bestMs=lapMs; }
 
-  flashHud(); haptic(isBest?[60,40,60]:80); beep(isBest?'best':'lap');
-  toast((isBest?'¡Mejor vuelta! ':'Vuelta '+ev.lapNum+' · ')+fmtLap(lapMs), 2600);
+  flashHud(); haptic(isRecord?[90,50,90,50,140]:isBest?[60,40,60]:80); beep(isBest||isRecord?'best':'lap');
+  if(isRecord) toast('🏁 ¡RÉCORD DEL CIRCUITO! '+fmtLap(lapMs)+'  ('+fmtDelta(-improved)+')', 3400);
+  else toast((isBest?'¡Mejor vuelta! ':'Vuelta '+ev.lapNum+' · ')+fmtLap(lapMs), 2600);
 
   // muestra los sectores recién cerrados (con color vs mejor sector)
   showLapSectors(secs);
@@ -367,6 +387,17 @@ function persistSession(finalize){
     speedMaxKmh: Math.round(live.speedMax*3.6),
     gate:{ lat:live.gate.lat, lon:live.gate.lon }, crossTimes: live.crossTimes.slice(), track: live.track,
   };
+  // récord histórico del circuito (se consolida al cerrar la sesión)
+  if(finalize && live.recordKey){
+    const stored = loadRecord(live.recordKey);            // PB previo a esta sesión
+    data.recordKey = live.recordKey;
+    data.prevRecordMs = stored ? stored.bestMs : null;
+    data.isRecord = live.best!=null && (stored==null || live.best<stored.bestMs);
+    if(data.isRecord){
+      saveRecord(live.recordKey, { bestMs:live.best, profile:live.bestProfile||null, sectors:live.bestSectors.slice(), date:Date.now(), name:live.gate.name });
+      data.recordMs = live.best;
+    } else { data.recordMs = stored ? stored.bestMs : (live.best||null); }
+  }
   currentId=data.id;
   const i=sessions.findIndex(s=>s.id===data.id);
   if(i>=0) sessions[i]=data; else sessions.unshift(data);
@@ -401,6 +432,21 @@ function renderSummary(s){
   $('#sum-count').textContent=s.laps.length;
   $('#sum-vmax').textContent=(s.speedMaxKmh!=null?Math.round(s.speedMaxKmh*(settings.units==='mph'?0.621371:1)):'--')+' '+speedUnit();
   $('#sum-opt').textContent = s.optimal!=null ? fmtLap(s.optimal) : '--';
+
+  // banner de récord del circuito
+  const rb=$('#sum-record');
+  if(rb){
+    if(s.recordMs==null){ rb.hidden=true; rb.className='record'; }
+    else if(s.isRecord){
+      rb.hidden=false; rb.className='record new';
+      const vs = s.prevRecordMs!=null ? ` · ${fmtDelta(s.recordMs-s.prevRecordMs)} vs anterior` : ' · primer récord';
+      rb.innerHTML=`<span class="tag">🏁 NUEVO RÉCORD</span><span class="t">${fmtLap(s.recordMs)}</span><span class="d">${esc(vs)}</span>`;
+    } else {
+      rb.hidden=false; rb.className='record';
+      const gap = s.best!=null ? ` · a ${fmtDelta(s.best-s.recordMs)} de tu récord` : '';
+      rb.innerHTML=`<span class="tag">RÉCORD DEL CIRCUITO</span><span class="t">${fmtLap(s.recordMs)}</span><span class="d">${esc(gap)}</span>`;
+    }
+  }
 
   const best=s.bestSectors||[];
   const wrap=$('#sum-laps'); wrap.innerHTML='';
@@ -651,7 +697,9 @@ function chooseMeta(m, name){ pendingTemplate=null; selectedMeta={ lat:m.lat, lo
 function confirmMeta(){
   if(!selectedMeta){ toast('Elige o marca una meta'); return; }
   $('#meta-name').textContent=selectedMeta.name;
-  $('#meta-sub').textContent=`${selectedMeta.lat.toFixed(5)}, ${selectedMeta.lon.toFixed(5)} · radio ${settings.radius} m`;
+  const rec=loadRecord(recordKey(selectedMeta));
+  const recTxt = rec ? ` · 🏁 récord ${fmtLap(rec.bestMs)}` : '';
+  $('#meta-sub').textContent=`${selectedMeta.lat.toFixed(5)}, ${selectedMeta.lon.toFixed(5)} · radio ${settings.radius} m${recTxt}`;
   refreshStartState(); show('home'); toast('Meta seleccionada');
 }
 function renderPresets(){
@@ -793,6 +841,7 @@ function wireSettings(){
     if(k==='sim'){ toast(settings.sim?'Modo demo activado · GPS simulado':'Modo demo desactivado · GPS real',2600); GPS.start(); }
   }));
   $('#btn-clear').addEventListener('click',()=>{ if(confirm('¿Borrar TODAS las sesiones? No se puede deshacer.')){ localStorage.removeItem(LS_SESSIONS); renderSessions(); toast('Sesiones borradas'); } });
+  $('#btn-clear-records').addEventListener('click',()=>{ if(confirm('¿Borrar todos los récords de circuito (PB)?')){ localStorage.removeItem(LS_RECORDS); toast('Récords borrados'); } });
 }
 
 /* ----------------------------- Navegación / init ----------------------------- */

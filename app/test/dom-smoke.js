@@ -65,6 +65,25 @@ ok('resumen mejor vuelta válida', txt('#sum-best').trim()!=='--');
 ok('resumen vuelta óptima válida', txt('#sum-opt').trim()!=='--');
 ok('resumen muestra chips de sector', window.document.querySelectorAll('#sum-laps .lap-secs .sc').length>0);
 
+// ---- Récord histórico (PB) por circuito ----
+let recs=JSON.parse(window.localStorage.getItem('trazza.records.v1')||'{}');
+ok('récord guardado tras la 1ª sesión', Object.keys(recs).length>=1);
+ok('banner de récord visible en resumen', window.document.querySelector('#sum-record').hidden===false);
+const firstRecMs = recs[Object.keys(recs)[0]].bestMs;
+// 2ª sesión más rápida en la misma meta -> debe batir el récord
+click('[data-go="home"]'); click('#meta-card');
+feed(CART.lat,CART.lon,4,t,0); t+=1000;                 // vuelve a la misma meta
+click('#btn-mark-here'); click('#btn-confirm-meta'); click('#btn-start');
+{ const A=200,B=110,DURS=[40,39.5]; let theta=-0.6,lapIdx=0;
+  for(let s=0;s<150;s++){ const x=B*(Math.cos(theta)-1),y=A*Math.sin(theta); const ll=offset(CART.lat,CART.lon,x,y);
+    feed(ll.lat,ll.lon,3,t,45); t+=1000;
+    const dur=DURS[lapIdx%DURS.length]; const before=Math.floor(theta/(2*Math.PI)); theta+=2*Math.PI/dur; if(Math.floor(theta/(2*Math.PI))>before) lapIdx++; } }
+click('#btn-stop');
+ok('2ª sesión marca NUEVO récord', window.document.querySelector('#sum-record').className.indexOf('new')>=0);
+ok('banner indica mejora vs anterior', txt('#sum-record').includes('vs anterior'));
+recs=JSON.parse(window.localStorage.getItem('trazza.records.v1')||'{}');
+ok('récord actualizado a la mejor marca', recs[Object.keys(recs)[0]].bestMs < firstRecMs);
+
 // ---- Zoom del trazado en el resumen ----
 const sm=window.document.querySelector('#sum-map');
 window.document.querySelector('#zoom-in').dispatchEvent(new window.Event('click',{bubbles:true}));

@@ -96,6 +96,15 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .map-zoom button:active{background:var(--hiviz);color:#0c0d10;border-color:var(--hiviz);}
 .map-legend{display:flex;gap:16px;margin-top:10px;padding:0 2px;flex-wrap:wrap;}
 .map-legend span{display:flex;align-items:center;gap:6px;font-family:var(--num);font-size:11px;letter-spacing:.06em;color:var(--niebla);}
+
+/* récord del circuito (PB) */
+.record{display:flex;align-items:baseline;gap:10px;margin-top:12px;padding:12px 16px;border-radius:16px;background:var(--grafito);border:1px solid var(--linea);flex-wrap:wrap;}
+.record .tag{font-family:var(--num);font-size:11px;letter-spacing:.08em;color:var(--niebla);}
+.record .t{font-family:var(--display);font-weight:700;font-size:22px;color:var(--blanco);font-variant-numeric:tabular-nums;}
+.record .d{font-family:var(--num);font-size:12px;color:var(--niebla);}
+.record.new{background:rgba(182,255,26,.12);border-color:rgba(182,255,26,.45);}
+.record.new .tag{color:var(--hiviz);font-weight:700;}
+.record.new .t{color:var(--hiviz);}
 .lg{width:10px;height:10px;border-radius:50%;}
 .lg-pos{background:var(--blanco);} .lg-fin{background:var(--hiviz);} .lg-rad{background:transparent;border:1.5px solid var(--cian);}
 

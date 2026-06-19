@@ -33,9 +33,11 @@ Todo el núcleo (`detect.js`) está cubierto por pruebas (ver `test/`).
 - Plantilla **Circuito de maniobras** (conos, reconstruida desde sus cotas): se
   coloca en tu posición al marcar la meta; solo hay que asignar la meta y rodar.
 - **Mini-mapa** en vivo para confirmar posición/meta y el track de la sesión.
-- HUD: vuelta en curso, **delta predictivo por distancia vs mejor**, última, mejor,
-  velocidad y máx.
-- Resumen con todas las vueltas, mejor resaltada, mapa del track y export.
+- HUD: vuelta en curso, **delta predictivo por distancia vs tu récord** (o vs tu
+  mejor de la sesión si aún no hay récord), última, mejor, velocidad y máx.
+- **Récord histórico (PB) por circuito**: guarda tu mejor marca de siempre, avisa
+  al batirla en pista y la compara en el resumen y en la pantalla de meta.
+- Resumen con todas las vueltas, mejor resaltada, mapa del track (con zoom) y export.
 - Export **CSV** (vueltas) y **GPX** (track crudo, red de seguridad).
 - Avisos: pitido, vibración y *wake lock* (pantalla siempre encendida). km/h o mph.
 - **Modo demo** (GPS simulado) para probar sin pista.

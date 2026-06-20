@@ -277,7 +277,7 @@ function liveFix(fix){
     live.samples.push({ d:live.cumDist, t:elapsed });
     if(live.refProfile){
       const ref=TrazzaDetect.interpProfile(live.refProfile, live.cumDist);
-      if(ref!=null) setDelta(elapsed-ref);
+      if(ref!=null){ setDelta(elapsed-ref); setTrackDelta(elapsed-ref); }  // delta y color en vivo
     }
     updateLiveSectors(elapsed);
   }

@@ -157,10 +157,12 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .tk-cur{text-align:center;font-family:var(--display);font-weight:700;font-variant-numeric:tabular-nums;font-size:clamp(34px,9vh,72px);line-height:1;color:#fff;margin-top:2px;}
 .tk-delta{flex:1;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:800;font-variant-numeric:tabular-nums;font-size:clamp(56px,26vh,200px);line-height:.9;color:#fff;letter-spacing:-.02em;}
 .tk-deltak{text-align:center;font-family:var(--num);font-size:clamp(11px,2vh,16px);letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.7);padding-bottom:12px;}
-/* colores a pantalla completa */
+/* colores a pantalla completa: tinte de fondo + tiempo y delta en verde/rojo */
 #track-mode{background:var(--asfalto);}
-#track-mode.faster{background:#159b3f;}
-#track-mode.slower{background:#cc2a20;}
+#track-mode.faster{background:#10401f;}
+#track-mode.slower{background:#401512;}
+#track-mode.faster .tk-cur,#track-mode.faster .tk-delta{color:#4be07a;}
+#track-mode.slower .tk-cur,#track-mode.slower .tk-delta{color:#ff5b4e;}
 #track-mode.faster .tk-fin,#track-mode.slower .tk-fin{border-color:rgba(255,255,255,.8);}
 
 @media (orientation:landscape){

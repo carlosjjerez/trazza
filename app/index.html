@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#0E0F12">
+  <title>Trazza · Cronómetro de pista</title>
+
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Trazza">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;500;600;700;800&family=Saira+Semi+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="app.css?v=20260619d">
+</head>
+<body>
+
+<!-- ===================== INICIO ===================== -->
+<section id="screen-home" class="screen active">
+  <header class="appbar">
+    <div class="brand">
+      <svg width="28" height="28" viewBox="0 0 128 128"><path d="M14 30 L50 104 L122 40 L116 46 L56 90 L40 26 Z" fill="#F5F7FA"></path><circle cx="51" cy="99" r="13" fill="#B6FF1A"></circle></svg>
+      <span class="brand-name">Trazza</span>
+    </div>
+    <button class="icon-btn" id="btn-settings" aria-label="Ajustes">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8A93A6" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+    </button>
+  </header>
+
+  <div class="scroll">
+    <!-- Estado GPS -->
+    <button class="card gps-card" id="gps-card">
+      <div class="card-head">
+        <span class="kicker">Señal GPS</span>
+        <span class="fixpill" id="gps-pill"><i class="dot"></i><span id="gps-pill-text">SIN FIX</span></span>
+      </div>
+      <div class="gps-main">
+        <div class="gps-acc"><span id="gps-acc">--</span><em>m</em></div>
+        <div class="gps-sub">
+          <div><span class="k">Frecuencia</span><span class="v" id="gps-hz">-- Hz</span></div>
+          <div><span class="k">Velocidad</span><span class="v" id="gps-spd">-- km/h</span></div>
+        </div>
+      </div>
+      <div class="gps-hint" id="gps-hint">Toca para activar la ubicación</div>
+    </button>
+
+    <!-- Meta -->
+    <button class="card row-card" id="meta-card">
+      <div>
+        <span class="kicker">Línea de meta</span>
+        <div class="row-title" id="meta-name">Sin meta</div>
+        <div class="row-sub" id="meta-sub">Elige un circuito o marca tu posición</div>
+      </div>
+      <svg class="chev" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8A93A6" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+
+    <!-- Recordatorios -->
+    <div class="card rem-card">
+      <div class="card-head">
+        <span class="kicker">Recordatorios</span>
+        <span class="rem-count" id="rem-count"></span>
+      </div>
+      <p class="row-sub" id="rem-empty">Avísame de algo en una vuelta concreta (p. ej. mirar temperatura en la vuelta 3).</p>
+      <div id="rem-list" class="rem-list"></div>
+      <div class="rem-add">
+        <input type="number" id="rem-lap" min="1" max="99" inputmode="numeric" placeholder="Vta." aria-label="Vuelta" />
+        <input type="text" id="rem-text" maxlength="60" placeholder="Recordatorio (ej. mirar temperatura)" aria-label="Texto del recordatorio" />
+        <button class="ghost" id="rem-add-btn" type="button">Añadir</button>
+      </div>
+    </div>
+
+    <!-- Arranque -->
+    <button class="cta" id="btn-start" disabled>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="#0E0F12"><path d="M8 5v14l11-7z"/></svg>
+      <span>Salir a pista</span>
+    </button>
+    <div class="cta-reason" id="start-reason">Esperando señal GPS y meta…</div>
+
+    <div class="list-head"><span class="kicker">Sesiones</span></div>
+    <div id="session-list" class="stack"></div>
+  </div>
+</section>
+
+<!-- ===================== META ===================== -->
+<section id="screen-meta" class="screen">
+  <header class="appbar">
+    <button class="icon-btn" data-go="home" aria-label="Atrás">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F5F7FA" stroke-width="2.2"><path d="M15 6l-6 6 6 6"/></svg>
+    </button>
+    <span class="appbar-title">Línea de meta</span>
+    <span class="appbar-spacer"></span>
+  </header>
+
+  <div class="scroll">
+    <canvas id="meta-map" class="map"></canvas>
+    <div class="map-legend">
+      <span><i class="lg lg-pos"></i>Tu posición</span>
+      <span><i class="lg lg-fin"></i>Meta</span>
+      <span><i class="lg lg-rad"></i>Radio captura</span>
+    </div>
+
+    <button class="cta" id="btn-mark-here" disabled>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0E0F12" stroke-width="2"><path d="M12 21s-7-6.4-7-11a7 7 0 1 1 14 0c0 4.6-7 11-7 11z"/><circle cx="12" cy="10" r="2.5" fill="#0E0F12"/></svg>
+      <span>Marcar meta en mi posición</span>
+    </button>
+    <div class="cta-reason" id="mark-reason">Esperando señal GPS…</div>
+
+    <button class="ghost full" id="btn-create-circuit" style="margin-top:14px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2"><path d="M3 17c4-1 5-9 9-9s5 8 9 7" stroke-linecap="round"/><circle cx="3" cy="17" r="1.6" fill="#B6FF1A"/></svg>
+      <span>Crear circuito (grabar o punto a punto)</span>
+    </button>
+
+    <div class="divider"><span>circuitos</span></div>
+    <div id="preset-list" class="stack"></div>
+
+    <div class="divider" id="saved-divider" hidden><span>guardadas</span></div>
+    <div id="saved-list" class="stack"></div>
+  </div>
+
+  <div class="dock">
+    <button class="cta" id="btn-confirm-meta" disabled><span>Usar esta meta</span></button>
+  </div>
+</section>
+
+<!-- ===================== CONSTRUCTOR DE CIRCUITO ===================== -->
+<section id="screen-builder" class="screen">
+  <header class="appbar">
+    <button class="icon-btn" data-go="meta" aria-label="Atrás">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F5F7FA" stroke-width="2.2"><path d="M15 6l-6 6 6 6"/></svg>
+    </button>
+    <span class="appbar-title">Crear circuito</span>
+    <span class="appbar-spacer"></span>
+  </header>
+
+  <div class="scroll">
+    <canvas id="builder-map" class="map"></canvas>
+    <div class="bld-stats">
+      <div><span class="k">Puntos</span><span class="v" id="bld-points">0</span></div>
+      <div><span class="k">Distancia</span><span class="v" id="bld-dist">0 m</span></div>
+      <div><span class="k">GPS</span><span class="v" id="bld-gps">±-- m</span></div>
+    </div>
+
+    <div class="pills wide" id="bld-mode">
+      <button data-mode="record" class="on">Grabar por GPS</button>
+      <button data-mode="manual">Punto a punto</button>
+    </div>
+
+    <!-- modo grabar -->
+    <div id="bld-record">
+      <p class="help" id="bld-record-help">Ponte en la línea de meta y dale a grabar. Da una vuelta completa y para. La app dibuja el trazado sola.</p>
+      <button class="cta" id="btn-rec-toggle" disabled><span>Empezar a grabar</span></button>
+    </div>
+
+    <!-- modo punto a punto -->
+    <div id="bld-manual" hidden>
+      <p class="help">Fija la meta y ve pineando puntos del trazado (en boxes, andando o despacio). Cierra cuando vuelvas a la meta.</p>
+      <button class="cta" id="btn-pin" disabled><span>Fijar meta aquí</span></button>
+      <button class="ghost full" id="btn-undo" style="margin-top:10px" disabled><span>Deshacer último punto</span></button>
+    </div>
+  </div>
+
+  <div class="dock">
+    <button class="cta" id="btn-save-circuit" disabled><span>Cerrar y guardar circuito</span></button>
+  </div>
+</section>
+
+<!-- ===================== HUD ===================== -->
+<section id="screen-hud" class="screen hud">
+  <div class="hud-reminder" id="hud-reminder" hidden role="alert"></div>
+  <div class="hud-top">
+    <span class="hud-lapnum" id="hud-lapnum">VUELTA 00</span>
+    <span class="fixpill sm" id="hud-gps"><i class="dot"></i><span id="hud-gps-text">±-- m</span></span>
+    <button class="hud-fin" id="btn-stop">FIN</button>
+  </div>
+
+  <div class="hud-body">
+    <canvas id="hud-map" class="hud-map"></canvas>
+    <div class="hud-block">
+      <span class="kicker amber">Vuelta en curso</span>
+      <div class="hero" id="hud-cur">0:00<span class="ms">.000</span></div>
+    </div>
+
+    <div class="delta" id="hud-delta">
+      <span class="kicker">Delta · predictivo vs mejor</span>
+      <div class="delta-num" id="hud-delta-num">--</div>
+    </div>
+
+    <div class="sectors" id="hud-sectors"></div>
+
+    <div class="duo">
+      <div class="duo-cell">
+        <span class="kicker">Última</span>
+        <div class="duo-num" id="hud-last">--</div>
+      </div>
+      <div class="duo-cell best">
+        <span class="kicker green">Mejor</span>
+        <div class="duo-num green" id="hud-best">--</div>
+      </div>
+    </div>
+
+    <div class="hud-fill"></div>
+
+    <div class="speed">
+      <div class="speed-now"><span id="hud-spd">0</span><em id="hud-spd-unit">KM/H</em></div>
+      <div class="speed-max"><span class="kicker">Máx</span><div id="hud-spdmax">0</div></div>
+    </div>
+  </div>
+
+  <!-- MODO TRACK (horizontal): info mínima + delta a pantalla completa -->
+  <div id="track-mode">
+    <div class="tk-bar">
+      <div class="tk-stats">
+        <div><span class="k">Vueltas</span><b id="tk-laps">0</b></div>
+        <div><span class="k">Tanda</span><b id="tk-elapsed">0:00</b></div>
+        <div><span class="k">Anterior</span><b id="tk-last">--</b></div>
+        <div><span class="k">Mejor</span><b id="tk-best">--</b></div>
+      </div>
+      <button class="tk-fin" id="tk-stop">FIN</button>
+    </div>
+    <div class="tk-cur" id="tk-cur">0:00.0</div>
+    <div class="tk-delta" id="tk-delta">—</div>
+    <div class="tk-deltak" id="tk-deltak">vs vuelta rápida</div>
+  </div>
+</section>
+
+<!-- ===================== RESUMEN ===================== -->
+<section id="screen-summary" class="screen">
+  <header class="appbar">
+    <button class="icon-btn" data-go="home" aria-label="Atrás">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F5F7FA" stroke-width="2.2"><path d="M15 6l-6 6 6 6"/></svg>
+    </button>
+    <span class="appbar-title" id="sum-title">Sesión</span>
+    <button class="icon-btn" id="btn-del-session" aria-label="Borrar">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
+    </button>
+  </header>
+
+  <div class="scroll">
+    <div class="card sum-card">
+      <span class="kicker green">Mejor vuelta</span>
+      <div class="sum-best" id="sum-best">--</div>
+      <div class="sum-stats">
+        <div><span class="k">Óptima</span><span class="v green" id="sum-opt">--</span></div>
+        <div><span class="k">Media</span><span class="v" id="sum-avg">--</span></div>
+        <div><span class="k">Vueltas</span><span class="v" id="sum-count">0</span></div>
+        <div><span class="k">V. máx</span><span class="v" id="sum-vmax">--</span></div>
+      </div>
+      <div class="opt-note">Óptima = suma de tus mejores sectores</div>
+    </div>
+
+    <div class="record" id="sum-record" hidden></div>
+
+    <div class="map-wrap">
+      <canvas id="sum-map" class="map"></canvas>
+      <div class="map-zoom">
+        <button id="zoom-in" aria-label="Acercar">＋</button>
+        <button id="zoom-out" aria-label="Alejar">－</button>
+        <button id="zoom-reset" aria-label="Restablecer">⟲</button>
+      </div>
+    </div>
+    <div class="map-legend">
+      <span><i class="lg" style="background:#FF3B30"></i>Lento</span>
+      <span><i class="lg" style="background:#FF9E1B"></i>Medio</span>
+      <span><i class="lg" style="background:#1FE0C8"></i>Rápido</span>
+      <span><i class="lg" style="background:rgba(138,147,166,.5)"></i>Resto</span>
+    </div>
+
+    <div class="laps-head"><span class="kicker">Vuelta</span><span class="kicker">Tiempo · Δ</span></div>
+    <div id="sum-laps" class="stack tight"></div>
+
+    <div class="export">
+      <button class="ghost" id="btn-csv">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+        <span>Vueltas CSV</span>
+      </button>
+      <button class="ghost cyan" id="btn-gpx">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1FE0C8" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+        <span>Track GPX</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== AJUSTES ===================== -->
+<section id="screen-settings" class="screen">
+  <header class="appbar">
+    <button class="icon-btn" data-go="home" aria-label="Atrás">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F5F7FA" stroke-width="2.2"><path d="M15 6l-6 6 6 6"/></svg>
+    </button>
+    <span class="appbar-title">Ajustes</span>
+    <span class="appbar-spacer"></span>
+  </header>
+
+  <div class="scroll">
+    <div class="list-head"><span class="kicker">Meta</span></div>
+    <div class="group">
+      <div class="grow">
+        <div><div class="g-title">Radio de captura</div><div class="g-sub">Tolerancia alrededor del punto de meta</div></div>
+        <div class="stepper"><button data-step="radius" data-d="-1">−</button><span id="set-radius">30 m</span><button data-step="radius" data-d="1">+</button></div>
+      </div>
+      <div class="hr"></div>
+      <div class="grow">
+        <div><div class="g-title">Vuelta mínima</div><div class="g-sub">Ignora cruces antes de este tiempo</div></div>
+        <div class="stepper"><button data-step="minlap" data-d="-1">−</button><span id="set-minlap">20 s</span><button data-step="minlap" data-d="1">+</button></div>
+      </div>
+      <div class="hr"></div>
+      <div class="grow">
+        <div><div class="g-title">Sectores</div><div class="g-sub">Tramos para tiempos parciales y vuelta óptima</div></div>
+        <div class="stepper"><button data-step="sectors" data-d="-1">−</button><span id="set-sectors">3</span><button data-step="sectors" data-d="1">+</button></div>
+      </div>
+    </div>
+
+    <div class="list-head"><span class="kicker">Unidades</span></div>
+    <div class="group">
+      <div class="grow">
+        <div class="g-title">Velocidad</div>
+        <div class="pills" id="units"><button data-units="kmh" class="on">km/h</button><button data-units="mph">mph</button></div>
+      </div>
+    </div>
+
+    <div class="list-head"><span class="kicker">Avisos</span></div>
+    <div class="group">
+      <div class="grow"><div class="g-title">Aviso sonoro de vuelta</div><button class="sw on" data-toggle="sound"><i></i></button></div>
+      <div class="hr"></div>
+      <div class="grow"><div class="g-title">Vibración háptica</div><button class="sw on" data-toggle="haptic"><i></i></button></div>
+      <div class="hr"></div>
+      <div class="grow"><div class="g-title">Pantalla siempre encendida</div><button class="sw on" data-toggle="wakelock"><i></i></button></div>
+    </div>
+
+    <div class="list-head"><span class="kicker">Pruebas</span></div>
+    <div class="group">
+      <div class="grow">
+        <div><div class="g-title">Modo demo (GPS simulado)</div><div class="g-sub">Da vueltas solo. Se apaga al recargar.</div></div>
+        <button class="sw" data-toggle="sim"><i></i></button>
+      </div>
+    </div>
+
+    <div class="list-head"><span class="kicker">Datos</span></div>
+    <div class="group">
+      <div class="grow clickable" id="btn-clear">
+        <div><div class="g-title danger">Borrar todas las sesiones</div><div class="g-sub">No se puede deshacer</div></div>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8A93A6" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+      </div>
+      <div class="grow clickable" id="btn-clear-records">
+        <div><div class="g-title danger">Borrar récords de circuito</div><div class="g-sub">Restablece tus mejores marcas (PB)</div></div>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8A93A6" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+      </div>
+    </div>
+
+    <p class="foot">Trazza MVP · GPS del móvil ≈1 Hz · precisión a nivel de décimas</p>
+  </div>
+</section>
+
+<div id="toast" class="toast"></div>
+
+<script src="detect.js?v=20260619d"></script>
+<script src="cartagena-track.js?v=20260619d"></script>
+<script src="sim.js?v=20260619d"></script>
+<script src="app.js?v=20260619d"></script>
+</body>
+</html>

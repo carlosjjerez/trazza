@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Investigación competitiva — Telemetría/GPS para track</title>
+<style>
+  :root{ --ink:#16181d; --mut:#5b6470; --line:#d8dce2; --bg:#fff; --accent:#0b6; --red:#c0392b; --amber:#c77f12; --green:#1f8f4e; --blue:#1f5fbf; --soft:#f4f6f9; }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;color:var(--ink);background:var(--bg);
+    font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.5;}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 4px;}
+  h1{font-size:26px;line-height:1.15;margin:0 0 6px;}
+  h2{font-size:17px;margin:26px 0 8px;padding-bottom:4px;border-bottom:2px solid var(--ink);}
+  h3{font-size:13px;margin:16px 0 5px;color:#000;}
+  h4{font-size:11.5px;margin:11px 0 3px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;}
+  p{margin:5px 0;}
+  small{color:var(--mut);}
+  a{color:var(--blue);text-decoration:none;word-break:break-all;}
+  table{border-collapse:collapse;width:100%;margin:8px 0 12px;font-size:9.5px;}
+  th,td{border:1px solid var(--line);padding:4px 6px;text-align:left;vertical-align:top;}
+  th{background:var(--soft);font-weight:700;}
+  tr:nth-child(even) td{background:#fbfcfd;}
+  .tag{display:inline-block;border-radius:4px;padding:0 5px;font-size:8.5px;font-weight:700;white-space:nowrap;color:#fff;}
+  .t-dec{background:#5b6470;} .t-usr{background:#1f5fbf;} .t-nv{background:#b03a2e;}
+  .sev-hi{color:#fff;background:var(--red);} .sev-md{color:#111;background:#f1c40f;} .sev-lo{color:#fff;background:var(--green);}
+  .badge{display:inline-block;border-radius:4px;padding:0 5px;font-size:8.5px;font-weight:700;}
+  .cover{padding:60px 0 18px;border-bottom:3px solid var(--ink);margin-bottom:8px;}
+  .cover .sub{font-size:13px;color:var(--mut);}
+  .kpi{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;}
+  .kpi div{flex:1;min-width:150px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--soft);}
+  .kpi b{font-size:15px;display:block;}
+  .note{border-left:3px solid var(--amber);background:#fff8ec;padding:7px 10px;margin:8px 0;border-radius:0 6px 6px 0;}
+  .gap{border-left:3px solid var(--green);background:#f0faf4;padding:7px 10px;margin:6px 0;border-radius:0 6px 6px 0;}
+  .legend span{margin-right:12px;}
+  ul,ol{margin:5px 0 8px;padding-left:18px;} li{margin:2px 0;}
+  .pagebreak{page-break-before:always;}
+  .src{font-size:8.5px;color:var(--mut);}
+  .src a{color:var(--mut);}
+  .small-cap{font-size:9px;color:var(--mut);}
+  code{background:var(--soft);padding:0 3px;border-radius:3px;font-size:9px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="cover">
+  <div class="small-cap">INVESTIGACIÓN COMPETITIVA · CONFIDENCIAL</div>
+  <h1>Sistemas de telemetría / GPS para track:<br>RaceBox y competencia</h1>
+  <div class="sub">Hardware · Aplicaciones · Voz de los usuarios · Huecos de mercado priorizados</div>
+  <p style="margin-top:14px"><b>Fecha:</b> 21 de junio de 2026 · <b>Preparado para:</b> proyecto Trazza · <b>Método:</b> 3 fases secuenciales, 15 investigaciones fan-out con verificación de fuentes.</p>
+  <div class="legend small-cap" style="margin-top:8px">
+    <span><span class="tag t-dec">DECLARADO</span> = fabricante/spec oficial</span>
+    <span><span class="tag t-usr">USUARIO</span> = reseña/foro</span>
+    <span><span class="tag t-nv">NO VERIF.</span> = no confirmado</span>
+  </div>
+</div>
+
+<div class="note">
+<b>Nota de método y verificación.</b> Las cifras provienen de páginas oficiales de fabricante, tiendas, foros y reseñas, recogidas vía búsqueda web (junio 2026). <b>Casi todos los dominios de fabricante y las tiendas (Apple/Google) devolvieron HTTP 403 a la descarga directa</b>, por lo que muchos datos se extrajeron de fragmentos de buscador de esas mismas páginas; donde no se pudo confirmar se marca <span class="tag t-nv">NO VERIF.</span>. <b>Excepción de alta confianza:</b> el protocolo BLE de RaceBox se verificó <i>directamente en código fuente abierto</i> (GitHub). Las cifras de precisión son afirmaciones de fabricante/reseñador, <b>no validadas con banco de pruebas independiente</b>.
+</div>
+
+<!-- ================= EXECUTIVE SUMMARY ================= -->
+<h2>0 · Resumen ejecutivo</h2>
+<div class="kpi">
+  <div><b>25 Hz + IMU</b><span class="small-cap">es el estándar de gama alta (RaceBox, AiM, Qstarz 8000, Catalyst 2). 10 Hz ya es "de entrada".</span></div>
+  <div><b>iOS sin Web-Bluetooth</b><span class="small-cap">Apple no lo soporta (2020→2026). Receptores MFi quedan a ~3-4 Hz. 25 Hz en iPhone exige BLE+SDK nativo o Wi-Fi.</span></div>
+  <div><b>RaceBox = rey del valor</b><span class="small-cap">25 Hz, IMU, protocolo abierto, ~$109-199. Pero app Android solo ~3,2/5 por crashes/pérdida de sesión.</span></div>
+  <div><b>Hueco moto: audio al casco</b><span class="small-cap">delta por voz a Cardo/Sena: nadie lo sirve bien. La mayor oportunidad sin atender.</span></div>
+</div>
+<p><b>Tesis competitiva.</b> El mercado está partido en dos polos mal conciliados: dispositivos <i>premium fáciles</i> que <b>encierran los datos</b> (Garmin Catalyst) y <i>loggers potentes</i> con <b>software hostil</b> (AiM, MoTeC). RaceBox ganó el centro con hardware barato y protocolo abierto, pero su <b>fiabilidad de app y conexión</b> es su talón de Aquiles. Las quejas se concentran en cinco ejes (fiabilidad, conexión BLE/Wi-Fi, UI, exportación, nube/login) y los huecos más claros son: <b>(1) audio-coaching al casco para moto</b>, <b>(2) fiabilidad "graba todo, siempre"</b>, <b>(3) compartir sesión con el coach de un toque</b>, y <b>(4) simple para amateur / profundo para pro en una sola app</b>. La cuña técnica para un recién llegado web/móvil barato es <b>ESP32 por Wi-Fi</b> (sortea el bloqueo iOS) + GPS 10-25 Hz, con modelo <b>freemium</b>.</p>
+
+<!-- ================= PHASE 1 ================= -->
+<h2 class="pagebreak">FASE 1 · Hardware y transmisión de datos</h2>
+
+<table>
+<thead><tr><th>Dispositivo</th><th>GNSS</th><th>Constelaciones</th><th>IMU</th><th>Logging solo</th><th>Enlace</th><th>Precisión declarada</th><th>Precio USD</th></tr></thead>
+<tbody>
+<tr><td><b>RaceBox Mini</b></td><td>25 Hz</td><td>GPS·GLO·GAL·BDS</td><td>Acc ±8g · Gyro ±320 dps (1 kHz)</td><td>No (req. móvil)</td><td>BLE 5.2 · USB-C</td><td>~10 cm; 0,01 s (&gt;99,5%)</td><td>~169 <span class="tag t-nv">NV</span></td></tr>
+<tr><td><b>RaceBox Mini S</b></td><td>25 Hz</td><td>GPS·GLO·GAL·BDS</td><td>igual</td><td>Sí · 2h@25 / 5h@10</td><td>BLE 5.2 · USB-C</td><td>~10 cm</td><td>~199 <span class="tag t-nv">NV</span></td></tr>
+<tr><td><b>RaceBox Micro</b></td><td>25 Hz</td><td>+SBAS·QZSS</td><td>igual</td><td>Sí (cableado 3,5-16 V)</td><td>BLE 5.2 + NMEA-BLE</td><td>~10 cm</td><td><b>desde 109</b></td></tr>
+<tr><td><b>RaceBox (LCD)</b></td><td>10 Hz</td><td>GPS·GLO·SBAS</td><td>Acc ±4g (gyro <span class="tag t-nv">NV</span>)</td><td>Sí (pantalla 2,5")</td><td>Wi-Fi · USB-C</td><td>0,01 s</td><td><span class="tag t-nv">NV</span></td></tr>
+<tr><td><b>VBOX Sport</b> <small>(descont.)</small></td><td>25 Hz <small>(rev; antes 10/20)</small></td><td><span class="tag t-nv">NV</span></td><td><b>Sin IMU</b> (acc por Doppler)</td><td>Sí (tarjeta SD)</td><td>BT "Apple-cert" + SD</td><td>vel ±0,1 km/h; pos ±2 m</td><td>~499 <small>(usado)</small></td></tr>
+<tr><td><b>AiM Solo 2</b></td><td>25 Hz</td><td>GPS·GLO·BDS·GAL</td><td>Acc ±5g+gyro+magn (100 Hz)</td><td>Sí · 4 GB · display</td><td>WiFi + USB <small>(sin BT)</small></td><td>pos &lt;0,5 m; 1/100 s</td><td>~399</td></tr>
+<tr><td><b>AiM Solo 2 DL</b></td><td>25 Hz</td><td>igual</td><td>igual</td><td>Sí + <b>OBD/CAN/RPM</b></td><td>WiFi + USB</td><td>igual</td><td>~849-899</td></tr>
+<tr><td><b>Garmin Catalyst</b></td><td>10 Hz</td><td>GPS·GLO <span class="tag t-usr">U</span></td><td>Acc (gyro <span class="tag t-nv">NV</span>)</td><td>Sí · pantalla 6,95" + cámara</td><td>WiFi + BT(audio) + microSD</td><td><b>sin nº declarado</b></td><td>899,99</td></tr>
+<tr><td><b>Garmin Catalyst 2</b> <small>(2026)</small></td><td>25 Hz</td><td>GPS·GAL·BDS</td><td>Acc + gyro</td><td>Sí · cámara 1440p · USB-C</td><td>igual</td><td><span class="tag t-nv">NV</span></td><td>1.199,99</td></tr>
+<tr><td><b>Qstarz LT-8000S/GT</b></td><td>25 Hz</td><td>GPS·GLO·GAL·BDS·QZSS</td><td>Acc + gyro</td><td>Sí · 8 GB · display</td><td>GT: BLE 5.0+WiFi; S: USB</td><td>&lt;0,01 s</td><td>~499</td></tr>
+<tr><td><b>Qstarz BL-1000GT</b></td><td>10 Hz</td><td>GPS·GLO·QZSS</td><td>Acc ±3g</td><td>Sí · sin pantalla</td><td>BLE 4.0</td><td>0,1 s</td><td>~239</td></tr>
+<tr><td><b>Starlane Stealth GPS-5</b></td><td>10 Hz <span class="tag t-nv">NV</span></td><td>GPS·GLO·GAL</td><td><b>Lean angle</b> (algoritmo) + Inertial Pack</td><td>Sí · display</td><td>BT + WiFi → MAAT</td><td>1/100 s</td><td>~€379</td></tr>
+<tr><td><b>Starlane Corsaro-II PRO</b></td><td>10 Hz</td><td>GPS·GLO·GAL</td><td>Lean angle (IP de fábrica)</td><td>Sí · táctil 400×220</td><td>BT + WiFi</td><td>1/100 s</td><td>~499 (R)</td></tr>
+</tbody>
+</table>
+
+<h4>Receptores GPS externos para apps de móvil</h4>
+<table>
+<thead><tr><th>Receptor</th><th>Hz</th><th>Enlace / iOS</th><th>IMU</th><th>Apps</th><th>Precio</th></tr></thead>
+<tbody>
+<tr><td>Dual XGPS160</td><td>10</td><td>BT clásico, <b>MFi</b> con acceso directo</td><td>No</td><td>Harry's, RaceChrono, TrackAddict</td><td>~$150</td></tr>
+<tr><td>Garmin GLO 2</td><td>10 <small>(pero <b>~3-4 Hz reales en iOS</b>)</small></td><td>MFi (solo Core Location)</td><td>No</td><td>RaceChrono (mejor en Android)</td><td>~$110</td></tr>
+<tr><td>Bad Elf (Surveyor/Flex)</td><td>1-10</td><td>MFi (solo Core Location)</td><td>No</td><td><b>No recomendado</b> (Harry's)</td><td>varía</td></tr>
+<tr><td>Columbus P-9 Race</td><td>25</td><td><b>BLE 5.1</b> + SPP + USB</td><td>No</td><td>RaceChrono, Harry's</td><td>~$179</td></tr>
+<tr><td>RaceBox Mini/Mini S</td><td>25</td><td><b>BLE 5.2 + SDK</b></td><td>Sí</td><td>RaceChrono, Harry's</td><td>~$169-199</td></tr>
+</tbody>
+</table>
+
+<h3>1.1 · Protocolo de transmisión de RaceBox (verificado en fuente primaria)</h3>
+<p>RaceBox publica documentación oficial del protocolo (Rev. 8, bajo solicitud). Verificado directamente en código abierto (<a href="https://github.com/lgnap/RaceBoxMicroBleClient">lgnap/RaceBoxMicroBleClient</a>):</p>
+<ul>
+<li><b>Transporte BLE:</b> Nordic UART Service. Servicio <code>6E400001-…</code>, RX (write) <code>6E400002-…</code>, TX (notify) <code>6E400003-…</code>.</li>
+<li><b>Framing:</b> formato binario <b>u-blox UBX</b> — sync <code>0xB5 0x62</code>, clase propietaria <code>0xFF</code>, IDs <code>0x01</code> (live) / <code>0x21</code> (history), longitud (LE), payload, checksum <b>Fletcher-16</b>.</li>
+<li><b>Payload live (80 bytes):</b> iTOW, fecha/hora, fix (0/2/3), nº satélites, lat/lon (int32 ×1e7), altitud, velocidad, rumbo, precisiones, PDOP, <b>gForce X/Y/Z</b>, rotación X/Y/Z, batería.</li>
+<li><b>USB-C:</b> CDC serie con el mismo flujo UBX. Micro añade también <b>NMEA sobre BLE</b>.</li>
+</ul>
+<p><b>Lectura competitiva:</b> RaceBox es el único con protocolo <b>abierto y documentado</b> — gran ventaja de integración frente a VBOX/AiM/Garmin (cerrados). Esto explica el ecosistema de clientes (ESP32 emuladores, Telemetry Overlay, etc.).</p>
+
+<h3>1.2 · Precisión: declarada vs reportada</h3>
+<ul>
+<li><span class="tag t-dec">DECLARADO</span> RaceBox ~10 cm / &gt;99,5% a 0,01 s; AiM &lt;0,5 m / 1/100 s; VBOX ±0,1 km/h vel, ±2 m pos; Qstarz &lt;0,01 s. <span class="tag t-nv">NO VERIF.</span> en banco independiente.</li>
+<li><span class="tag t-usr">USUARIO</span> Apps GPS quedan "a una o dos décimas" del transpondedor (patrón oro). El cuello de botella real es el <b>Hz del receptor</b>: móvil ~1 Hz vs 10-25 Hz externo. La <b>calidad del algoritmo</b> de suavizado importa tanto como el Hz (TrackAddict a 1 Hz se acerca a tiempos de transpondedor).</li>
+<li><span class="tag t-usr">USUARIO</span> Errores reportados: Qstarz "primera vuelta 20-30 s más rápida" (corrompe mejor vuelta); RaceBox pierde/duplica vueltas en circuitos &lt;1 km o solapados; predictivo de AiM con deriva (mejorado por firmware).</li>
+</ul>
+
+<!-- ================= PHASE 2 ================= -->
+<h2 class="pagebreak">FASE 2 · Aplicaciones (software)</h2>
+<table>
+<thead><tr><th>App</th><th>Plataformas</th><th>Precio</th><th>Vídeo overlay/sync</th><th>Exportación</th><th>Nube / social</th></tr></thead>
+<tbody>
+<tr><td><b>RaceBox</b></td><td>iOS·Android·<b>Web</b></td><td>Gratis (req. HW)</td><td>Sí: in-app + importa GoPro + sync</td><td>CSV·VBO·GPX·KML</td><td>Cloud: auto-backup, multidispositivo, compartir por invitación (sin leaderboard púb.)</td></tr>
+<tr><td><b>Harry's LapTimer</b></td><td>iOS(líder)·Android·CarPlay·Watch</td><td>~$9 / ~$20 / GrandPrix↑</td><td><b>Top:</b> MultiCam + PiP, GoPro/Sony, render on-device</td><td>CSV·VBO·GPX·KML·HLPTRL·MP4</td><td>"Online Racing" (Hall of Fame, amigos en vivo); backup por archivo</td></tr>
+<tr><td><b>RaceChrono</b></td><td>Android(origen)·iOS</td><td>Free + <b>Pro ~$20</b></td><td><b>Top:</b> multicam, PiP, auto-sync GoPro, export HW-accel</td><td>CSV·.vbo·NMEA·.rcz·MP4</td><td><b>Sin nube propia</b> → terceros (MyRaceLab, Perfect Apex); <b>API BLE DIY abierta</b></td></tr>
+<tr><td><b>TrackAddict + RaceRender</b></td><td>iOS·Android (RR: Win/Mac)</td><td>Free + <b>Pro $8,99</b></td><td>Sí: in-app + RaceRender desktop</td><td>CSV·GPX·KML·VBO</td><td>Live.RaceRender streaming</td></tr>
+<tr><td><b>VBOX apps + Circuit Tools</b></td><td>apps <b>iOS only</b>; CT: Win/Mac/iOS</td><td>Gratis (companion HW)</td><td>Sí (en Circuit Tools)</td><td>.vbo + CSV</td><td>Local (sin nube)</td></tr>
+<tr><td><b>AiM Race Studio 3</b></td><td><b>Win-only</b> + móvil iOS/Android</td><td>Gratis</td><td>Sí (SmartyCam)</td><td>.xrk + CSV·MATLAB + DLL</td><td>AiM Cloud (20 MB free, compartir)</td></tr>
+<tr><td><b>Garmin Catalyst app</b></td><td>iOS·Android (sin web)</td><td>Gratis</td><td>Sí on-device (mapa, vel, delta, G-G)</td><td><b>Sin export raw/CSV</b> (.FIT en SD)</td><td>Cuenta Garmin (≠ Connect); <b>Vault $9,99/mes</b> vídeo</td></tr>
+<tr><td><b>Qstarz QRacing + Web</b></td><td>móvil + PC Win + <b>Web</b></td><td>Gratis (req. GT BLE)</td><td><b>Eliminado en v3.3</b> (regresión)</td><td>CSV (app); RCN·KML·GPX·CSV·VBO (PC)</td><td><b>QRacing Web: leaderboards</b> + import VBO</td></tr>
+<tr><td><b>Starlane MAAT</b></td><td>Win/<b>Mac</b> + móvil (<b>iOS solo Wi-Fi</b>)</td><td>Gratis</td><td>Sí (overlay export)</td><td>CSV</td><td>Comunidad de trazadas (sin nube general)</td></tr>
+</tbody>
+</table>
+
+<h4>Hallazgos transversales</h4>
+<ul>
+<li><b>Vídeo overlay+sync es estándar</b> en la gama alta. <b>Harry's y RaceChrono</b> lideran el multicámara desde el móvil; Garmin lo hace muy fácil pero <b>encerrado</b>.</li>
+<li><b>Exportación abierta (CSV/VBO) casi universal salvo Garmin</b> (.FIT cerrado, solo workaround con FIT SDK) → queja recurrente.</li>
+<li><b>Nube fragmentada y floja:</b> leaderboards solo Qstarz Web y (parcial) Harry's; RaceBox = backup/compartir privado; RaceChrono depende de terceros. <b>Nadie domina lo social.</b></li>
+<li><b>iOS recurrente:</b> sin BT-SPP → apps por BLE/Wi-Fi; varias lo confirman (Harry's, MAAT, RaceChrono).</li>
+<li><b>Stack:</b> todas <b>nativas</b> (ninguna híbrida confirmada). Mapas: casi todos <span class="tag t-nv">NV</span>; RaceBox usa Google Maps.</li>
+<li><b>AiM</b> lanzó por fin app móvil iOS/Android (jun-2026); RS3 desktop sigue <b>solo Windows</b>.</li>
+</ul>
+
+<!-- ================= PHASE 3 ================= -->
+<h2 class="pagebreak">FASE 3 · Voz de los usuarios</h2>
+
+<h3>3.1 · Quejas recurrentes (ordenadas por frecuencia × severidad)</h3>
+<table>
+<thead><tr><th>#</th><th>Queja</th><th>Productos</th><th>Frec.</th><th>Sev.</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><b>Garmin: ecosistema cerrado / sin export a PC</b> (.FIT, "feature eliminada")</td><td>Catalyst 1 y 2</td><td><span class="badge sev-hi">Alta</span></td><td><span class="badge sev-hi">Crítica*</span></td></tr>
+<tr><td>2</td><td><b>Vueltas perdidas / GPS de móvil insuficiente</b> (~1 Hz)</td><td>RaceChrono, apps en general</td><td><span class="badge sev-hi">Alta</span></td><td><span class="badge sev-md">Media-Alta</span></td></tr>
+<tr><td>3</td><td><b>Pérdida de datos en Android</b> por ahorro de batería del SO</td><td>RaceChrono (Android)</td><td><span class="badge sev-hi">Alta</span></td><td><span class="badge sev-hi">Alta</span></td></tr>
+<tr><td>4</td><td><b>"Shrinkflation" Catalyst 2</b> (sin OBD, sin pantalla incluida, 45 min batería)</td><td>Garmin Catalyst 2</td><td><span class="badge sev-hi">Alta</span></td><td><span class="badge sev-md">Media-Alta</span></td></tr>
+<tr><td>5</td><td><b>Bloqueos de conexión / vueltas parciales</b> (BLE/Wi-Fi)</td><td>RaceBox Mini/Mini S</td><td><span class="badge sev-md">Media-Alta</span></td><td><span class="badge sev-hi">Alta (por incidente)</span></td></tr>
+<tr><td>6</td><td><b>Crashes que borran sesiones</b> / corrupción de BD</td><td>Harry's, TrackAddict, RaceBox</td><td><span class="badge sev-md">Media-Alta</span></td><td><span class="badge sev-hi">Crítica</span></td></tr>
+<tr><td>7</td><td><b>Software "de la edad media"</b> (potente pero hostil)</td><td>AiM Race Studio, MoTeC i2</td><td><span class="badge sev-md">Media-Alta</span></td><td><span class="badge sev-md">Media</span></td></tr>
+<tr><td>8</td><td><b>UI confusa / no apta con guantes</b></td><td>Harry's, RaceChrono, QRacing</td><td><span class="badge sev-md">Media</span></td><td><span class="badge sev-md">Media</span></td></tr>
+<tr><td>9</td><td><b>Export tras un muro de pago</b> (antes gratis)</td><td>RaceChrono (free)</td><td><span class="badge sev-md">Media</span></td><td><span class="badge sev-lo">Baja</span></td></tr>
+<tr><td>10</td><td><b>iOS solo BLE/Wi-Fi</b> (no receptores BT clásico)</td><td>RaceChrono, apps iOS</td><td><span class="badge sev-md">Media</span></td><td><span class="badge sev-md">Media</span></td></tr>
+</tbody>
+</table>
+<p class="small-cap">* Crítica para usuarios "data-serious"; irrelevante para el comprador "sin portátil" objetivo de Garmin. <span class="tag t-nv">NO VERIF.</span> el sub-tema de falsos cruces en circuitos en 8/solapados: poca evidencia en voz de usuario.</p>
+
+<h3>3.2 · Peticiones de funciones (ordenadas)</h3>
+<ol>
+<li><b>Garmin:</b> exportación de datos a PC de un botón (restaurar "función eliminada").</li>
+<li><b>Garmin:</b> integración OBD2/CAN.</li>
+<li><b>AiM:</b> software de análisis moderno y amable; overlay de vídeo fácil entre sesiones.</li>
+<li><b>Garmin:</b> comparación piloto-vs-piloto en pista (+ cámara más angular, jack de audio).</li>
+<li><b>TrackAddict Android:</b> paridad con iOS (importar vídeo, render) + export fiable.</li>
+<li><b>RaceChrono:</b> grabación en background fiable en Android.</li>
+<li><b>RaceBox:</b> revisión en dispositivo sin móvil (track-days que prohíben móvil en el manillar/salpicadero).</li>
+<li>Mejoras de precisión del <b>predictivo</b> (AiM, Qstarz).</li>
+</ol>
+
+<h3>3.3 · Amateurs vs Profesionales vs Moto</h3>
+<table>
+<thead><tr><th>Segmento</th><th>Qué priorizan</th><th>Fricciones</th></tr></thead>
+<tbody>
+<tr><td><b>Amateurs</b></td><td>Simplicidad, <b>delta predictivo</b> en vivo, coste único bajo, sin portátil, vídeo para redes</td><td>Comprar GPS externo es un engorro; el análisis con datos se percibe "demasiado lío"; vuelven al cuaderno; falta de tiempo</td></tr>
+<tr><td><b>Pros / coaches</b></td><td>Fidelidad de datos raw + <b>export</b>, trazas alta resolución, canales CAN/ECU, vuelta de referencia, overlay vídeo, comparación piloto-vs-piloto, telemetría en vivo pit→coach</td><td>MoTeC i2 "abrumador" y licencia "miles/año"; fragmentación de formatos; bucle descargar-descomprimir-comparar; "enviar al coach" = email de archivos</td></tr>
+<tr><td><b>Moto</b></td><td><b>Ángulo de inclinación</b> (métrica definitoria); <b>no se puede mirar pantalla en curva</b>; display antirreflejo; montaje/vibración; datos de suspensión y freno</td><td><b>Coaching por audio al casco prácticamente inexistente</b>; Garmin (coaching) es car-céntrico; el móvil suele estar prohibido en el manillar</td></tr>
+</tbody>
+</table>
+
+<h3>3.4 · Sensibilidad a precio</h3>
+<ul>
+<li><b>Amateur:</b> muy sensible, prefiere <b>pago único</b> (~$20-24 apps) + GPS externo ~$50-250. Rechazo a suscripciones. RaceBox Mini = "mejor hardware por el dinero".</li>
+<li><b>Mid:</b> AiM Solo 2 ~$400-800 ("budget" en su tier). VBOX Sport visto como "caro para lo que da" frente a RaceBox.</li>
+<li><b>Premium:</b> Garmin Catalyst 2 = $1.199,99 (+ percepción de "shrinkflation").</li>
+<li><b>Pro:</b> cuatro cifras + sensores; licencia MoTeC "miles/año" <span class="tag t-nv">NV</span> exacto.</li>
+<li><b>Señal clave:</b> <b>freemium</b> aceptado para la capa de <i>software/IA</i> (validado por Brake Point: 5 sesiones/mes gratis, IA y PDF de pago).</li>
+</ul>
+
+<!-- ================= MARKET GAPS ================= -->
+<h2 class="pagebreak">Huecos de mercado (priorizados)</h2>
+<p>Priorización por <b>frecuencia × severidad</b> de la evidencia y por amplitud del segmento desatendido. P1 = máxima prioridad.</p>
+<table>
+<thead><tr><th>Prio.</th><th>Hueco / oportunidad</th><th>Evidencia (frecuencia)</th><th>Severidad</th><th>Quién falla hoy</th></tr></thead>
+<tbody>
+<tr><td><b>P1</b></td><td><b>Coaching por audio al casco en moto</b> (delta de vuelta/sector por voz a Cardo/Sena)</td><td>Definitorio del segmento; nadie confirmado lo hace</td><td><span class="badge sev-hi">Alta</span></td><td>Garmin (car-céntrico); Starlane/AiM/SpeedAngle solo visual</td></tr>
+<tr><td><b>P2</b></td><td><b>"Graba todo, siempre"</b> — fiabilidad como característica (anti-crash, anti-pérdida de sesión, persistencia de login)</td><td>Queja #5/#6 + #3; crashes = tema más universal</td><td><span class="badge sev-hi">Crítica</span></td><td>RaceBox (app), Harry's, TrackAddict, RaceChrono(Android)</td></tr>
+<tr><td><b>P3</b></td><td><b>Datos abiertos + "compartir con mi coach" de un toque</b> (link web, no email de .ld/.vbo)</td><td>Queja #1 (Garmin) + dolor de workflow de coaching</td><td><span class="badge sev-hi">Alta</span></td><td>Garmin (cerrado); resto = email/archivos</td></tr>
+<tr><td><b>P4</b></td><td><b>Una app "amateur-simple / pro-profundo"</b>: delta verde/rojo por defecto, sectores+referencia para el coach</td><td>"RaceChrono confuso", "AiM imposible", "Catalyst limitante"</td><td><span class="badge sev-md">Media-Alta</span></td><td>Todos fuerzan a elegir un polo</td></tr>
+<tr><td><b>P5</b></td><td><b>Coaching realmente útil y específico por curva</b> (no "frena antes" genérico)</td><td>Catalyst coaching "rudimentario / recomendaciones absurdas"</td><td><span class="badge sev-md">Media-Alta</span></td><td>Garmin (único con coaching, flojo)</td></tr>
+<tr><td><b>P6</b></td><td><b>OBD2/CAN en gama consumo</b> (lo que AiM DL/VBOX cobran caro)</td><td>Petición #2; ausente en Catalyst y RaceBox</td><td><span class="badge sev-md">Media</span></td><td>Garmin, RaceBox</td></tr>
+<tr><td><b>P7</b></td><td><b>Feedback de sector en vivo barato para moto</b> (LED/háptico/HUD glance-only)</td><td>RaceBox "sin alertas de sector"; móvil prohibido en manillar</td><td><span class="badge sev-md">Media</span></td><td>RaceBox; gama baja en general</td></tr>
+<tr><td><b>P8</b></td><td><b>Leaderboards/social bien hechos</b> por circuito (la nube está fragmentada)</td><td>Solo Qstarz/Harry's parcial; RaceChrono via terceros</td><td><span class="badge sev-lo">Media-Baja</span></td><td>Casi todos</td></tr>
+</tbody>
+</table>
+
+<h2>Implicaciones estratégicas para Trazza</h2>
+<div class="gap"><b>La cuña técnica.</b> iOS no tendrá Web-Bluetooth (confirmado 2020→2026). Una PWA <b>no</b> puede hablar BLE en iPhone, pero <b>sí Wi-Fi</b>. Un <b>ESP32 en modo SoftAP + WebSocket</b> que sirva la propia app (lo ya propuesto) sortea el bloqueo y funciona offline en pista. Viabilidad y coste validados por el proyecto open-source <b>BonoGPS</b> (ESP32 + GPS) y por el protocolo abierto de RaceBox como referencia de integración. BOM objetivo: ESP32 ~$5 + GPS 10-25 Hz ~$10-30 + IMU (lean) → muy por debajo de los $200+ de los pucks de marca.</div>
+<ul>
+<li><b>Posicionamiento ganador: moto-first.</b> Combinar lo que Trazza ya tiene (delta predictivo en vivo, verde/rojo, modo horizontal) con <b>(P1) audio al casco</b> y <b>(P7) feedback glance-only</b> ataca el hueco más claro y menos disputado.</li>
+<li><b>(P2) Fiabilidad como bandera.</b> "Graba cada vuelta, siempre" + autocierre del grabador + persistencia: convierte la queja #1 de la categoría en diferenciador. Trazza ya es local-first (localStorage) — encaja.</li>
+<li><b>(P3) Compartir con un toque.</b> Un enlace web a la sesión (no email de archivos) + export abierto (CSV/GPX/VBO) frente al cierre de Garmin.</li>
+<li><b>(P4) Doble altímetro de UX.</b> Trazza ya tiene la capa "amateur-simple" (delta grande, récord, recordatorios). Añadir sectores+referencia para el coach completa el puente.</li>
+<li><b>Modelo de negocio:</b> <b>freemium</b> (app gratis local; nube/IA/compartir/coaching de pago) — coherente con la sensibilidad del amateur y validado por Brake Point.</li>
+<li><b>Realidad de precisión:</b> el algoritmo importa tanto como el Hz; con GPS del ESP32 a 10-25 Hz + buen suavizado, Trazza puede estar "a una o dos décimas" del transpondedor, suficiente para el 95% del público objetivo.</li>
+</ul>
+
+<!-- ================= SOURCES ================= -->
+<h2 class="pagebreak">Apéndice · Fuentes (selección)</h2>
+<p class="src"><b>Hardware:</b>
+racebox.pro/products/racebox-mini · racebox.pro/products/racebox-mini-s · racebox.pro/products/racebox-micro · racebox.pro/products/mini-micro-protocol-documentation · github.com/lgnap/RaceBoxMicroBleClient · github.com/anchit92/ESP32-RaceBox-mini-Emulator · aimtechnologies.com/aim-solo-2 · aimtechnologies.com/solo-2-tech-spec · vboxautomotive.co.uk/index.php/en/products/data-loggers/vbs · vboxmotorsport.co.uk · garmin.com/en-US/newsroom/.../garmin-catalyst-2 · gpswebshop.com/products/qstarz-lt-8000s · racing.qstarz.com/Products/BL-1000GT.html · starlane.com (Stealth GPS-5, Corsaro) · dualav.com (XGPS160/190) · garmin.com/en-US/p/645104 (GLO 2) · bad-elf.com · cbgps.com/p9 · racechrono.com/article/faq/which-external-gps-should-i-buy · webkit.org (Web Bluetooth) · caniuse.com/web-bluetooth · developer.apple.com/forums (EAAccessory/CoreBluetooth)
+</p>
+<p class="src"><b>Apps:</b>
+racebox.pro/products/mobile-app · racebox.pro/info/session-export · apps.apple.com/us/app/racebox/id1521988789 · gps-laptimer.de (Harry's) + forum.gps-laptimer.de · racechrono.com + github.com/aollin/racechrono-ble-diy-device · racerender.com/TrackAddict + hptuners.com · en.racelogic.support (VBOX/Circuit Tools) · aim-sportline.com/docs/racestudio3 · aimshop.com (AiM Cloud, export) · support.garmin.com (Catalyst FAQ) + developer.garmin.com/fit · racing.qstarz.com/Products/QRacing-APP.html + qws.qstarz.com · starlane.com/en/software-update-download (MAAT)
+</p>
+<p class="src"><b>Voz de usuarios:</b>
+reddit/grassrootsmotorsports.com · rennlist.com · pistonheads.com · planet-9.com · 718forum.com · corvetteforum.com · kartpulse.com · r6-forum.com · ducatiforum.com · pnwmoto.com · s1000rrforum.com · zx6r.com · appbrain.com (ratings) · probleme.app · hagerty.com · yourdatadriven.com · windingroad.com · carmagazine.co.uk · grassrootsmotorsports.com/articles · risingxedge.com · motoiq.com · amazon.com (reviews) · speedangle.com · i2m.it · motec.com.au/i2 · autosportlabs.com (PodiumConnect) · coachdaveacademy.com · brakepoint.io · github.com/renatobo/bonogps · visordown.com / garminrumors.com (zūmo XT3 lean angle)
+</p>
+<p class="small-cap" style="margin-top:14px;border-top:1px solid var(--line);padding-top:8px">Informe generado el 21/06/2026. Las afirmaciones marcadas <span class="tag t-nv">NO VERIF.</span> requieren confirmación en la fuente primaria antes de uso en decisiones de inversión. Cifras de precisión = declaradas por fabricante/reseñador, sin validación de banco independiente.</p>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trazza — Afina tu trazada. Baja tus décimas.</title>
+<meta name="description" content="El cronómetro GPS de pista para moto, en tu idioma. Delta predictivo, ángulo de inclinación, sectores y récord. Empieza gratis con tu móvil; sube a 25 Hz con el dispositivo Trazza. Sin pagar 500 € por un datalogger en inglés.">
+<meta property="og:title" content="Trazza — Afina tu trazada. Baja tus décimas.">
+<meta property="og:description" content="El cronómetro GPS de pista para moto, en español. Delta en vivo, lean angle, audio al casco. Empieza gratis.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Semi+Condensed:wght@600;700;800&family=Saira:wght@500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --asfalto:#0E0F12; --grafito:#15171c; --grafito2:#1C1F26; --linea:#262A33;
+  --hiviz:#B6FF1A; --hiviz-dim:#7fb814; --cian:#1FE0C8; --ambar:#FF9E1B; --rojo:#FF3B30;
+  --blanco:#F5F7FA; --niebla:#8A93A6;
+  --display:'Saira Semi Condensed','Saira',system-ui,sans-serif;
+  --num:'Saira',system-ui,sans-serif;
+  --ui:'Space Grotesk',system-ui,-apple-system,sans-serif;
+  --maxw:1180px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--asfalto);color:var(--blanco);font-family:var(--ui);line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden;width:100%;max-width:100%;}
+main{overflow-x:hidden;width:100%;max-width:100%;}
+a{color:inherit;text-decoration:none;}
+img{max-width:100%;display:block;}
+.wrap{width:100%;max-width:var(--maxw);margin:0 auto;padding:0 22px;}
+section{position:relative;}
+.kick{font-family:var(--num);font-size:13px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--hiviz);}
+.kick.cy{color:var(--cian);} .kick.gray{color:var(--niebla);}
+h2{font-family:var(--display);font-weight:800;letter-spacing:-.02em;line-height:1.02;font-size:clamp(2.2rem,5.2vw,4rem);}
+h3{font-family:var(--display);font-weight:700;letter-spacing:-.01em;line-height:1.05;}
+p.lead{color:var(--niebla);font-size:clamp(1rem,1.4vw,1.18rem);max-width:46ch;}
+
+/* ambient background */
+.bg-ambient{position:fixed;inset:0;z-index:-2;pointer-events:none;
+  background:
+   radial-gradient(60% 50% at 50% -5%, rgba(182,255,26,.10), transparent 60%),
+   radial-gradient(45% 40% at 90% 20%, rgba(31,224,200,.08), transparent 60%),
+   radial-gradient(50% 45% at 5% 80%, rgba(255,158,27,.06), transparent 60%),
+   var(--asfalto);}
+.grain{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.04;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+
+/* nav: floating glass pill */
+.nav{position:fixed;top:14px;left:0;right:0;z-index:50;display:flex;justify-content:center;}
+.nav-inner{display:flex;align-items:center;gap:26px;background:rgba(21,23,28,.72);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid var(--linea);
+  border-radius:999px;padding:9px 9px 9px 18px;box-shadow:0 14px 40px rgba(0,0,0,.45);}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:800;font-size:21px;letter-spacing:-.01em;}
+.nav-links{display:flex;gap:22px;font-size:14px;color:var(--niebla);font-weight:500;}
+.nav-links a:hover{color:var(--blanco);}
+.btn{font-family:var(--ui);font-weight:700;font-size:14px;border-radius:999px;padding:11px 20px;cursor:pointer;border:1px solid transparent;transition:transform .15s ease,background .2s ease,color .2s;white-space:nowrap;display:inline-flex;align-items:center;gap:8px;}
+.btn:active{transform:translateY(1px) scale(.99);}
+.btn-hi{background:var(--hiviz);color:#0b0d10;}
+.btn-hi:hover{background:#c9ff45;}
+.btn-ghost{background:transparent;color:var(--blanco);border-color:var(--linea);}
+.btn-ghost:hover{border-color:var(--niebla);}
+.btn-lg{font-size:16px;padding:15px 26px;}
+.nav-burger{display:none;background:none;border:none;color:var(--blanco);font-size:22px;cursor:pointer;padding:6px 10px;}
+
+/* HERO */
+.hero{padding:170px 0 90px;text-align:center;}
+.hero h1{font-family:var(--display);font-weight:800;letter-spacing:-.03em;line-height:.98;
+  font-size:clamp(3rem,7.4vw,6.1rem);max-width:15ch;margin:0 auto;}
+.hero h1 .hi{color:var(--hiviz);}
+.hero .sub{margin:26px auto 0;max-width:60ch;color:#c4cad4;font-size:clamp(1.05rem,1.6vw,1.32rem);}
+.hero .cta-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:34px;}
+.hero .micro{margin-top:18px;color:var(--niebla);font-size:13px;font-family:var(--num);letter-spacing:.04em;}
+.hero .micro b{color:var(--blanco);}
+
+/* product mock (phone HUD) */
+.stage{margin:60px auto 0;max-width:980px;display:grid;grid-template-columns:1.1fr .9fr;gap:26px;align-items:center;}
+.phone{justify-self:center;width:280px;border-radius:34px;background:linear-gradient(180deg,#202329,#101216);
+  border:1px solid var(--linea);padding:14px;box-shadow:0 40px 80px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.05);}
+.screen{background:var(--asfalto);border-radius:22px;padding:16px;border:1px solid #20232b;}
+.hud-top{display:flex;justify-content:space-between;align-items:center;font-family:var(--num);font-size:11px;letter-spacing:.16em;color:var(--niebla);font-weight:700;}
+.fin{color:var(--rojo);border:1.4px solid var(--rojo);border-radius:999px;padding:4px 11px;font-size:10px;}
+.hud-mapline{height:70px;margin:12px 0;border:1px solid #20232b;border-radius:12px;position:relative;overflow:hidden;background:#0c0e12;}
+.hud-mapline svg{position:absolute;inset:0;width:100%;height:100%;}
+.hud-kick{font-family:var(--num);font-size:10px;letter-spacing:.18em;color:var(--ambar);font-weight:700;}
+.hud-time{font-family:var(--num);font-weight:800;font-size:46px;line-height:.9;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-top:2px;}
+.hud-time .ms{color:var(--niebla);}
+.delta{margin-top:12px;background:rgba(182,255,26,.12);border:1px solid rgba(182,255,26,.4);border-radius:14px;padding:10px 13px;}
+.delta .k{font-family:var(--num);font-size:9px;letter-spacing:.16em;color:var(--niebla);font-weight:700;}
+.delta .v{font-family:var(--num);font-weight:800;font-size:34px;color:var(--hiviz);line-height:.9;font-variant-numeric:tabular-nums;}
+.sectors{display:flex;gap:7px;margin-top:12px;}
+.sec{flex:1;background:#101216;border:1px solid #20232b;border-radius:10px;padding:7px 4px;text-align:center;}
+.sec b{display:block;font-family:var(--num);font-size:9px;letter-spacing:.12em;color:var(--niebla);}
+.sec span{font-family:var(--num);font-weight:700;font-size:13px;}
+.sec.g span{color:var(--hiviz);}
+.spd{display:flex;justify-content:space-between;align-items:flex-end;margin-top:13px;}
+.spd .big{font-family:var(--num);font-weight:800;font-size:34px;color:var(--cian);line-height:.85;}
+.spd .big em{font-style:normal;font-size:12px;color:var(--niebla);margin-left:3px;}
+.spd .mx{font-family:var(--num);font-size:11px;color:var(--niebla);text-align:right;}
+.stage-copy h3{font-size:clamp(1.5rem,2.4vw,2rem);}
+.stage-copy p{color:var(--niebla);margin-top:10px;max-width:34ch;}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;}
+.chip{font-family:var(--num);font-size:12px;letter-spacing:.05em;color:#cfd4dc;border:1px solid var(--linea);border-radius:999px;padding:6px 12px;background:rgba(255,255,255,.02);}
+
+/* marquee */
+.marq{border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);padding:20px 0;margin-top:90px;overflow:hidden;background:rgba(255,255,255,.015);}
+.marq .row{display:flex;gap:46px;width:max-content;animation:scroll 26s linear infinite;}
+.marq span{font-family:var(--display);font-weight:700;font-size:clamp(1.3rem,2.4vw,2rem);color:#2f3640;white-space:nowrap;letter-spacing:.01em;}
+.marq span b{color:var(--niebla);}
+@keyframes scroll{to{transform:translateX(-50%);}}
+
+/* generic section */
+.sec-pad{padding:clamp(80px,12vw,150px) 0;}
+.sec-head{max-width:62ch;}
+.sec-head h2{margin-top:14px;}
+.sec-head p{margin-top:16px;}
+
+/* BENTO */
+.bento{display:grid;grid-template-columns:repeat(12,1fr);grid-auto-flow:dense;gap:14px;margin-top:46px;}
+.card{background:var(--grafito);border:1px solid var(--linea);border-radius:20px;padding:24px;position:relative;overflow:hidden;transition:transform .4s cubic-bezier(.2,.7,.2,1),border-color .3s;}
+.card:hover{transform:translateY(-4px);border-color:#384150;}
+.card h3{font-size:1.35rem;margin-top:14px;}
+.card p{color:var(--niebla);margin-top:9px;font-size:.96rem;}
+.card .ic{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(182,255,26,.12);}
+.card .ic svg{width:22px;height:22px;}
+.c-6{grid-column:span 6;} .c-4{grid-column:span 4;} .c-8{grid-column:span 8;} .c-12{grid-column:span 12;}
+.row-2{grid-row:span 2;}
+.card.hi{background:linear-gradient(165deg,#1a2410,#121611);border-color:rgba(182,255,26,.3);}
+.card.feature-audio{display:flex;flex-direction:column;justify-content:space-between;min-height:300px;}
+.audio-wave{display:flex;align-items:flex-end;gap:5px;height:60px;margin-top:18px;}
+.audio-wave i{flex:1;background:var(--hiviz);border-radius:3px;opacity:.85;animation:wv 1.4s ease-in-out infinite;}
+@keyframes wv{0%,100%{height:18%}50%{height:100%}}
+.mini-track{margin-top:18px;height:90px;border:1px solid var(--linea);border-radius:14px;background:#0c0e12;position:relative;overflow:hidden;}
+.mini-track svg{position:absolute;inset:0;width:100%;height:100%;}
+/* track-mode green/red mock */
+.tk{margin-top:18px;border-radius:14px;padding:16px;text-align:center;background:#10401f;border:1px solid rgba(75,224,122,.4);}
+.tk .lbl{font-family:var(--num);font-size:9px;letter-spacing:.16em;color:rgba(255,255,255,.7);font-weight:700;}
+.tk .big{font-family:var(--num);font-weight:800;font-size:42px;color:#5dec82;line-height:.95;font-variant-numeric:tabular-nums;}
+.lean{display:flex;align-items:center;justify-content:center;margin-top:14px;}
+.lean .deg{font-family:var(--num);font-weight:800;font-size:40px;color:var(--cian);font-variant-numeric:tabular-nums;}
+.lean .u{color:var(--niebla);font-size:16px;font-family:var(--num);}
+
+/* COMPARISON */
+.cmp{margin-top:48px;border:1px solid var(--linea);border-radius:22px;overflow:hidden;}
+.cmp table{width:100%;border-collapse:collapse;font-size:.95rem;}
+.cmp th,.cmp td{padding:16px 16px;text-align:left;border-bottom:1px solid var(--linea);}
+.cmp thead th{font-family:var(--num);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--niebla);font-weight:700;background:rgba(255,255,255,.02);}
+.cmp thead th.us{color:#0b0d10;background:var(--hiviz);}
+.cmp td.feat{color:var(--blanco);font-weight:500;}
+.cmp td{color:var(--niebla);}
+.cmp td.us{color:var(--blanco);font-weight:600;background:rgba(182,255,26,.06);}
+.cmp .yes{color:var(--hiviz);font-weight:800;}
+.cmp .no{color:#5a626e;}
+.cmp tr:last-child td{border-bottom:none;}
+
+/* STEPS */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:46px;}
+.step{background:var(--grafito);border:1px solid var(--linea);border-radius:20px;padding:26px;}
+.step .n{font-family:var(--num);font-weight:800;font-size:54px;color:var(--hiviz);line-height:.8;opacity:.9;}
+.step h3{font-size:1.3rem;margin-top:14px;}
+.step p{color:var(--niebla);margin-top:8px;}
+
+/* HARDWARE band */
+.hw{background:linear-gradient(160deg,#12161b,#0c0e12);border:1px solid var(--linea);border-radius:26px;padding:clamp(28px,5vw,56px);display:grid;grid-template-columns:1.1fr .9fr;gap:34px;align-items:center;margin-top:30px;}
+.hw .puck{justify-self:center;width:100%;max-width:300px;aspect-ratio:1.3/1;border-radius:22px;background:
+   radial-gradient(120% 90% at 30% 10%, rgba(31,224,200,.18), transparent 55%),
+   linear-gradient(160deg,#1b1f26,#0b0d10);border:1px solid var(--linea);position:relative;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 30px 60px rgba(0,0,0,.5);}
+.hw .puck .led{position:absolute;top:16px;right:16px;width:9px;height:9px;border-radius:50%;background:var(--hiviz);box-shadow:0 0 14px var(--hiviz);}
+.hw .puck .label{font-family:var(--display);font-weight:800;font-size:26px;letter-spacing:.02em;color:#3a424e;}
+.hw ul{list-style:none;margin-top:18px;display:flex;flex-direction:column;gap:10px;}
+.hw li{display:flex;gap:10px;color:#c8cdd6;font-size:1rem;}
+.hw li svg{flex:none;margin-top:3px;}
+
+/* PRICING */
+.prices{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:46px;}
+.price{background:var(--grafito);border:1px solid var(--linea);border-radius:22px;padding:28px;display:flex;flex-direction:column;}
+.price.pop{border-color:rgba(182,255,26,.5);background:linear-gradient(180deg,#161b12,#121611);}
+.price .tag{font-family:var(--num);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--niebla);font-weight:700;}
+.price .amt{font-family:var(--num);font-weight:800;font-size:46px;letter-spacing:-.02em;margin-top:10px;}
+.price .amt small{font-size:15px;color:var(--niebla);font-weight:600;}
+.price ul{list-style:none;margin:18px 0 22px;display:flex;flex-direction:column;gap:11px;}
+.price li{display:flex;gap:10px;color:#c8cdd6;font-size:.95rem;}
+.price li svg{flex:none;margin-top:3px;}
+.price .btn{margin-top:auto;justify-content:center;}
+.popbadge{align-self:flex-start;font-family:var(--num);font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:800;color:#0b0d10;background:var(--hiviz);border-radius:999px;padding:4px 11px;margin-bottom:12px;}
+
+/* FINAL CTA */
+.final{text-align:center;border-radius:30px;margin:0 22px;padding:clamp(60px,9vw,110px) 22px;position:relative;overflow:hidden;
+  background:radial-gradient(70% 120% at 50% 0%, rgba(182,255,26,.14), transparent 60%), linear-gradient(180deg,#13160f,#0c0e12);border:1px solid var(--linea);}
+.final h2{max-width:18ch;margin:14px auto 0;}
+.final .cta-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:30px;}
+
+/* footer */
+footer{border-top:1px solid var(--linea);margin-top:90px;padding:48px 0 60px;color:var(--niebla);}
+.foot-grid{display:flex;justify-content:space-between;gap:30px;flex-wrap:wrap;}
+.foot-grid .col h4{font-family:var(--num);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--niebla);margin-bottom:12px;}
+.foot-grid .col a{display:block;color:#aeb4be;font-size:.95rem;margin:7px 0;}
+.foot-grid .col a:hover{color:var(--blanco);}
+.foot-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:40px;padding-top:22px;border-top:1px solid var(--linea);font-size:.85rem;flex-wrap:wrap;gap:12px;}
+
+/* reveal */
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1);}
+.reveal.in{opacity:1;transform:none;}
+@media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;}.audio-wave i,.marq .row{animation:none;}}
+
+/* responsive */
+@media(max-width:920px){
+  .nav-links{display:none;}
+  .stage{grid-template-columns:1fr;gap:34px;}
+  .hw{grid-template-columns:1fr;}
+  .steps,.prices{grid-template-columns:1fr;}
+  .c-6,.c-4,.c-8{grid-column:span 12;} .row-2{grid-row:span 1;}
+  .cmp{overflow-x:auto;}
+}
+@media(max-width:520px){
+  .hero{padding:140px 0 60px;}
+  .btn-lg{font-size:15px;}
+}
+</style>
+</head>
+<body>
+<div class="bg-ambient"></div><div class="grain"></div>
+<main>
+
+<!-- NAV -->
+<nav class="nav"><div class="nav-inner">
+  <a href="#" class="brand">
+    <svg width="26" height="26" viewBox="0 0 128 128" aria-hidden="true"><path d="M14 30 L50 104 L122 40 L116 46 L56 90 L40 26 Z" fill="#F5F7FA"></path><circle cx="51" cy="99" r="13" fill="#B6FF1A"></circle></svg>
+    Trazza
+  </a>
+  <div class="nav-links">
+    <a href="#producto">Producto</a>
+    <a href="#comparativa">Comparativa</a>
+    <a href="#como">Cómo funciona</a>
+    <a href="#precios">Precios</a>
+    <a href="#comunidad">Comunidad</a>
+  </div>
+  <a href="#precios" class="btn btn-hi">Empieza gratis</a>
+  <button class="nav-burger" aria-label="Menú">≡</button>
+</div></nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="wrap">
+    <h1>Afina tu trazada.<br>Baja tus <span class="hi">décimas.</span></h1>
+    <p class="sub">El cronómetro GPS de pista para moto, pensado en tu idioma. Delta en vivo, sectores y récord en la palma de la mano. Empieza gratis con tu móvil y sube a 25 Hz con el dispositivo Trazza.</p>
+    <div class="cta-row">
+      <a href="#precios" class="btn btn-hi btn-lg">Empieza gratis</a>
+      <a href="#como" class="btn btn-ghost btn-lg">Ver cómo funciona</a>
+    </div>
+    <div class="micro">Sin pagar <b>500&nbsp;€</b> por un datalogger en inglés. Tus datos son tuyos.</div>
+
+    <!-- product stage -->
+    <div class="stage">
+      <div class="phone">
+        <div class="screen">
+          <div class="hud-top"><span>VUELTA 04</span><span>±3,5 m</span><span class="fin">FIN</span></div>
+          <div class="hud-mapline">
+            <svg viewBox="0 0 260 70" preserveAspectRatio="none"><path d="M8 50 C40 10 80 8 110 34 S170 64 210 30 250 16 252 22" fill="none" stroke="#1FE0C8" stroke-width="2.4" stroke-linecap="round" opacity=".85"/><circle cx="150" cy="46" r="4.5" fill="#F5F7FA"/></svg>
+          </div>
+          <div class="hud-kick">VUELTA EN CURSO</div>
+          <div class="hud-time">1:42<span class="ms">.318</span></div>
+          <div class="delta"><div class="k">DELTA · VS RÉCORD</div><div class="v">−0,47</div></div>
+          <div class="sectors">
+            <div class="sec g"><b>S1</b><span>28,4</span></div>
+            <div class="sec g"><b>S2</b><span>31,1</span></div>
+            <div class="sec"><b>S3</b><span>—</span></div>
+          </div>
+          <div class="spd"><div class="big">182<em>KM/H</em></div><div class="mx">MÁX<br>241</div></div>
+        </div>
+      </div>
+      <div class="stage-copy" style="text-align:left">
+        <h3>El tiempo manda. De un vistazo.</h3>
+        <p>Jerarquía brutal pensada para leerse en 0,5&nbsp;s, en el manillar, bajo sol fuerte. Verde si ganas, rojo si pierdes.</p>
+        <div class="chips">
+          <span class="chip">Delta predictivo</span>
+          <span class="chip">Ángulo de inclinación</span>
+          <span class="chip">Sectores</span>
+          <span class="chip">Récord por circuito</span>
+          <span class="chip">Audio al casco</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- MARQUEE -->
+<div class="marq" aria-hidden="true"><div class="row">
+  <span>Cartagena</span><span><b>·</b></span><span>Jerez</span><span><b>·</b></span><span>Jarama</span><span><b>·</b></span><span>Albacete</span><span><b>·</b></span><span>Montmeló</span><span><b>·</b></span><span>Navarra</span><span><b>·</b></span><span>Portimão</span><span><b>·</b></span><span>Almería</span><span><b>·</b></span>
+  <span>Cartagena</span><span><b>·</b></span><span>Jerez</span><span><b>·</b></span><span>Jarama</span><span><b>·</b></span><span>Albacete</span><span><b>·</b></span><span>Montmeló</span><span><b>·</b></span><span>Navarra</span><span><b>·</b></span><span>Portimão</span><span><b>·</b></span><span>Almería</span><span><b>·</b></span>
+</div></div>
+
+<!-- INTEREST / BENTO -->
+<section class="sec-pad" id="producto"><div class="wrap">
+  <div class="sec-head reveal">
+    <span class="kick">Todo en una app</span>
+    <h2>Lo que necesitas para bajar tu marca.</h2>
+    <p class="lead">Cronometraje serio, datos honestos y herramientas de moto de verdad. Nada de una app de coches con "modo moto" pegado encima.</p>
+  </div>
+
+  <div class="bento">
+    <div class="card hi c-6 reveal">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2"><path d="M3 12h4l2 6 4-14 2 8h6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <h3>Delta predictivo, en vivo</h3>
+      <p>Sabes si ganas o pierdes tiempo en cada sector frente a tu vuelta rápida del día. Verde por delante, rojo por detrás.</p>
+      <div class="tk"><div class="lbl">VS VUELTA RÁPIDA</div><div class="big">−0,45</div></div>
+    </div>
+
+    <div class="card feature-audio c-6 row-2 reveal">
+      <div>
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2"><path d="M4 14v-4a8 8 0 0 1 16 0v4" stroke-linecap="round"/><rect x="2.5" y="13" width="4" height="7" rx="2" fill="#B6FF1A" stroke="none"/><rect x="17.5" y="13" width="4" height="7" rx="2" fill="#B6FF1A" stroke="none"/></svg></div>
+        <h3>Audio al casco</h3>
+        <p>Tus tiempos y tu delta al oído por tu intercom Cardo o Sena. Sin apartar la vista de la curva. El coaching que ningún rival te da.</p>
+      </div>
+      <div class="audio-wave">
+        <i style="animation-delay:0s"></i><i style="animation-delay:.1s"></i><i style="animation-delay:.2s"></i><i style="animation-delay:.3s"></i><i style="animation-delay:.15s"></i><i style="animation-delay:.25s"></i><i style="animation-delay:.05s"></i><i style="animation-delay:.35s"></i><i style="animation-delay:.2s"></i><i style="animation-delay:.1s"></i><i style="animation-delay:.3s"></i><i style="animation-delay:0s"></i>
+      </div>
+    </div>
+
+    <div class="card c-3 c-6 reveal" style="grid-column:span 6">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2"><path d="M12 3a9 9 0 1 0 9 9" stroke-linecap="round"/><path d="M12 12l6-4" stroke-linecap="round"/></svg></div>
+      <h3>Ángulo de inclinación</h3>
+      <p>Lean angle izquierda/derecha y máximos por curva. Métrica de moto de verdad, no fuerzas G de coche.</p>
+      <div class="lean"><span class="deg">52°</span><span class="u">&nbsp;máx izq.</span></div>
+    </div>
+
+    <div class="card c-4 reveal">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2"><path d="M5 12l5 5L20 7" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <h3>Récord por circuito</h3>
+      <p>Tu mejor marca de siempre guardada por circuito. La app te avisa cuando la bates.</p>
+    </div>
+    <div class="card c-4 reveal">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2"><path d="M4 4v16M4 8h11M4 14h7" stroke-linecap="round"/></svg></div>
+      <h3>Sectores y vuelta óptima</h3>
+      <p>Splits en vivo y la suma de tus mejores sectores. Sabes dónde dejas las décimas.</p>
+    </div>
+    <div class="card c-4 reveal">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2"><path d="M12 21s7-6.4 7-11a7 7 0 0 0-14 0c0 4.6 7 11 7 11z"/><circle cx="12" cy="10" r="2.5" fill="#B6FF1A" stroke="none"/></svg></div>
+      <h3>Trazado real del circuito</h3>
+      <p>Mapa GPS real con tu traza coloreada por velocidad. Cartagena ya cargado; graba el tuyo.</p>
+    </div>
+
+    <div class="card c-6 reveal">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <h3>Tus datos son tuyos</h3>
+      <p>Exporta a CSV, GPX o VBO cuando quieras y compártelos con tu coach de un toque. Aquí nadie encierra tu telemetría en un formato cerrado.</p>
+    </div>
+    <div class="card c-6 reveal">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2"><path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <h3>Graba todo, siempre</h3>
+      <p>Sin sesiones perdidas. El dispositivo graba aunque el móvil no esté cerca y sincroniza al reconectar. La fiabilidad que falla en la competencia.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- COMPARISON -->
+<section class="sec-pad" id="comparativa"><div class="wrap">
+  <div class="sec-head reveal">
+    <span class="kick cy">Lo mismo que los caros</span>
+    <h2>Por una fracción del precio.</h2>
+    <p class="lead">Los dataloggers de pista cuestan de 400 a 900 €, hablan en inglés y miran al coche. Trazza empieza gratis en tu móvil y crece contigo.</p>
+  </div>
+  <div class="cmp reveal">
+    <table>
+      <thead><tr>
+        <th>&nbsp;</th><th class="us">Trazza</th><th>Garmin Catalyst</th><th>AiM Solo 2</th><th>RaceBox</th>
+      </tr></thead>
+      <tbody>
+        <tr><td class="feat">Precio de entrada</td><td class="us">Gratis</td><td>~900&nbsp;€</td><td>~400&nbsp;€</td><td>~170&nbsp;€</td></tr>
+        <tr><td class="feat">100% en español</td><td class="us"><span class="yes">Sí</span></td><td class="no">No</td><td class="no">No</td><td class="no">No</td></tr>
+        <tr><td class="feat">Moto-first (ángulo de inclinación)</td><td class="us"><span class="yes">Sí</span></td><td class="no">No</td><td>Con sensor</td><td>Parcial</td></tr>
+        <tr><td class="feat">Audio-coaching al casco</td><td class="us"><span class="yes">Sí</span></td><td class="no">No</td><td class="no">No</td><td class="no">No</td></tr>
+        <tr><td class="feat">Exporta tus datos (CSV/GPX/VBO)</td><td class="us"><span class="yes">Sí</span></td><td class="no">No</td><td>Sí</td><td>Sí</td></tr>
+        <tr><td class="feat">Comunidad y leaderboards en tu idioma</td><td class="us"><span class="yes">Sí</span></td><td>Parcial</td><td class="no">No</td><td class="no">No</td></tr>
+        <tr><td class="feat">Empieza sin comprar hardware</td><td class="us"><span class="yes">Sí</span></td><td class="no">No</td><td class="no">No</td><td class="no">No</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="color:var(--niebla);font-size:.85rem;margin-top:14px">Honestos con los datos: en el móvil el GPS va a ~1&nbsp;Hz (suficiente para empezar). Para 25&nbsp;Hz y precisión de pista, súbete al dispositivo Trazza. Precios de la competencia orientativos (jun. 2026).</p>
+</div></section>
+
+<!-- HOW -->
+<section class="sec-pad" id="como"><div class="wrap">
+  <div class="sec-head reveal">
+    <span class="kick">Del móvil a la pista</span>
+    <h2>Tres pasos. Cero líos.</h2>
+  </div>
+  <div class="steps">
+    <div class="step reveal"><div class="n">01</div><h3>Marca tu meta</h3><p>Elige tu circuito o marca la línea de meta en tu posición. Cartagena ya viene cargado.</p></div>
+    <div class="step reveal"><div class="n">02</div><h3>Sal a pista</h3><p>El crono arranca solo al cruzar meta. En horizontal, la pantalla se pone verde o roja según tu ritmo.</p></div>
+    <div class="step reveal"><div class="n">03</div><h3>Baja tus décimas</h3><p>Analiza vueltas y sectores, bate tu récord y comparte con tu gente. Repite.</p></div>
+  </div>
+</div></section>
+
+<!-- HARDWARE -->
+<section class="sec-pad" style="padding-top:0"><div class="wrap">
+  <div class="hw reveal">
+    <div>
+      <span class="kick cy">Upsell de precisión</span>
+      <h2 style="margin-top:14px;font-size:clamp(2rem,4vw,3rem)">El dispositivo Trazza</h2>
+      <p class="lead" style="margin-top:14px">Cuando quieras precisión de pista, añade el sensor propio: GPS a 25&nbsp;Hz, ángulo de inclinación real y memoria que graba aunque el móvil no esté delante.</p>
+      <ul>
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2.4"><path d="M5 12l5 5L20 7" stroke-linecap="round"/></svg> GNSS 25&nbsp;Hz multiconstelación + IMU con lean angle</li>
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2.4"><path d="M5 12l5 5L20 7" stroke-linecap="round"/></svg> Memoria a bordo: graba la tanda sin móvil y sincroniza luego</li>
+        <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2.4"><path d="M5 12l5 5L20 7" stroke-linecap="round"/></svg> Se conecta por Wi-Fi: funciona offline en el box, también en iPhone</li>
+      </ul>
+      <div style="margin-top:24px"><a href="#precios" class="btn btn-ghost btn-lg">Reservar el dispositivo</a></div>
+    </div>
+    <div class="puck"><span class="led"></span><span class="label">TRAZZA</span></div>
+  </div>
+</div></section>
+
+<!-- PRICING -->
+<section class="sec-pad" id="precios" style="padding-top:0"><div class="wrap">
+  <div class="sec-head reveal">
+    <span class="kick">Precios</span>
+    <h2>Empieza gratis. Crece cuando quieras.</h2>
+    <p class="lead">Pago único o suscripción ligera para la capa pro. Nada de cuotas abusivas por ver tus propios datos.</p>
+  </div>
+  <div class="prices">
+    <div class="price reveal">
+      <span class="tag">Rider</span>
+      <div class="amt">Gratis</div>
+      <ul>
+        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2.6"><path d="M5 12l5 5L20 7" stroke-linecap="round"/></svg> Cronómetro, sectores y récord</li>
+        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2.6"><path d="M5 12l5 5L20 7" stroke-linecap="round"/></svg> Delta predictivo y modo track</li>
+        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2.6"><path d="M5 12l5 5L20 7" stroke-linecap="round"/></svg> GPS del móvil, mapa del circuito</li>
+        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2.6"><path d="M5 12l5 5L20 7" stroke-linecap="round"/></svg> Export CSV/GPX</li>
+      </ul>
+      <a href="https://trazza-deploy.vercel.app" class="btn btn-ghost">Abrir la app</a>
+    </div>
+    <div class="price pop reveal">
+      <span class="popbadge">Más popular</span>
+      <span class="tag">Pro</span>
+      <div class="amt">desde 3,99&nbsp;€<small> /mes</small></div>
+      <ul>
+        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2.6"><path d="M5 12l5 5L20 7" stroke-linecap="round"/></svg> Todo lo de Rider</li>
+        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2.6"><path d="M5 12l5 5L20 7" stroke-linecap="round"/></svg> Audio al casco (Cardo/Sena)</li>
+        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2.6"><path d="M5 12l5 5L20 7" stroke-linecap="round"/></svg> Vídeo con overlay y nube</li>
+        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2.6"><path d="M5 12l5 5L20 7" stroke-linecap="round"/></svg> Comparar con tu gente y leaderboards</li>
+      </ul>
+      <a href="#" class="btn btn-hi">Hazte Pro</a>
+    </div>
+    <div class="price reveal">
+      <span class="tag">Pack dispositivo</span>
+      <div class="amt">desde 99&nbsp;€</div>
+      <ul>
+        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2.6"><path d="M5 12l5 5L20 7" stroke-linecap="round"/></svg> Sensor GPS 25&nbsp;Hz + IMU lean</li>
+        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2.6"><path d="M5 12l5 5L20 7" stroke-linecap="round"/></svg> Graba sin móvil + sincroniza</li>
+        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2.6"><path d="M5 12l5 5L20 7" stroke-linecap="round"/></svg> 3 meses de Pro incluidos</li>
+        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2.6"><path d="M5 12l5 5L20 7" stroke-linecap="round"/></svg> Vinculación por QR, sin cables</li>
+      </ul>
+      <a href="#" class="btn btn-ghost">Reservar</a>
+    </div>
+  </div>
+  <p style="color:var(--niebla);font-size:.82rem;margin-top:14px">Precios de lanzamiento orientativos. La app base es y será gratis.</p>
+</div></section>
+
+<!-- COMMUNITY -->
+<section class="sec-pad" id="comunidad" style="padding-top:0"><div class="wrap">
+  <div class="sec-head reveal" style="max-width:70ch">
+    <span class="kick cy">Comunidad</span>
+    <h2>El Strava del motorsport sobre dos ruedas.</h2>
+    <p class="lead" style="max-width:60ch">Feed de tandas, retos por circuito, comparativa de vueltas y leaderboards entre tu gente. Rodar solo está bien; superarte con los tuyos engancha.</p>
+  </div>
+</div></section>
+
+<!-- FINAL CTA -->
+<section><div class="final reveal">
+  <span class="kick">Tu mejor vuelta te espera</span>
+  <h2>Sal a pista. Marca tu vuelta. Supera tu marca.</h2>
+  <div class="cta-row">
+    <a href="https://trazza-deploy.vercel.app" class="btn btn-hi btn-lg">Empieza gratis</a>
+    <a href="#producto" class="btn btn-ghost btn-lg">Ver funciones</a>
+  </div>
+</div></section>
+
+<!-- FOOTER -->
+<footer><div class="wrap">
+  <div class="foot-grid">
+    <div class="col" style="max-width:300px">
+      <a href="#" class="brand" style="font-size:22px"><svg width="24" height="24" viewBox="0 0 128 128" aria-hidden="true"><path d="M14 30 L50 104 L122 40 L116 46 L56 90 L40 26 Z" fill="#F5F7FA"></path><circle cx="51" cy="99" r="13" fill="#B6FF1A"></circle></svg> Trazza</a>
+      <p style="margin-top:14px;color:#aeb4be;font-size:.92rem">Afina tu trazada. Baja tus décimas. Hecho para riders hispanohablantes.</p>
+    </div>
+    <div class="col"><h4>Producto</h4><a href="#producto">Funciones</a><a href="#comparativa">Comparativa</a><a href="#precios">Precios</a><a href="https://trazza-deploy.vercel.app">Abrir la app</a></div>
+    <div class="col"><h4>Comunidad</h4><a href="#comunidad">Leaderboards</a><a href="#">Retos</a><a href="#">Circuitos</a></div>
+    <div class="col"><h4>Trazza</h4><a href="#">Sobre nosotros</a><a href="#">Dispositivo</a><a href="#">Contacto</a></div>
+  </div>
+  <div class="foot-bottom">
+    <span>© 2026 Trazza. Tus vueltas, tu progreso, tu gente: en tu idioma.</span>
+    <span>Privacidad · Términos · ES</span>
+  </div>
+</div></footer>
+
+</main>
+<script>
+// reveal on scroll
+const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}})},{threshold:.14});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+// mobile nav: smooth-scroll handled by CSS; burger just jumps to precios for now
+document.querySelector('.nav-burger')?.addEventListener('click',()=>{document.getElementById('producto').scrollIntoView({behavior:'smooth'});});
+</script>
+</body>
+</html>

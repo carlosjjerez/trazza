@@ -59,6 +59,12 @@ Todo el núcleo (`detect.js`) está cubierto por pruebas (ver `test/`).
   G) en el resumen. Opt-in en Ajustes. Núcleo puro en `sensors.js`.
   Honestidad: grados orientativos del móvil, no telemetría profesional; el ajuste
   fino de ejes depende del soporte y se calibra en moto real.
+- **Garaje**: tus **motos** (marca/modelo, cc, CV, kg, categoría, **horas de motor**),
+  **mantenimiento por horas** (aceite, cadena, pastillas, líquido, horquilla, válvulas
+  con intervalo, barra «faltan X h» y botón «Hecho»), **fichas de reglaje** (clics de
+  suspensión, presiones, alturas…) y **mejor tiempo por reglaje** por circuito. Antes de
+  la tanda eliges **moto + reglaje**; las horas de motor se suman solas al terminar.
+  Núcleo puro en `garage.js`.
 - Export **CSV** (vueltas) y **GPX** (track crudo, red de seguridad).
 - Avisos: pitido, vibración y *wake lock* (pantalla siempre encendida). km/h o mph.
 - **Modo demo** (GPS simulado) para probar sin pista.
@@ -106,6 +112,7 @@ app/
 ├── detect.js       # núcleo de detección de vueltas (puro, testeable)
 ├── analyze.js      # núcleo de análisis de tanda (puro, testeable)
 ├── sensors.js      # núcleo de sensores: lean angle + G del móvil (puro, testeable)
+├── garage.js       # núcleo del garaje: mantenimiento, horas, mejor por reglaje (puro)
 ├── sim.js          # simulador de GPS (modo demo)
 ├── sw.js           # stub que se auto-desinstala (sana versiones antiguas)
 ├── vercel.json     # headers de despliegue estático
@@ -120,6 +127,7 @@ cd app
 node test/detect-test.js   # núcleo de detección (incluye caso 250 km/h)
 node test/analyze-test.js  # núcleo de análisis (segmentar, delta por distancia, constancia)
 node test/sensors-test.js  # núcleo de sensores (lean complementario, G, calibración)
+node test/garage-test.js   # núcleo del garaje (mantenimiento por horas, mejor por reglaje)
 node test/sim-test.js      # modo demo de extremo a extremo
 npm i jsdom && node test/dom-smoke.js   # arranca la app real y simula una sesión + análisis
 ```

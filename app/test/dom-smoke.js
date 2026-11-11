@@ -20,7 +20,7 @@ window.HTMLCanvasElement.prototype.getContext=()=>null;
 window.DeviceMotionEvent=function DeviceMotionEvent(){};        // sensores disponibles (sin requestPermission: tipo Android)
 try{ window.localStorage.setItem('trazza.settings.v2', JSON.stringify({imu:true})); }catch(e){}  // activa inclinación + G
 
-for(const f of ['detect.js','analyze.js','sensors.js','cartagena-track.js','sim.js','app.js']) window.eval(fs.readFileSync(path.join(APP,f),'utf8'));
+for(const f of ['detect.js','analyze.js','sensors.js','garage.js','cartagena-track.js','sim.js','app.js']) window.eval(fs.readFileSync(path.join(APP,f),'utf8'));
 window.document.dispatchEvent(new window.Event('DOMContentLoaded'));
 
 const R=6378137, CART={lat:37.6444,lon:-1.0352};
@@ -174,6 +174,35 @@ presetEls.find(e=>e.textContent.toLowerCase().includes('maniobras')).dispatchEve
 ok('plantilla anclada habilita confirmar', window.document.querySelector('#btn-confirm-meta').disabled===false);
 click('#btn-confirm-meta');
 ok('meta = circuito de maniobras', txt('#meta-name').toLowerCase().includes('maniobras'));
+
+// ---- Garaje: motos, reglajes, mantenimiento y uso en la tanda ----
+click('#bike-card');
+ok('pantalla garaje activa', qsActive('#screen-garage'));
+click('#btn-add-bike');
+ok('formulario de moto activo', qsActive('#screen-bike-edit'));
+window.document.querySelector('#f-name').value='Panigale Test';
+window.document.querySelector('#f-cc').value='1103';
+window.document.querySelector('#f-hours').value='3';
+click('#btn-save-bike');
+ok('tras guardar, detalle de moto', qsActive('#screen-bike'));
+ok('horas de motor mostradas', txt('#bike-hours').indexOf('3.0')>=0);
+ok('mantenimiento con elementos', window.document.querySelectorAll('#bike-maint .maint').length>=5);
+click('#btn-add-setup');
+ok('formulario de reglaje activo', qsActive('#screen-setup-edit'));
+window.document.querySelector('#s-name').value='Cheste B';
+window.document.querySelector('#sf-presTra').value='2.1';
+click('#btn-save-setup');
+ok('reglaje listado en la moto', [...window.document.querySelectorAll('#bike-setups .setup-row')].some(e=>e.textContent.includes('Cheste B')));
+// usa la moto + reglaje para la tanda
+window.document.querySelector('#bike-setups .mini-use').dispatchEvent(new window.Event('click',{bubbles:true}));
+ok('al usar moto vuelve a inicio', qsActive('#screen-home'));
+ok('tarjeta de inicio muestra la moto', txt('#bike-card-name').includes('Panigale Test'));
+// la tanda hereda moto y reglaje
+click('#btn-start');
+feed(CART.lat,CART.lon,4,t,10); t+=1000; feed(CART.lat,CART.lon,4,t,10); t+=1000;
+click('#btn-stop');
+const gsess=(JSON.parse(window.localStorage.getItem('trazza.sessions.v2')||'[]'))[0];
+ok('la sesión guarda la moto y el reglaje', !!(gsess && gsess.bikeName==='Panigale Test' && gsess.setupName==='Cheste B'));
 
 console.log('\nresumen mejor:', txt('#sum-best'), '| vueltas:', count);
 console.log(`DOM SMOKE: ${pass} pass, ${fail} fail`);

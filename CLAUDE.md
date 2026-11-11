@@ -25,6 +25,8 @@ Cronómetro GPS de vueltas para **moto en circuito**, en **español**, como PWA.
   - `sensors.js` — **núcleo puro y testeado** de sensores: inclinación (lean) por filtro
     complementario + fuerzas G con el IMU del PROPIO móvil (no hardware externo). El mapeo
     de ejes DeviceMotion→moto vive en `app.js` (`IMU_AXES`) y se calibra en pista.
+  - `garage.js` — **núcleo puro y testeado** del garaje: mantenimiento por horas de motor,
+    horas que aporta una sesión, mejor tiempo por reglaje/circuito. `require`-able desde Node.
   - `sim.js` — simulador de GPS para el **modo demo** (probar sin pista).
   - `cartagena-track.js` — trazado real de Cartagena (meta + outline), ya en sentido correcto.
   - `sw.js` — stub que se auto-desinstala (NO reintroducir service worker).
@@ -83,6 +85,10 @@ distancia; todo por distancia recorrida, con nota de honestidad. Núcleo en `ana
 **Inclinación (lean) + G con el IMU del móvil** (opt-in en Ajustes): HUD en vivo y máximos
 (IZQ/DER y G) en el resumen; calibración al salir a pista. Núcleo en `sensors.js`. Se guarda
 alineado al fix GPS (1 Hz) + máximos, sin inflar `localStorage`.
+**Garaje**: motos (datos + horas de motor), mantenimiento por horas con barras y «Hecho»,
+fichas de reglaje y mejor tiempo por reglaje/circuito; eliges moto+reglaje antes de la tanda
+y las horas de motor se suman al terminar. Núcleo en `garage.js` (claves `trazza.bikes.v1`,
+`trazza.presession.v1`).
 
 ## Ideas de siguiente paso (solo móvil; confirmar con el usuario antes de construir)
 Guía de adaptación competitiva (vs Lap360): teardown en `research/` cuando se mueva ahí.
@@ -92,7 +98,8 @@ Guía de adaptación competitiva (vs Lap360): teardown en `research/` cuando se 
   signo del roll en MOTO REAL (depende del soporte); lean/G por distancia en el análisis;
   corrección por ancho de neumático con geometría real; muestreo denso → **IndexedDB**
   antes de guardar streams a >1 Hz (localStorage no escala).
-- Garaje: motos, mantenimiento por horas de motor, fichas de reglaje, mejor tiempo por reglaje.
+- Garaje: v1 HECHA (motos, mantenimiento por horas, reglajes, mejor por reglaje). Pendiente:
+  editar intervalos de mantenimiento, recordatorio de mantenimiento en el HUD/inicio.
 - Home dashboard (sesiones/km/vueltas/récord) y lista de sesiones mejorada.
 - Liga/comunidad/quedadas → backend (Supabase disponible); fase mayor, cuentas incluidas.
 - Mejoras de precisión con GPS de móvil (suavizado, filtrado de outliers del fix).

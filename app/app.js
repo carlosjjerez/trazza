@@ -319,6 +319,8 @@ function startSession(){
     lapStartT:null, lapNum:0, cumDist:0, samples:[{d:0,t:0}], prevFix:null,
     track:[], speedMax:0, startedAt:Date.now(),
     nSectors:settings.sectors, refDist:null, crossTimes:[], curSectorIdx:0, lastSplitT:0, curSectors:[], bestSectors:[],
+    bikeId: preSession?preSession.bikeId:null, bikeName: preSession?preSession.bikeName:null,
+    setupId: preSession?preSession.setupId:null, setupName: preSession?preSession.setupName:null,
   });
   // referencia para sectores en vivo desde la vuelta 1:
   //  - demo con trazado: longitud del trazado dibujado (coherente con el mapa)
@@ -565,6 +567,13 @@ function persistSession(finalize){
   if(live.peaks && (live.peaks.leanL||live.peaks.leanR||live.peaks.gHoriz)){
     data.imu={ leanL:Math.round(live.peaks.leanL), leanR:Math.round(live.peaks.leanR),
                gHoriz:Math.round(live.peaks.gHoriz*100)/100, gLon:Math.round(live.peaks.gLon*100)/100 };
+  }
+  // moto y reglaje de la tanda (garaje)
+  if(live.bikeId){ data.bikeId=live.bikeId; data.bikeName=live.bikeName||null; data.setupName=live.setupName||null; }
+  // al cerrar: suma horas de motor a la moto usada
+  if(finalize && live.bikeId){
+    const bikes=loadBikes(), b=bikes.find(x=>x.id===live.bikeId);
+    if(b){ b.engineHours=TrazzaGarage.addEngineHours(b, TrazzaGarage.sessionHours(data)).engineHours; saveBikes(bikes); }
   }
   // récord histórico del circuito (se consolida al cerrar la sesión)
   if(finalize && live.recordKey){
@@ -1206,11 +1215,181 @@ function wireSettings(){
   $('#btn-clear-records').addEventListener('click',()=>{ if(confirm('¿Borrar todos los récords de circuito (PB)?')){ localStorage.removeItem(LS_RECORDS); toast('Récords borrados'); } });
 }
 
+/* ----------------------------- Garaje ----------------------------- */
+const LS_BIKES='trazza.bikes.v1', LS_PRESESSION='trazza.presession.v1';
+const BIKE_CATS=['Supersport','Superbike','Naked','Trail','2T','Clásica','Scooter','Otra'];
+function loadBikes(){ return loadJSON(LS_BIKES, []); }
+function saveBikes(a){ saveJSON(LS_BIKES, a); }
+function bikeById(id){ return loadBikes().find(b=>b.id===id)||null; }
+let preSession = loadJSON(LS_PRESESSION, null);  // {bikeId,bikeName,setupId,setupName}
+let viewingBikeId=null, editingBikeId=null, editingSetupId=null;
+function savePreSession(){ saveJSON(LS_PRESESSION, preSession); renderBikeCard(); }
+
+function renderBikeCard(){
+  const nm=$('#bike-card-name'), sub=$('#bike-card-sub'); if(!nm) return;
+  if(preSession && preSession.bikeId && bikeById(preSession.bikeId)){
+    nm.textContent=preSession.bikeName||'Moto';
+    sub.textContent = preSession.setupName ? ('Reglaje: '+preSession.setupName) : 'Sin reglaje · toca para elegir';
+  } else { nm.textContent='Sin moto'; sub.textContent='Elige moto y reglaje para la tanda (opcional)'; }
+}
+function bikeSpecLine(b){
+  const bits=[]; const mm=[b.make,b.model].filter(Boolean).join(' '); if(mm) bits.push(mm);
+  if(b.cc) bits.push(b.cc+' cc'); if(b.cv) bits.push(b.cv+' CV'); if(b.category) bits.push(b.category);
+  return bits.join(' · ')||'Moto';
+}
+function numOrNull(v){ v=(''+(v==null?'':v)).trim(); if(!v) return null; const n=+v; return isFinite(n)?n:null; }
+
+function openGarage(){ renderGarage(); show('garage'); }
+function renderGarage(){
+  const list=$('#bike-list'), bikes=loadBikes();
+  $('#garage-empty').hidden = bikes.length>0;
+  list.innerHTML='';
+  bikes.forEach(b=>{
+    const due=(b.maint||[]).filter(m=>TrazzaGarage.maintStatus(m, b.engineHours).due).length;
+    const el=document.createElement('button'); el.className='card row-card';
+    el.innerHTML=`<div><div class="row-title">${esc(b.name)}</div>
+      <div class="row-sub">${esc(bikeSpecLine(b))} · ${(+b.engineHours||0).toFixed(1)} h motor</div></div>
+      ${due?`<span class="maint-badge">${due}</span>`:'<svg class="chev" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8A93A6" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>'}`;
+    el.addEventListener('click',()=>openBike(b.id));
+    list.appendChild(el);
+  });
+}
+
+function openBike(id){ viewingBikeId=id; renderBike(); show('bike'); }
+function renderBike(){
+  const b=bikeById(viewingBikeId); if(!b){ openGarage(); return; }
+  $('#bike-title').textContent=b.name; $('#bike-name2').textContent=b.name;
+  $('#bike-specs').textContent=bikeSpecLine(b)+(b.kg?(' · '+b.kg+' kg'):'');
+  $('#bike-hours').textContent=(+b.engineHours||0).toFixed(1)+' h';
+  const maint=b.maint||[];
+  const due=maint.filter(m=>TrazzaGarage.maintStatus(m, b.engineHours).due).length;
+  $('#bike-maint-count').textContent = due? (due+' por hacer') : 'al día';
+  const mw=$('#bike-maint'); mw.innerHTML='';
+  maint.forEach(m=>{
+    const st=TrazzaGarage.maintStatus(m, b.engineHours), pct=Math.round(st.frac*100);
+    const cls=st.due?'bad':st.frac>=0.8?'warn':'ok';
+    const rem=st.due?'¡toca!':('faltan '+st.remaining.toFixed(1)+' h');
+    const row=document.createElement('div'); row.className='maint';
+    row.innerHTML=`<div class="maint-top"><span class="ml">${esc(m.label)}</span><span class="mr ${cls}">${rem}</span></div>
+      <div class="mbar"><i class="${cls}" style="width:${pct}%"></i></div>
+      <div class="maint-bot"><span>cada ${m.intervalH} h</span><button class="mini-done" type="button">Hecho</button></div>`;
+    row.querySelector('.mini-done').addEventListener('click',()=>markMaintDone(b.id, m.id));
+    mw.appendChild(row);
+  });
+  const sw=$('#bike-setups'); sw.innerHTML='';
+  const setups=b.setups||[];
+  if(!setups.length) sw.innerHTML='<div class="empty">Sin reglajes. Añade uno para guardar clics y comparar tiempos.</div>';
+  setups.forEach(s=>{
+    const row=document.createElement('div'); row.className='card row-card setup-row';
+    row.innerHTML=`<div><div class="row-title sm">${esc(s.name)}</div><div class="row-sub">${esc(setupSummary(s))}</div></div>
+      <button class="mini-use" type="button">Usar</button>`;
+    row.addEventListener('click',(e)=>{ if(e.target.closest('.mini-use')) return; openSetupEdit(b.id, s.id); });
+    row.querySelector('.mini-use').addEventListener('click',(e)=>{ e.stopPropagation(); usePreSession(b, s); });
+    sw.appendChild(row);
+  });
+  const bw=$('#bike-best'); bw.innerHTML='';
+  const rows=TrazzaGarage.bestSetups(loadJSON(LS_SESSIONS,[]), b.id);
+  if(!rows.length) bw.innerHTML='<div class="empty">Aún no hay tiempos con esta moto.</div>';
+  rows.forEach(r=>{
+    const el=document.createElement('div'); el.className='best-row';
+    el.innerHTML=`<div><div class="br-c">${esc(r.circuit)}</div><div class="br-s">${esc(r.setup)}</div></div><div class="br-t green">${fmtLap(r.bestMs)}</div>`;
+    bw.appendChild(el);
+  });
+}
+function setupSummary(s){
+  const f=s.fields||{}, bits=[];
+  if(f.presDel!=null||f.presTra!=null) bits.push('pres '+(f.presDel!=null?f.presDel:'–')+'/'+(f.presTra!=null?f.presTra:'–'));
+  if(f.altTra!=null) bits.push('alt tras '+f.altTra);
+  if(s.notes) bits.push(s.notes);
+  return bits.join(' · ')||'Ficha de reglaje';
+}
+function markMaintDone(bikeId, mid){
+  const bikes=loadBikes(), b=bikes.find(x=>x.id===bikeId); if(!b) return;
+  const m=(b.maint||[]).find(x=>x.id===mid); if(!m) return;
+  m.lastH=+b.engineHours||0; saveBikes(bikes); renderBike(); toast(m.label+' · al día'); haptic(30);
+}
+function usePreSession(b, setup){
+  preSession={ bikeId:b.id, bikeName:b.name, setupId:setup?setup.id:null, setupName:setup?setup.name:null };
+  savePreSession(); toast('Usarás '+b.name+(setup?(' · '+setup.name):'')+' en la tanda', 2600);
+  show('home'); refreshStartState();
+}
+
+function formRow(label,type,id,val,ph){
+  const v = (val!=null && val!=='') ? esc(String(val)) : '';
+  return `<label class="frow"><span>${label}</span><input type="${type}" id="${id}" value="${v}" placeholder="${ph||''}" ${type==='number'?'inputmode="decimal"':''}></label>`;
+}
+function openBikeEdit(id){
+  editingBikeId=id||null; const b=id?bikeById(id):null;
+  $('#bike-edit-title').textContent = b?'Editar moto':'Nueva moto';
+  const cats=BIKE_CATS.map(c=>`<option value="${c}" ${b&&b.category===c?'selected':''}>${c}</option>`).join('');
+  $('#bike-form').innerHTML=
+    formRow('Nombre','text','f-name',b?b.name:'', 'Mi Panigale')+
+    formRow('Marca','text','f-make',b?b.make:'', 'Ducati')+
+    formRow('Modelo','text','f-model',b?b.model:'', 'Panigale V4 S')+
+    formRow('Cilindrada (cc)','number','f-cc',b?b.cc:'', '1103')+
+    formRow('Potencia (CV)','number','f-cv',b?b.cv:'', '215')+
+    formRow('Peso (kg)','number','f-kg',b?b.kg:'', '195')+
+    `<label class="frow"><span>Categoría</span><select id="f-cat">${cats}</select></label>`+
+    formRow('Horas de motor','number','f-hours',b?b.engineHours:'0', '0');
+  show('bike-edit');
+}
+function saveBike(){
+  const name=($('#f-name').value||'').trim(); if(!name){ toast('Pon un nombre a la moto'); return; }
+  const bikes=loadBikes();
+  let b=editingBikeId? bikes.find(x=>x.id===editingBikeId):null;
+  const data={ name, make:($('#f-make').value||'').trim(), model:($('#f-model').value||'').trim(),
+    cc:numOrNull($('#f-cc').value), cv:numOrNull($('#f-cv').value), kg:numOrNull($('#f-kg').value),
+    category:$('#f-cat').value, engineHours:Math.max(0, +($('#f-hours').value)||0) };
+  if(b){ Object.assign(b, data); }
+  else { b=Object.assign({ id:'b'+Date.now() }, data, { maint:TrazzaGarage.defaultMaintenance(), setups:[] }); bikes.unshift(b); }
+  saveBikes(bikes); viewingBikeId=b.id; renderBikeCard(); openBike(b.id); toast('Moto guardada');
+}
+function delBike(){
+  if(!viewingBikeId) return;
+  if(!confirm('¿Borrar esta moto y sus reglajes?')) return;
+  saveBikes(loadBikes().filter(b=>b.id!==viewingBikeId));
+  if(preSession && preSession.bikeId===viewingBikeId){ preSession=null; savePreSession(); }
+  openGarage(); toast('Moto borrada');
+}
+
+function openSetupEdit(bikeId, setupId){
+  editingBikeId=bikeId; editingSetupId=setupId||null;
+  const b=bikeById(bikeId); const s=setupId?(b.setups||[]).find(x=>x.id===setupId):null;
+  $('#setup-title').textContent = s?'Editar reglaje':'Nuevo reglaje';
+  $('#setup-del').style.visibility = s?'visible':'hidden';
+  const f=s&&s.fields?s.fields:{};
+  const fieldRows=TrazzaGarage.SETUP_FIELDS.map(ff=>formRow(ff.label+' ('+ff.unit+')','number','sf-'+ff.id, f[ff.id]!=null?f[ff.id]:'', '')).join('');
+  $('#setup-form').innerHTML=
+    formRow('Nombre','text','s-name', s?s.name:'', 'Cheste B (+2 mm trasera)')+
+    `<label class="frow"><span>Notas</span><textarea id="s-notes" rows="2" placeholder="Más altura detrás, mejor en la 1 y la 2">${s&&s.notes?esc(s.notes):''}</textarea></label>`+
+    fieldRows;
+  show('setup-edit');
+}
+function saveSetup(){
+  const name=($('#s-name').value||'').trim(); if(!name){ toast('Pon un nombre al reglaje'); return; }
+  const bikes=loadBikes(), b=bikes.find(x=>x.id===editingBikeId); if(!b){ openGarage(); return; }
+  b.setups=b.setups||[];
+  const fields={}; TrazzaGarage.SETUP_FIELDS.forEach(ff=>{ const v=numOrNull($('#sf-'+ff.id).value); if(v!=null) fields[ff.id]=v; });
+  const notes=($('#s-notes').value||'').trim();
+  let s=editingSetupId? b.setups.find(x=>x.id===editingSetupId):null;
+  if(s){ s.name=name; s.notes=notes; s.fields=fields; }
+  else { s={ id:'r'+Date.now(), name, notes, fields }; b.setups.push(s); }
+  saveBikes(bikes); openBike(b.id); toast('Reglaje guardado');
+}
+function delSetup(){
+  const bikes=loadBikes(), b=bikes.find(x=>x.id===editingBikeId); if(!b) return;
+  if(!editingSetupId){ openBike(b.id); return; }
+  if(!confirm('¿Borrar este reglaje?')) return;
+  b.setups=(b.setups||[]).filter(x=>x.id!==editingSetupId);
+  if(preSession && preSession.setupId===editingSetupId){ preSession.setupId=null; preSession.setupName=null; savePreSession(); }
+  saveBikes(bikes); openBike(b.id); toast('Reglaje borrado');
+}
+
 /* ----------------------------- Navegación / init ----------------------------- */
 function show(id){ $all('.screen').forEach(s=>s.classList.remove('active')); $('#screen-'+id).classList.add('active'); }
 
 function init(){
-  $all('[data-go]').forEach(b=>b.addEventListener('click',()=>{ const d=b.dataset.go; if(d==='home'){ renderSessions(); renderReminders(); } if(d==='meta'){ renderPresets(); renderSaved(); } show(d); }));
+  $all('[data-go]').forEach(b=>b.addEventListener('click',()=>{ const d=b.dataset.go; if(d==='home'){ renderSessions(); renderReminders(); renderBikeCard(); } if(d==='meta'){ renderPresets(); renderSaved(); } show(d); }));
   $('#rem-add-btn').addEventListener('click', addReminderFromInputs);
   $('#rem-text').addEventListener('keydown',e=>{ if(e.key==='Enter') addReminderFromInputs(); });
   $('#rem-lap').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#rem-text').focus(); });
@@ -1245,6 +1424,20 @@ function init(){
   });
   $('#btn-analyze').addEventListener('click',()=>{ if(curSummary) openAnalysis(curSummary); });
   $('#an-back').addEventListener('click',()=>{ if(curSummary){ renderSummary(curSummary); } show('summary'); });
+  // garaje
+  $('#bike-card').addEventListener('click', openGarage);
+  $('#btn-add-bike').addEventListener('click',()=>openBikeEdit(null));
+  $('#bike-back').addEventListener('click', openGarage);
+  $('#bike-edit').addEventListener('click',()=>openBikeEdit(viewingBikeId));
+  $('#bike-edit-back').addEventListener('click',()=>{ if(editingBikeId) openBike(editingBikeId); else openGarage(); });
+  $('#btn-save-bike').addEventListener('click', saveBike);
+  $('#btn-del-bike').addEventListener('click', delBike);
+  $('#btn-use-bike').addEventListener('click',()=>{ const b=bikeById(viewingBikeId); if(b) usePreSession(b, null); });
+  $('#btn-add-setup').addEventListener('click',()=>openSetupEdit(viewingBikeId, null));
+  $('#setup-back').addEventListener('click',()=>openBike(editingBikeId));
+  $('#btn-save-setup').addEventListener('click', saveSetup);
+  $('#setup-del').addEventListener('click', delSetup);
+  renderBikeCard();
 
   wireSettings();
   renderSettings();

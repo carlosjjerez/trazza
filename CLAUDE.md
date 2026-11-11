@@ -1,0 +1,85 @@
+# Trazza — contexto del proyecto
+
+Cronómetro GPS de vueltas para **moto en circuito**, en **español**, como PWA.
+«El Strava del motorsport sobre dos ruedas». Marca y tono en `trazza-brand.md`.
+
+## FOCO ACTUAL (léelo primero)
+- **Solo GPS del móvil (~1 Hz).** Trabajamos únicamente la app web/PWA con la
+  geolocalización del teléfono.
+- **El hardware está APARCADO.** Toda la vía de dispositivo propio (ESP32 +
+  u-blox / IMU / lean angle / 25 Hz / BLE / Wi-Fi) queda **fuera de alcance por
+  ahora**. No añadas código, pantallas ni dependencias de hardware. Está
+  documentado en `research/` solo como referencia futura; no lo implementes.
+- Honestidad de datos: el móvil da **décimas fiables, no centésimas**. No
+  prometas precisión que la fuente no da; muestra siempre precisión/estado real.
+
+## Dónde está cada cosa
+- `app/` — la PWA (todo el producto actual). Sin build, ficheros estáticos.
+  - `index.html` — 5 pantallas: inicio, meta, HUD, resumen, ajustes + builder + modo track.
+  - `app.css` — estilos; tokens de paleta de marca en `:root`.
+  - `app.js` — GPS, sesión, delta predictivo, mini-mapa, récord (PB), recordatorios,
+    modo track horizontal, export, ajustes.
+  - `detect.js` — **núcleo puro y testeado** de detección de vueltas (no tocar sin tests).
+  - `sim.js` — simulador de GPS para el **modo demo** (probar sin pista).
+  - `cartagena-track.js` — trazado real de Cartagena (meta + outline), ya en sentido correcto.
+  - `sw.js` — stub que se auto-desinstala (NO reintroducir service worker).
+- `app/README.md` — documentación de uso, detección, pruebas y despliegue.
+- `trazza-brand.md` — marca: paleta, tipografía, tono de voz, logo.
+- `research/` — investigación competitiva + hardware (REFERENCIA, no es alcance actual).
+- `design/` — maquetas de diseño antiguas (referencia visual).
+
+## Cómo ejecutar / probar / desplegar
+```bash
+# Ejecutar en local (la geolocalización exige localhost o https)
+cd app && python3 -m http.server 8080      # http://localhost:8080
+#   Ajustes → Pruebas → Modo demo  (ver el HUD dar vueltas sin GPS real)
+
+# Pruebas (node, sin dependencias salvo dom-smoke)
+cd app
+node test/detect-test.js    # núcleo de detección (incluye caso 250 km/h)
+node test/sim-test.js       # modo demo de extremo a extremo
+npm i jsdom && node test/dom-smoke.js   # arranca la app real y simula una sesión
+
+# Desplegar (Vercel, sin build, Root Directory = app)
+cd app && vercel --prod
+```
+Tras tocar lógica de detección o de sesión, **corre los tests** antes de dar algo por hecho.
+
+## Invariantes y convenciones (no romper)
+- **Detección**: la meta es un **punto + radio** (sin rumbo); el cruce se interpola
+  punto-a-segmento; hay bloqueo de sentido y vuelta mínima. Todo en `detect.js`,
+  cubierto por tests y también `require`-able desde Node. Cambios aquí → añade/pasa tests.
+- **Delta predictivo** se calcula por **distancia recorrida** vs vuelta de referencia
+  (récord, o mejor de la sesión si aún no hay récord), no por tiempo.
+- **Sin service worker.** Decisión consciente (fiabilidad de carga en iOS). No hay
+  modo offline; se abre la app con cobertura. No reintroducir `sw.js` con handler `fetch`.
+- **Cache busting**: los assets se enlazan con `?v=YYYYMMDD…`; al cambiar `.css`/`.js`
+  sube la versión del query string (iOS cachea agresivo). `vercel.json` ya pone no-cache
+  a `/`, `.css`, `.js`.
+- **Paleta** (marca, dark-first): asfalto `#0E0F12`, grafito `#1C1F26`, **hi-viz
+  `#B6FF1A`** (acento/mejor/delta+), cian `#1FE0C8` (datos en vivo), ámbar `#FF9E1B`
+  (en curso/PB), rojo `#FF3B30` (crítico/delta−), blanco `#F5F7FA`, niebla `#8A93A6`.
+  Verde = vas más rápido; rojo = más lento. Tiempos en cifras tabulares (héroe visual).
+- **Tono**: tuteo, español neutro, colega motero experto, frases cortas, honesto con los datos.
+- **Persistencia**: hoy en `localStorage` con claves `trazza.*.v*` (settings, sessions,
+  metas, circuits, records, reminders). ⚠️ Deuda conocida: `localStorage` NO escala para
+  telemetría; si se registran muestras densas, migrar a **IndexedDB** (no ampliar el uso
+  de localStorage para datos pesados).
+
+## Estado actual (funciona)
+Cronómetro con detección automática, sectores en vivo, delta predictivo verde/rojo,
+mini-mapa del circuito en el HUD, crear circuitos (GPS o punto a punto), preset Cartagena
+y plantilla de maniobras, récord histórico (PB) por circuito, recordatorios por vuelta,
+modo track horizontal (pantalla verde/roja), resumen con mapa y zoom, export CSV/GPX,
+avisos (pitido/vibración/wake-lock), km/h o mph, modo demo. Instalable como PWA.
+
+## Ideas de siguiente paso (solo móvil; confirmar con el usuario antes de construir)
+- Pulir UX del HUD y del resumen; análisis de vuelta (gráfica velocidad, comparar vueltas).
+- Trazada coloreada por velocidad en el mapa del resumen.
+- Migración de almacenamiento a IndexedDB + ajustes de retención/exportar a archivos.
+- Mejoras de precisión con GPS de móvil (suavizado, filtrado de outliers del fix).
+
+## Git / trabajo
+- Rama de desarrollo: **`main-9znyue`** (crear en local desde el último default si no existe).
+- No crear Pull Requests salvo que el usuario lo pida explícitamente.
+- `VERCEL_TOKEN` y el email del usuario son privados: nunca exponerlos a servicios externos.

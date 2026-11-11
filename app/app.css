@@ -280,3 +280,45 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
   background:var(--grafito);color:var(--blanco);padding:12px 20px;border-radius:14px;font-size:14px;font-weight:500;
   opacity:0;pointer-events:none;transition:.25s;z-index:60;border:1px solid rgba(255,255,255,.08);max-width:88vw;text-align:center;}
 .toast.show{opacity:1;transform:translate(-50%,0);}
+
+/* ===================== Análisis de tanda ===================== */
+.cta.analyze{background:var(--cian);margin-top:14px;}
+.cta.analyze svg{stroke:var(--asfalto);}
+.an-pick{display:flex;align-items:flex-end;gap:10px;margin-top:4px;}
+.an-sel{flex:1;display:flex;flex-direction:column;gap:4px;}
+.an-sel .k{font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--niebla);}
+.an-sel .k.cyan{color:var(--cian);} .an-sel .k.amber{color:var(--ambar);}
+.an-sel select{appearance:none;-webkit-appearance:none;background:var(--grafito);border:1px solid var(--linea);border-radius:12px;
+  color:var(--blanco);font-family:var(--num);font-weight:600;font-size:15px;padding:11px 12px;width:100%;}
+.an-sel select:focus{outline:none;border-color:var(--cian);}
+.an-vs{color:var(--niebla);font-family:var(--display);font-weight:700;padding-bottom:12px;}
+.an-narr{margin-top:14px;padding:16px;}
+.an-head{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.an-head.one{justify-content:flex-start;gap:16px;}
+.an-side{display:flex;flex-direction:column;gap:2px;} .an-side.r{align-items:flex-end;text-align:right;}
+.an-head .k{font-family:var(--display);font-weight:700;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--niebla);}
+.an-head .k.cyan{color:var(--cian);} .an-head .k.amber{color:var(--ambar);}
+.an-hero{font-family:var(--display);font-weight:700;font-size:26px;line-height:.95;font-variant-numeric:tabular-nums;color:var(--blanco);}
+.an-hero.cyan{color:var(--cian);} .an-hero.amber{color:var(--ambar);}
+.an-net{text-align:center;display:flex;flex-direction:column;gap:2px;}
+.an-net b{font-family:var(--display);font-weight:800;font-size:30px;line-height:.9;font-variant-numeric:tabular-nums;}
+.an-net small{font-size:10px;color:var(--niebla);letter-spacing:.04em;}
+.an-net.good b{color:var(--hiviz);} .an-net.bad b{color:var(--rojo);} .an-net.flat b{color:var(--niebla);}
+.an-note{font-size:12.5px;color:var(--niebla);max-width:52%;}
+.an-sec-row{display:flex;gap:7px;margin-top:14px;flex-wrap:wrap;}
+.an-sec{flex:1;min-width:64px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border-radius:11px;
+  background:var(--grafito-2);border:1px solid var(--linea);font-family:var(--num);font-weight:600;font-size:14px;font-variant-numeric:tabular-nums;}
+.an-sec b{font-family:var(--display);font-weight:700;font-size:11px;color:var(--niebla);letter-spacing:.05em;}
+.an-sec.good{color:var(--hiviz);border-color:rgba(182,255,26,.3);} .an-sec.bad{color:var(--rojo);border-color:rgba(255,59,48,.3);}
+.an-sec.flat{color:var(--niebla);}
+.an-line{margin:14px 2px 0;font-size:13.5px;line-height:1.5;color:var(--blanco);}
+.an-line b{color:var(--blanco);font-weight:700;}
+.an-empty{color:var(--niebla);font-size:13.5px;line-height:1.5;text-align:center;padding:10px 4px;}
+.an-chart-wrap{margin-top:18px;}
+.an-chart-head{display:flex;align-items:center;justify-content:space-between;margin:0 2px 8px;}
+.an-hint{font-size:11px;color:var(--niebla);display:flex;align-items:center;gap:4px;}
+.an-hint .lg{width:10px;height:3px;border-radius:2px;display:inline-block;}
+.an-chart{width:100%;height:150px;background:var(--grafito-2);border:1px solid var(--linea);border-radius:14px;display:block;}
+.lap.selA{border-color:rgba(31,224,200,.55);} .lap.selB{border-color:rgba(255,158,27,.5);}
+.an-tag{display:inline-block;margin-left:7px;font-family:var(--display);font-weight:800;font-size:11px;padding:1px 6px;border-radius:6px;vertical-align:middle;}
+.an-tag.cyan{color:var(--asfalto);background:var(--cian);} .an-tag.amber{color:var(--asfalto);background:var(--ambar);}

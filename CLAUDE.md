@@ -20,6 +20,8 @@ Cronómetro GPS de vueltas para **moto en circuito**, en **español**, como PWA.
   - `app.js` — GPS, sesión, delta predictivo, mini-mapa, récord (PB), recordatorios,
     modo track horizontal, export, ajustes.
   - `detect.js` — **núcleo puro y testeado** de detección de vueltas (no tocar sin tests).
+  - `analyze.js` — **núcleo puro y testeado** de análisis de tanda (segmentar vueltas,
+    perfil y delta por distancia, reparto por sectores, constancia). `require`-able desde Node.
   - `sim.js` — simulador de GPS para el **modo demo** (probar sin pista).
   - `cartagena-track.js` — trazado real de Cartagena (meta + outline), ya en sentido correcto.
   - `sw.js` — stub que se auto-desinstala (NO reintroducir service worker).
@@ -72,11 +74,21 @@ mini-mapa del circuito en el HUD, crear circuitos (GPS o punto a punto), preset 
 y plantilla de maniobras, récord histórico (PB) por circuito, recordatorios por vuelta,
 modo track horizontal (pantalla verde/roja), resumen con mapa y zoom, export CSV/GPX,
 avisos (pitido/vibración/wake-lock), km/h o mph, modo demo. Instalable como PWA.
+**Análisis de tanda**: desde el resumen, comparar dos vueltas (A vs B) con cabecera
+narrativa «dónde está la vuelta», delta por distancia (área verde/roja) y velocidad por
+distancia; todo por distancia recorrida, con nota de honestidad. Núcleo en `analyze.js`.
 
 ## Ideas de siguiente paso (solo móvil; confirmar con el usuario antes de construir)
-- Pulir UX del HUD y del resumen; análisis de vuelta (gráfica velocidad, comparar vueltas).
-- Trazada coloreada por velocidad en el mapa del resumen.
-- Migración de almacenamiento a IndexedDB + ajustes de retención/exportar a archivos.
+Guía de adaptación competitiva (vs Lap360): teardown en `research/` cuando se mueva ahí.
+- Análisis de tanda v2: trazada sobre satélite coloreada por velocidad/pérdida de tiempo,
+  gráficas metro a metro con zoom sincronizado al mapa, curva a curva, comparar >2 vueltas.
+- **Inclinación (lean angle) + fuerzas G con el IMU del propio móvil** (DeviceMotion/Orientation,
+  ~60 Hz): confirmado en alcance por el usuario. Lean = giroscopio + velocidad con corrección de
+  ancho de neumático (no solo acelerómetro). Requiere calibración y nota de precisión. ⚠️ Con
+  muestreo denso → migrar persistencia a **IndexedDB** antes (localStorage no escala).
+- Garaje: motos, mantenimiento por horas de motor, fichas de reglaje, mejor tiempo por reglaje.
+- Home dashboard (sesiones/km/vueltas/récord) y lista de sesiones mejorada.
+- Liga/comunidad/quedadas → backend (Supabase disponible); fase mayor, cuentas incluidas.
 - Mejoras de precisión con GPS de móvil (suavizado, filtrado de outliers del fix).
 
 ## Git / trabajo

@@ -18,7 +18,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;500;600;700;800&family=Saira+Semi+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="app.css?v=20260619d">
+  <link rel="stylesheet" href="app.css?v=20261111a">
 </head>
 <body>
 
@@ -257,6 +257,11 @@
 
     <div class="record" id="sum-record" hidden></div>
 
+    <button class="cta analyze" id="btn-analyze">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0E0F12" stroke-width="2.2"><path d="M4 19V5M4 19h16M8 15l4-5 3 3 4-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Analizar tanda</span>
+    </button>
+
     <div class="map-wrap">
       <canvas id="sum-map" class="map"></canvas>
       <div class="map-zoom">
@@ -285,6 +290,48 @@
         <span>Track GPX</span>
       </button>
     </div>
+  </div>
+</section>
+
+<!-- ===================== ANÁLISIS DE TANDA ===================== -->
+<section id="screen-analysis" class="screen">
+  <header class="appbar">
+    <button class="icon-btn" id="an-back" aria-label="Atrás">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F5F7FA" stroke-width="2.2"><path d="M15 6l-6 6 6 6"/></svg>
+    </button>
+    <span class="appbar-title" id="an-title">Análisis</span>
+    <span class="appbar-spacer"></span>
+  </header>
+
+  <div class="scroll">
+    <!-- selector de vueltas a comparar -->
+    <div class="an-pick">
+      <label class="an-sel"><span class="k cyan">Vuelta A</span><select id="an-a"></select></label>
+      <span class="an-vs">vs</span>
+      <label class="an-sel"><span class="k amber">Vuelta B</span><select id="an-b"></select></label>
+    </div>
+
+    <!-- narrativa: dónde está la vuelta -->
+    <div class="card an-narr" id="an-narr"></div>
+
+    <!-- delta por distancia (el héroe: tu delta, hecho visual) -->
+    <div class="an-chart-wrap">
+      <div class="an-chart-head"><span class="kicker">Delta por distancia</span><span class="an-hint">verde: A va por delante · rojo: A pierde</span></div>
+      <canvas id="an-delta" class="an-chart"></canvas>
+    </div>
+
+    <!-- velocidad por distancia -->
+    <div class="an-chart-wrap">
+      <div class="an-chart-head"><span class="kicker">Velocidad por distancia</span>
+        <span class="an-hint"><i class="lg" style="background:#1FE0C8"></i>A&nbsp;&nbsp;<i class="lg" style="background:#FF9E1B"></i>B</span></div>
+      <canvas id="an-speed" class="an-chart"></canvas>
+    </div>
+
+    <!-- tabla de vueltas y sectores -->
+    <div class="laps-head"><span class="kicker">Vueltas y sectores</span><span class="kicker">Tiempo · Δ</span></div>
+    <div id="an-laps" class="stack tight"></div>
+
+    <p class="foot" id="an-honesty">GPS del móvil ≈1 Hz: trabajamos en <b>décimas, no centésimas</b>. Las gráficas van por <b>distancia recorrida</b> y se suavizan entre fixes.</p>
   </div>
 </section>
 
@@ -360,9 +407,10 @@
 
 <div id="toast" class="toast"></div>
 
-<script src="detect.js?v=20260619d"></script>
-<script src="cartagena-track.js?v=20260619d"></script>
-<script src="sim.js?v=20260619d"></script>
-<script src="app.js?v=20260619d"></script>
+<script src="detect.js?v=20261111a"></script>
+<script src="analyze.js?v=20261111a"></script>
+<script src="cartagena-track.js?v=20261111a"></script>
+<script src="sim.js?v=20261111a"></script>
+<script src="app.js?v=20261111a"></script>
 </body>
 </html>

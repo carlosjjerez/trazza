@@ -79,6 +79,7 @@ settings.sim = false; // el modo demo nunca persiste
 
 let selectedMeta = null;   // {lat,lon,name}
 let viewingSessionId = null;
+let curSummary = null;     // sesión mostrada en resumen (base del análisis)
 
 const live = {
   running:false, gate:null, detector:null,
@@ -501,7 +502,7 @@ function renderSessions(){
 function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
 function renderSummary(s){
-  if(!s) return; viewingSessionId=s.id;
+  if(!s) return; viewingSessionId=s.id; curSummary=s;
   $('#sum-title').textContent=s.name;
   $('#sum-best').textContent=fmtLap(s.best);
   const valid=s.laps.filter(l=>l.ms>0);
@@ -552,6 +553,172 @@ function renderSummary(s){
   const sm=$('#sum-map');
   if(sm){ sm._view={zoom:1,panX:0,panY:0}; attachMapZoom(sm, ()=>drawSummaryMap(sm, s)); }
   requestAnimationFrame(()=>drawSummaryMap(sm, s));
+}
+
+/* ----------------------------- Análisis de tanda ----------------------------- */
+// Toque Trazza: narrativa primero (dónde está la vuelta), honestidad de datos,
+// y todo por DISTANCIA recorrida (coherente con el delta predictivo).
+let anProfiles=null;            // [{n, ms, profile:[{d,t,spd}]}]
+let anSel={ a:null, b:null };   // nº de vuelta A/B
+const pad2=n=>String(n).padStart(2,'0');
+const capFirst=s=>s.charAt(0).toUpperCase()+s.slice(1);
+
+// reconstruye el perfil por distancia de cada vuelta desde el track + crossTimes
+function buildLapProfiles(s){
+  if(!s || !s.track || !s.track.length || !s.crossTimes || s.crossTimes.length<2) return [];
+  const segs=TrazzaAnalyze.segmentLaps(s.track, s.crossTimes);
+  return segs.map((seg,i)=>{
+    const lap=s.laps[i]||null;
+    return { n: lap?lap.n:seg.n, ms: lap?lap.ms:(seg.t1-seg.t0), profile: TrazzaAnalyze.lapProfile(seg.points) };
+  }).filter(x=>x.profile.length>=2);
+}
+
+function openAnalysis(s){
+  if(!s) return;
+  curSummary=s;
+  anProfiles=buildLapProfiles(s);
+  $('#an-title').textContent='Análisis · '+(s.name||'tanda');
+  if(anProfiles.length<1){ renderAnalysisEmpty(); show('analysis'); return; }
+  const byMs=anProfiles.slice().sort((a,b)=>a.ms-b.ms);
+  anSel.a=byMs[0].n; anSel.b=(byMs[1]||byMs[0]).n;
+  fillLapSelectors();
+  show('analysis');
+  renderAnalysis();                         // narrativa + tabla (síncrono)
+  requestAnimationFrame(renderAnalysis);    // redibuja las gráficas con el tamaño ya aplicado
+}
+
+function renderAnalysisEmpty(){
+  $('#an-narr').innerHTML='<div class="an-empty">Esta tanda no guardó telemetría (sesión antigua o sin track GPS). Las nuevas tandas con esta versión traerán el análisis completo.</div>';
+  $('#an-a').innerHTML=''; $('#an-b').innerHTML=''; $('#an-laps').innerHTML='';
+  ['#an-delta','#an-speed'].forEach(id=>{ const c=$(id); if(c&&c.getContext){ const x=c.getContext('2d'); x&&x.clearRect(0,0,c.width,c.height);} });
+}
+
+function fillLapSelectors(){
+  const html=anProfiles.slice().sort((a,b)=>a.n-b.n)
+    .map(p=>`<option value="${p.n}">V${pad2(p.n)} · ${fmtLap(p.ms)}</option>`).join('');
+  const a=$('#an-a'), b=$('#an-b');
+  a.innerHTML=html; b.innerHTML=html; a.value=anSel.a; b.value=anSel.b;
+  a.onchange=()=>{ anSel.a=+a.value; renderAnalysis(); };
+  b.onchange=()=>{ anSel.b=+b.value; renderAnalysis(); };
+}
+const profOf=n=>{ const p=anProfiles&&anProfiles.find(x=>x.n===n); return p?p.profile:null; };
+
+function renderAnalysis(){
+  const pa=profOf(anSel.a), pb=profOf(anSel.b);
+  const la=anProfiles.find(x=>x.n===anSel.a), lb=anProfiles.find(x=>x.n===anSel.b);
+  const nSec=curSummary.nSectors||3;
+  const gl=(pa&&pb)?TrazzaAnalyze.gainLossBySector(pa,pb,nSec):[];
+  const dd=(pa&&pb)?TrazzaAnalyze.deltaByDistance(pa,pb,160):[];
+  const totalMs=dd.length&&dd[dd.length-1].dt!=null ? dd[dd.length-1].dt : (la&&lb?(la.ms-lb.ms):null);
+  renderNarrative(la,lb,gl,totalMs);
+  drawDeltaChart($('#an-delta'), dd);
+  drawSpeedChart($('#an-speed'), dd);
+  renderAnalysisLaps();
+}
+
+function renderNarrative(la,lb,gl,totalMs){
+  const box=$('#an-narr'); if(!la||!lb){ box.innerHTML='<div class="an-empty">Elige dos vueltas para comparar.</div>'; return; }
+  const same=la.n===lb.n;
+  let head;
+  if(same){
+    head=`<div class="an-head one"><div><span class="k cyan">Vuelta ${pad2(la.n)}</span><span class="an-hero cyan">${fmtLap(la.ms)}</span></div><div class="an-note">Elige una vuelta distinta en B para comparar.</div></div>`;
+  } else {
+    const cls=totalMs<0?'good':(totalMs>0?'bad':'flat');
+    head=`<div class="an-head">
+      <div class="an-side"><span class="k cyan">A · V${pad2(la.n)}</span><span class="an-hero cyan">${fmtLap(la.ms)}</span></div>
+      <div class="an-net ${cls}"><b>${fmtDelta(totalMs)}</b><small>A frente a B</small></div>
+      <div class="an-side r"><span class="k amber">B · V${pad2(lb.n)}</span><span class="an-hero amber">${fmtLap(lb.ms)}</span></div>
+    </div>`;
+  }
+  let chips='';
+  if(gl.length && !same){
+    chips='<div class="an-sec-row">'+gl.map(g=>{
+      const c=g.dt<-10?'good':(g.dt>10?'bad':'flat');   // ±10 ms ≈ ruido GPS 1 Hz
+      return `<span class="an-sec ${c}"><b>S${g.sector}</b>${fmtDelta(g.dt)}</span>`;
+    }).join('')+'</div>';
+    const worst=gl.slice().sort((a,b)=>b.dt-a.dt)[0];    // mayor pérdida (dt+)
+    const best=gl.slice().sort((a,b)=>a.dt-b.dt)[0];     // mayor ganancia (dt−)
+    const parts=[];
+    if(worst&&worst.dt>10) parts.push(`donde más tiempo dejas es el <b>Sector ${worst.sector}</b> (${fmtDelta(worst.dt)})`);
+    if(best&&best.dt<-10) parts.push(`donde más ganas es el <b>Sector ${best.sector}</b> (${fmtDelta(best.dt)})`);
+    chips += parts.length
+      ? '<p class="an-line">'+capFirst(parts.join(', y '))+'.</p>'
+      : '<p class="an-line">Vueltas muy parejas: las diferencias caben dentro del ruido del GPS.</p>';
+  }
+  box.innerHTML=head+chips;
+}
+
+// base común de canvas de gráfica (DPR + rectángulo de dibujo)
+function chartBase(canvas){
+  if(!canvas) return null;
+  const dpr=window.devicePixelRatio||1, W=canvas.clientWidth, H=canvas.clientHeight;
+  if(!W||!H) return null;
+  canvas.width=W*dpr; canvas.height=H*dpr;
+  const ctx=canvas.getContext&&canvas.getContext('2d'); if(!ctx) return null;
+  ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,H);
+  const padc={l:36,r:12,t:12,b:16}, pw=W-padc.l-padc.r, ph=H-padc.t-padc.b;
+  return { ctx, W, H, pad:padc, pw, ph };
+}
+function emptyChart(B,msg){ if(!B)return; B.ctx.fillStyle='#8A93A6'; B.ctx.font='600 12px Inter,sans-serif'; B.ctx.textAlign='center'; B.ctx.fillText(msg,B.W/2,B.H/2); }
+
+// delta por distancia: área verde (A por delante) / roja (A pierde) alrededor de 0
+function drawDeltaChart(canvas, dd){
+  const B=chartBase(canvas); if(!B) return;
+  if(!dd||dd.length<2){ emptyChart(B,'Sin datos para comparar'); return; }
+  const {ctx,pad,pw,ph}=B, L=dd[dd.length-1].d||1;
+  let maxAbs=200; dd.forEach(p=>{ if(p.dt!=null) maxAbs=Math.max(maxAbs,Math.abs(p.dt)); });
+  const X=d=>pad.l+(d/L)*pw, Y=v=>pad.t+ph/2-(v/maxAbs)*(ph/2);
+  for(let i=1;i<dd.length;i++){ const a=dd[i-1],b=dd[i]; if(a.dt==null||b.dt==null)continue;
+    ctx.beginPath(); ctx.moveTo(X(a.d),Y(0)); ctx.lineTo(X(a.d),Y(a.dt)); ctx.lineTo(X(b.d),Y(b.dt)); ctx.lineTo(X(b.d),Y(0)); ctx.closePath();
+    ctx.fillStyle=((a.dt+b.dt)/2<0)?'rgba(182,255,26,.22)':'rgba(255,59,48,.22)'; ctx.fill(); }
+  ctx.strokeStyle='rgba(138,147,166,.35)'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(pad.l,Y(0)); ctx.lineTo(pad.l+pw,Y(0)); ctx.stroke();
+  ctx.beginPath(); dd.forEach((p,i)=>{ if(p.dt==null)return; const x=X(p.d),y=Y(p.dt); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+  ctx.strokeStyle='#F5F7FA'; ctx.lineWidth=1.6; ctx.lineJoin='round'; ctx.stroke();
+  ctx.fillStyle='#8A93A6'; ctx.font='600 10px Saira,sans-serif'; ctx.textAlign='left';
+  ctx.fillText('+'+(maxAbs/1000).toFixed(2).replace('.',','), 2, Y(maxAbs)+8);
+  ctx.fillText('0', 2, Y(0)+3);
+  ctx.fillText('−'+(maxAbs/1000).toFixed(2).replace('.',','), 2, Y(-maxAbs));
+  const end=dd[dd.length-1].dt;
+  if(end!=null){ ctx.textAlign='right'; ctx.font='700 12px Saira,sans-serif'; ctx.fillStyle=end<0?'#B6FF1A':'#FF3B30'; ctx.fillText(fmtDelta(end), pad.l+pw, Y(0)-6); }
+}
+
+// velocidad por distancia: A (cian) sobre B (ámbar)
+function drawSpeedChart(canvas, dd){
+  const B=chartBase(canvas); if(!B) return;
+  if(!dd||dd.length<2){ emptyChart(B,'Sin datos'); return; }
+  const {ctx,pad,pw,ph}=B, L=dd[dd.length-1].d||1;
+  let vmax=0; dd.forEach(p=>{ if(p.spdA!=null)vmax=Math.max(vmax,p.spdA); if(p.spdB!=null)vmax=Math.max(vmax,p.spdB); });
+  if(vmax<=0){ emptyChart(B,'Esta tanda no guardó velocidad'); return; }
+  const f=speedFactor(), X=d=>pad.l+(d/L)*pw, Y=v=>pad.t+ph-(v/vmax)*ph;
+  ctx.strokeStyle='rgba(138,147,166,.14)'; ctx.lineWidth=1;
+  [0.5,1].forEach(fr=>{ const y=Y(vmax*fr); ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(pad.l+pw,y); ctx.stroke(); });
+  const line=(key,color)=>{ ctx.beginPath(); let on=false; dd.forEach(p=>{ const v=p[key]; if(v==null)return; const x=X(p.d),y=Y(v); on?ctx.lineTo(x,y):ctx.moveTo(x,y); on=true; }); ctx.strokeStyle=color; ctx.lineWidth=1.8; ctx.lineJoin='round'; ctx.stroke(); };
+  line('spdB','#FF9E1B'); line('spdA','#1FE0C8');
+  ctx.fillStyle='#8A93A6'; ctx.font='600 10px Saira,sans-serif'; ctx.textAlign='left';
+  ctx.fillText(Math.round(vmax*f)+'', 2, Y(vmax)+8);
+  ctx.fillText('0', 2, Y(0)-1);
+  ctx.textAlign='right'; ctx.fillText(Math.round(L)+' m', pad.l+pw, pad.t+ph+13);
+}
+
+function renderAnalysisLaps(){
+  const s=curSummary, best=s.bestSectors||[], wrap=$('#an-laps'); wrap.innerHTML='';
+  s.laps.forEach(l=>{
+    const isBest=l.ms===s.best, selA=l.n===anSel.a, selB=l.n===anSel.b;
+    let cls='best',txt='MEJOR';
+    if(!isBest){ const sec=(l.ms-s.best)/1000; txt='+'+sec.toFixed(2).replace('.',','); cls=sec>=1?'worse':'close'; }
+    let secsHtml='';
+    if(l.sectors&&l.sectors.length){
+      secsHtml='<div class="lap-secs">'+l.sectors.map((sv,i)=>{
+        const d=best[i]!=null?sv-best[i]:null, isB=best[i]!=null&&Math.abs(sv-best[i])<1e-6;
+        return `<span class="sc ${isB?'good':sectorClass(d)}">S${i+1} ${fmtSecShort(sv)}</span>`;
+      }).join('')+'</div>';
+    }
+    const tag=selA?'<span class="an-tag cyan">A</span>':selB?'<span class="an-tag amber">B</span>':'';
+    const row=document.createElement('div'); row.className='lap'+(isBest?' best':'')+(selA?' selA':'')+(selB?' selB':'');
+    row.innerHTML=`<div class="lap-top"><span class="ln">${pad2(l.n)}${tag}</span><div class="rt"><span class="lt">${fmtLap(l.ms)}</span><span class="dl ${cls}">${txt}</span></div></div>${secsHtml}`;
+    row.addEventListener('click',()=>{ if(l.n!==anSel.b){ anSel.a=l.n; $('#an-a').value=anSel.a; renderAnalysis(); } });
+    wrap.appendChild(row);
+  });
 }
 
 /* ----------------------------- Export ----------------------------- */
@@ -953,6 +1120,8 @@ function init(){
     if(!viewingSessionId) return;
     if(confirm('¿Borrar esta sesión?')){ const s=loadJSON(LS_SESSIONS,[]).filter(x=>x.id!==viewingSessionId); saveJSON(LS_SESSIONS,s); renderSessions(); show('home'); toast('Sesión borrada'); }
   });
+  $('#btn-analyze').addEventListener('click',()=>{ if(curSummary) openAnalysis(curSummary); });
+  $('#an-back').addEventListener('click',()=>{ if(curSummary){ renderSummary(curSummary); } show('summary'); });
 
   wireSettings();
   renderSettings();

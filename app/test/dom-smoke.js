@@ -18,7 +18,7 @@ window.navigator.geolocation={ watchPosition:(s)=>{ success=s; return 1; }, clea
 window.confirm=()=>true; window.alert=()=>{};
 window.HTMLCanvasElement.prototype.getContext=()=>null;
 
-for(const f of ['detect.js','cartagena-track.js','sim.js','app.js']) window.eval(fs.readFileSync(path.join(APP,f),'utf8'));
+for(const f of ['detect.js','analyze.js','cartagena-track.js','sim.js','app.js']) window.eval(fs.readFileSync(path.join(APP,f),'utf8'));
 window.document.dispatchEvent(new window.Event('DOMContentLoaded'));
 
 const R=6378137, CART={lat:37.6444,lon:-1.0352};
@@ -75,6 +75,18 @@ ok('resumen cuenta >=2 vueltas ('+count+')', count>=2);
 ok('resumen mejor vuelta válida', txt('#sum-best').trim()!=='--');
 ok('resumen vuelta óptima válida', txt('#sum-opt').trim()!=='--');
 ok('resumen muestra chips de sector', window.document.querySelectorAll('#sum-laps .lap-secs .sc').length>0);
+
+// ---- Análisis de tanda (comparar vueltas) ----
+click('#btn-analyze');
+ok('pantalla análisis activa', window.document.querySelector('#screen-analysis').classList.contains('active'));
+ok('selector A con >=2 vueltas', window.document.querySelectorAll('#an-a option').length>=2);
+ok('selector B con >=2 vueltas', window.document.querySelectorAll('#an-b option').length>=2);
+ok('A y B son vueltas distintas por defecto', window.document.querySelector('#an-a').value!==window.document.querySelector('#an-b').value);
+ok('narrativa de análisis con contenido', txt('#an-narr').trim().length>0);
+ok('tabla de análisis lista vueltas', window.document.querySelectorAll('#an-laps .lap').length>=2);
+ok('tabla marca la vuelta A', window.document.querySelectorAll('#an-laps .lap.selA').length===1);
+click('#an-back');
+ok('vuelve al resumen desde análisis', window.document.querySelector('#screen-summary').classList.contains('active'));
 
 // ---- Récord histórico (PB) por circuito ----
 let recs=JSON.parse(window.localStorage.getItem('trazza.records.v1')||'{}');

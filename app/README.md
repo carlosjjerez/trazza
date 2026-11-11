@@ -45,6 +45,12 @@ Todo el núcleo (`detect.js`) está cubierto por pruebas (ver `test/`).
   se pone **verde si vas más rápido** o **roja si más lento** que tu vuelta rápida,
   con la diferencia en segundos y décimas, recalculada al cruzar cada sector.
 - Resumen con todas las vueltas, mejor resaltada, mapa del track (con zoom) y export.
+- **Análisis de tanda** (comparar vueltas): desde el resumen, «Analizar tanda» abre
+  una pantalla que **compara dos vueltas** (A vs B) con cabecera **narrativa**
+  («dónde está la vuelta»: reparto por sectores, verde ganas / rojo pierdes),
+  **delta por distancia** (área verde/roja) y **velocidad por distancia** (A/B
+  superpuestas). Todo por **distancia recorrida**, coherente con el delta en vivo,
+  y con nota de honestidad (décimas, no centésimas). Núcleo puro en `analyze.js`.
 - Export **CSV** (vueltas) y **GPX** (track crudo, red de seguridad).
 - Avisos: pitido, vibración y *wake lock* (pantalla siempre encendida). km/h o mph.
 - **Modo demo** (GPS simulado) para probar sin pista.
@@ -90,6 +96,7 @@ app/
 ├── app.css         # estilos (paleta de marca Trazza)
 ├── app.js          # GPS, sesión, delta predictivo, mini-mapa, export, ajustes
 ├── detect.js       # núcleo de detección de vueltas (puro, testeable)
+├── analyze.js      # núcleo de análisis de tanda (puro, testeable)
 ├── sim.js          # simulador de GPS (modo demo)
 ├── sw.js           # stub que se auto-desinstala (sana versiones antiguas)
 ├── vercel.json     # headers de despliegue estático
@@ -102,6 +109,7 @@ app/
 ```bash
 cd app
 node test/detect-test.js   # núcleo de detección (incluye caso 250 km/h)
+node test/analyze-test.js  # núcleo de análisis (segmentar, delta por distancia, constancia)
 node test/sim-test.js      # modo demo de extremo a extremo
-npm i jsdom && node test/dom-smoke.js   # arranca la app real y simula una sesión
+npm i jsdom && node test/dom-smoke.js   # arranca la app real y simula una sesión + análisis
 ```

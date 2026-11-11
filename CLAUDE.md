@@ -22,6 +22,9 @@ Cronómetro GPS de vueltas para **moto en circuito**, en **español**, como PWA.
   - `detect.js` — **núcleo puro y testeado** de detección de vueltas (no tocar sin tests).
   - `analyze.js` — **núcleo puro y testeado** de análisis de tanda (segmentar vueltas,
     perfil y delta por distancia, reparto por sectores, constancia). `require`-able desde Node.
+  - `sensors.js` — **núcleo puro y testeado** de sensores: inclinación (lean) por filtro
+    complementario + fuerzas G con el IMU del PROPIO móvil (no hardware externo). El mapeo
+    de ejes DeviceMotion→moto vive en `app.js` (`IMU_AXES`) y se calibra en pista.
   - `sim.js` — simulador de GPS para el **modo demo** (probar sin pista).
   - `cartagena-track.js` — trazado real de Cartagena (meta + outline), ya en sentido correcto.
   - `sw.js` — stub que se auto-desinstala (NO reintroducir service worker).
@@ -77,15 +80,18 @@ avisos (pitido/vibración/wake-lock), km/h o mph, modo demo. Instalable como PWA
 **Análisis de tanda**: desde el resumen, comparar dos vueltas (A vs B) con cabecera
 narrativa «dónde está la vuelta», delta por distancia (área verde/roja) y velocidad por
 distancia; todo por distancia recorrida, con nota de honestidad. Núcleo en `analyze.js`.
+**Inclinación (lean) + G con el IMU del móvil** (opt-in en Ajustes): HUD en vivo y máximos
+(IZQ/DER y G) en el resumen; calibración al salir a pista. Núcleo en `sensors.js`. Se guarda
+alineado al fix GPS (1 Hz) + máximos, sin inflar `localStorage`.
 
 ## Ideas de siguiente paso (solo móvil; confirmar con el usuario antes de construir)
 Guía de adaptación competitiva (vs Lap360): teardown en `research/` cuando se mueva ahí.
 - Análisis de tanda v2: trazada sobre satélite coloreada por velocidad/pérdida de tiempo,
   gráficas metro a metro con zoom sincronizado al mapa, curva a curva, comparar >2 vueltas.
-- **Inclinación (lean angle) + fuerzas G con el IMU del propio móvil** (DeviceMotion/Orientation,
-  ~60 Hz): confirmado en alcance por el usuario. Lean = giroscopio + velocidad con corrección de
-  ancho de neumático (no solo acelerómetro). Requiere calibración y nota de precisión. ⚠️ Con
-  muestreo denso → migrar persistencia a **IndexedDB** antes (localStorage no escala).
+- Inclinación + G (IMU): v1 HECHA (HUD + máximos). Pendiente v2: afinar `IMU_AXES` y el
+  signo del roll en MOTO REAL (depende del soporte); lean/G por distancia en el análisis;
+  corrección por ancho de neumático con geometría real; muestreo denso → **IndexedDB**
+  antes de guardar streams a >1 Hz (localStorage no escala).
 - Garaje: motos, mantenimiento por horas de motor, fichas de reglaje, mejor tiempo por reglaje.
 - Home dashboard (sesiones/km/vueltas/récord) y lista de sesiones mejorada.
 - Liga/comunidad/quedadas → backend (Supabase disponible); fase mayor, cuentas incluidas.

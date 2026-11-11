@@ -5,7 +5,7 @@
    ===================================================================== */
 'use strict';
 
-const DEFAULTS = { radius:30, minLap:20, sectors:3, units:'kmh', sound:true, haptic:true, wakelock:true, sim:false };
+const DEFAULTS = { radius:30, minLap:20, sectors:3, units:'kmh', sound:true, haptic:true, wakelock:true, sim:false, imu:false };
 
 function metersToLatLon(lat0,lon0,e,n){ return [lat0+n/111320, lon0+e/(111320*Math.cos(lat0*Math.PI/180))]; }
 // Trazado REAL del Circuito de Cartagena (OpenStreetMap, lat/lon reales): forma
@@ -86,6 +86,7 @@ const live = {
   laps:[], best:null, bestProfile:null,
   lapStartT:null, lapNum:0, cumDist:0, samples:[], prevFix:null,
   track:[], speedMax:0, startedAt:null, rafId:null, wakeLock:null,
+  peaks:null,  // picos de inclinación/G de la tanda (si hay sensores)
   // sectores
   nSectors:3, refDist:null, crossTimes:[], curSectorIdx:0, lastSplitT:0, curSectors:[], bestSectors:[],
 };
@@ -173,6 +174,89 @@ const GPS = {
   },
 };
 
+/* ----------------------------- IMU: inclinación + G ----------------------------- */
+// Lean angle y fuerzas G con el acelerómetro/giroscopio DEL PROPIO MÓVIL
+// (DeviceMotion ~60 Hz). Sin hardware externo. Núcleo en sensors.js.
+//
+// ⚠️ MAPEO DE EJES DeviceMotion -> marco de la MOTO: depende de cómo quede el
+//    móvil en el soporte. Supuesto por defecto (ajustar probando en moto real):
+//    móvil VERTICAL en el depósito, pantalla hacia el piloto, borde superior
+//    hacia delante. Entonces:
+//      - tumbar izq/der (roll) ≈ rotationRate.beta           (°/s)
+//      - aLat (lateral)        ≈ accelerationIncludingGravity.x
+//      - aLon (acel/frenada)   ≈ accelerationIncludingGravity.y
+//      - aVert (vertical)      ≈ accelerationIncludingGravity.z
+// Estas constantes están aisladas aquí para poder calibrarlas en pista.
+const IMU_AXES = { rollRate:'beta', aLat:'x', aLon:'y', aVert:'z', rollSign:1 };
+
+const IMU = {
+  active:false, available:false, permission:'unknown',
+  filter:null, calib:null, calibrating:false, calBuf:null,
+  last:{ lean:0, g:null }, lastT:null, _handler:null, _calTimer:null,
+  supported(){ return typeof window!=='undefined' && typeof window.DeviceMotionEvent!=='undefined'; },
+  needsPermission(){ return this.supported() && typeof window.DeviceMotionEvent.requestPermission==='function'; },
+  async requestPermission(){
+    if(!this.supported()) return 'unsupported';
+    if(!this.needsPermission()){ this.permission='granted'; return 'granted'; }
+    try{ const r=await window.DeviceMotionEvent.requestPermission(); this.permission=r; return r; }
+    catch(e){ this.permission='denied'; return 'denied'; }
+  },
+  // arranca la escucha + calibración corta (moto recta y parada ~1,6 s)
+  start(){
+    if(!settings.imu || !this.supported() || this.permission==='denied') { this.active=false; return; }
+    this.stop();
+    this.filter=TrazzaSensors.createLeanFilter();
+    this.calib=null; this.calibrating=true; this.calBuf=TrazzaSensors.makeCalibrator();
+    this.lastT=null; this.last={ lean:0, g:null }; this.available=false;
+    this._handler=(e)=>this._onMotion(e);
+    window.addEventListener('devicemotion', this._handler, true);
+    this._calTimer=setTimeout(()=>this._finishCalib(), 1600);
+    this.active=true;
+    toast('Calibrando sensores · mantén la moto recta', 1600);
+  },
+  stop(){
+    if(this._handler){ window.removeEventListener('devicemotion', this._handler, true); this._handler=null; }
+    if(this._calTimer){ clearTimeout(this._calTimer); this._calTimer=null; }
+    this.active=false; this.calibrating=false;
+  },
+  _finishCalib(){
+    this.calibrating=false;
+    const c=this.calBuf && this.calBuf.finish(); if(c) this.calib=c;
+    if(this.filter) this.filter.reset(0);
+    if(this.available) toast('Sensores listos · 0° en recto', 1300);
+  },
+  _onMotion(e){
+    const ag=e.accelerationIncludingGravity, rr=e.rotationRate;
+    if(!ag || !rr){ return; }                 // navegador sin datos reales
+    this.available=true;
+    const ax=ag[IMU_AXES.aLat]||0, ay=ag[IMU_AXES.aLon]||0, az=ag[IMU_AXES.aVert]||0;
+    const rawRoll=(rr[IMU_AXES.rollRate]||0)*IMU_AXES.rollSign;
+    if(this.calibrating){
+      this.calBuf.add({ ax, ay, az, gx:rawRoll, gy:0, gz:0 });
+      if(this.calBuf.count>=60) this._finishCalib();   // ~1 s a 60 Hz; el timer es respaldo
+      return;
+    }
+    const now=(e.timeStamp!=null?e.timeStamp:(typeof performance!=='undefined'?performance.now():Date.now()));
+    let dt=this.lastT!=null ? (now-this.lastT)/1000 : 0; this.lastT=now;
+    if(!(dt>0) || dt>0.5) dt=0.016;            // protege de saltos/pausas
+    const bias=this.calib?this.calib.gyroBias.x:0;
+    const lean=this.filter.update(dt, rawRoll-bias, ax, az, Math.hypot(ax,ay,az));
+    const g=TrazzaSensors.gForces(ax, ay, az);
+    this.last={ lean, g };
+    if(live.running && live.peaks) live.peaks.push(lean, g);
+    renderImuHud(lean, g);
+  }
+};
+
+let _imuHudT=0;
+function renderImuHud(lean, g){
+  const now=(typeof performance!=='undefined'?performance.now():Date.now());
+  if(now-_imuHudT<90) return; _imuHudT=now;   // ~11 fps, suficiente y barato
+  const le=$('#hud-lean'); if(le) le.textContent=Math.round(Math.abs(lean))+'°';
+  const ls=$('#hud-lean-side'); if(ls) ls.textContent = Math.abs(lean)<3?'—':(lean<0?'IZQ':'DER');
+  const ge=$('#hud-g'); if(ge && g) ge.textContent=(g.horiz||0).toFixed(1);
+}
+
 /* ----------------------------- UI de GPS ----------------------------- */
 function accClass(acc){ return acc<=8?'ok':acc<=20?'wait':'bad'; }
 function accLabel(acc){ return acc<=8?'FIX BUENO':acc<=20?'FIX DÉBIL':'FIX POBRE'; }
@@ -259,13 +343,23 @@ function startSession(){
   show('hud');
   acquireWake();
   if(audioCtx&&audioCtx.state==='suspended') audioCtx.resume();
+  // sensores (inclinación + G) si están activados y disponibles
+  live.peaks = (settings.imu && IMU.supported()) ? TrazzaSensors.makePeaks() : null;
+  { const tel=$('#hud-telemetry'); if(tel) tel.hidden = !live.peaks; }
+  IMU.start();
   GPS.start(); // asegura modo correcto (real/sim)
   startClock();
   toast('A pista. El crono arranca en tu primer paso por meta', 2800);
 }
 
 function liveFix(fix){
-  live.track.push({ t:fix.t, lat:fix.lat, lon:fix.lon, acc:fix.acc, spd:fix.spd });
+  // guarda el fix + instantánea de sensores (1 Hz: no infla localStorage)
+  const pt={ t:fix.t, lat:fix.lat, lon:fix.lon, acc:fix.acc, spd:fix.spd };
+  if(live.peaks && IMU.available && IMU.last){
+    pt.lean=Math.round(IMU.last.lean*10)/10;
+    if(IMU.last.g) pt.g=Math.round((IMU.last.g.horiz||0)*100)/100;
+  }
+  live.track.push(pt);
   if(fix.spd!=null) live.speedMax=Math.max(live.speedMax, fix.spd);
   $('#hud-spd').textContent=fmtSpeed(fix.spd);
   $('#hud-spdmax').textContent=fmtSpeed(live.speedMax);
@@ -448,6 +542,7 @@ function stopSession(){
   live.running=false;
   cancelAnimationFrame(live.rafId);
   releaseWake();
+  IMU.stop();
   const saved=persistSession(true);
   renderSummary(saved); show('summary');
 }
@@ -466,6 +561,11 @@ function persistSession(finalize){
     speedMaxKmh: Math.round(live.speedMax*3.6),
     gate:{ lat:live.gate.lat, lon:live.gate.lon }, crossTimes: live.crossTimes.slice(), track: live.track,
   };
+  // telemetría de sensores (inclinación/G) si la tanda la registró
+  if(live.peaks && (live.peaks.leanL||live.peaks.leanR||live.peaks.gHoriz)){
+    data.imu={ leanL:Math.round(live.peaks.leanL), leanR:Math.round(live.peaks.leanR),
+               gHoriz:Math.round(live.peaks.gHoriz*100)/100, gLon:Math.round(live.peaks.gLon*100)/100 };
+  }
   // récord histórico del circuito (se consolida al cerrar la sesión)
   if(finalize && live.recordKey){
     const stored = loadRecord(live.recordKey);            // PB previo a esta sesión
@@ -511,6 +611,16 @@ function renderSummary(s){
   $('#sum-count').textContent=s.laps.length;
   $('#sum-vmax').textContent=(s.speedMaxKmh!=null?Math.round(s.speedMaxKmh*(settings.units==='mph'?0.621371:1)):'--')+' '+speedUnit();
   $('#sum-opt').textContent = s.optimal!=null ? fmtLap(s.optimal) : '--';
+  // telemetría de sensores (inclinación / G máx) si la tanda la registró
+  const imuBox=$('#sum-imu');
+  if(imuBox){
+    if(s.imu){
+      imuBox.hidden=false;
+      $('#sum-lean').textContent=Math.max(s.imu.leanL,s.imu.leanR)+'°';
+      $('#sum-lean-lr').textContent='IZQ '+s.imu.leanL+'° · DER '+s.imu.leanR+'°';
+      $('#sum-g').textContent=(s.imu.gHoriz||0).toFixed(1).replace('.',',')+' g';
+    } else imuBox.hidden=true;
+  }
 
   // banner de récord del circuito
   const rb=$('#sum-record');
@@ -1084,6 +1194,13 @@ function wireSettings(){
   $all('.sw[data-toggle]').forEach(b=>b.addEventListener('click',()=>{
     const k=b.dataset.toggle; settings[k]=!settings[k]; saveJSON(LS_SETTINGS,settings); renderSettings();
     if(k==='sim'){ toast(settings.sim?'Modo demo activado · GPS simulado':'Modo demo desactivado · GPS real',2600); GPS.start(); }
+    if(k==='imu' && settings.imu){
+      IMU.requestPermission().then(r=>{
+        if(r==='unsupported') toast('Este móvil no expone sensores de movimiento',2800);
+        else if(r==='denied') toast('Permiso de sensores denegado',2800);
+        else toast('Inclinación y G activados · se calibra al salir a pista',3000);
+      });
+    }
   }));
   $('#btn-clear').addEventListener('click',()=>{ if(confirm('¿Borrar TODAS las sesiones? No se puede deshacer.')){ localStorage.removeItem(LS_SESSIONS); renderSessions(); toast('Sesiones borradas'); } });
   $('#btn-clear-records').addEventListener('click',()=>{ if(confirm('¿Borrar todos los récords de circuito (PB)?')){ localStorage.removeItem(LS_RECORDS); toast('Récords borrados'); } });
@@ -1113,7 +1230,13 @@ function init(){
   $('#btn-undo').addEventListener('click', undoPoint);
   $('#btn-save-circuit').addEventListener('click', saveCircuit);
   $('#btn-confirm-meta').addEventListener('click', confirmMeta);
-  $('#btn-start').addEventListener('click', startSession);
+  $('#btn-start').addEventListener('click', ()=>{
+    // iOS exige pedir permiso de sensores DENTRO de un gesto de usuario. No
+    // esperamos la promesa para no aplazar el arranque: la escucha se engancha
+    // ya y los eventos llegan en cuanto se concede.
+    if(settings.imu && IMU.supported() && IMU.permission==='unknown') IMU.requestPermission();
+    startSession();
+  });
   $('#btn-stop').addEventListener('click',()=>{ if(confirm('¿Terminar la sesión?')) stopSession(); });
   $('#tk-stop').addEventListener('click',()=>{ if(confirm('¿Terminar la sesión?')) stopSession(); });
   $('#btn-del-session').addEventListener('click',()=>{

@@ -51,6 +51,14 @@ Todo el núcleo (`detect.js`) está cubierto por pruebas (ver `test/`).
   **delta por distancia** (área verde/roja) y **velocidad por distancia** (A/B
   superpuestas). Todo por **distancia recorrida**, coherente con el delta en vivo,
   y con nota de honestidad (décimas, no centésimas). Núcleo puro en `analyze.js`.
+- **Inclinación (lean angle) y fuerzas G** con el **IMU del propio móvil**
+  (acelerómetro + giroscopio, `DeviceMotion` ~60 Hz; sin hardware externo).
+  Filtro complementario (el acelerómetro solo se equivoca en curva, así que el
+  giroscopio lleva la voz y el acelerómetro corrige deriva en recto). Se calibra
+  al salir a pista (0° con la moto recta). En el HUD en vivo y máximos (IZQ/DER y
+  G) en el resumen. Opt-in en Ajustes. Núcleo puro en `sensors.js`.
+  Honestidad: grados orientativos del móvil, no telemetría profesional; el ajuste
+  fino de ejes depende del soporte y se calibra en moto real.
 - Export **CSV** (vueltas) y **GPX** (track crudo, red de seguridad).
 - Avisos: pitido, vibración y *wake lock* (pantalla siempre encendida). km/h o mph.
 - **Modo demo** (GPS simulado) para probar sin pista.
@@ -97,6 +105,7 @@ app/
 ├── app.js          # GPS, sesión, delta predictivo, mini-mapa, export, ajustes
 ├── detect.js       # núcleo de detección de vueltas (puro, testeable)
 ├── analyze.js      # núcleo de análisis de tanda (puro, testeable)
+├── sensors.js      # núcleo de sensores: lean angle + G del móvil (puro, testeable)
 ├── sim.js          # simulador de GPS (modo demo)
 ├── sw.js           # stub que se auto-desinstala (sana versiones antiguas)
 ├── vercel.json     # headers de despliegue estático
@@ -110,6 +119,7 @@ app/
 cd app
 node test/detect-test.js   # núcleo de detección (incluye caso 250 km/h)
 node test/analyze-test.js  # núcleo de análisis (segmentar, delta por distancia, constancia)
+node test/sensors-test.js  # núcleo de sensores (lean complementario, G, calibración)
 node test/sim-test.js      # modo demo de extremo a extremo
 npm i jsdom && node test/dom-smoke.js   # arranca la app real y simula una sesión + análisis
 ```

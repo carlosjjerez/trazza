@@ -18,7 +18,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;500;600;700;800&family=Saira+Semi+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="app.css?v=20261111a">
+  <link rel="stylesheet" href="app.css?v=20261111b">
 </head>
 <body>
 
@@ -207,6 +207,19 @@
 
     <div class="hud-fill"></div>
 
+    <div class="telemetry" id="hud-telemetry" hidden>
+      <div class="tl-cell">
+        <span class="kicker">Inclinación</span>
+        <div class="tl-num"><span id="hud-lean">0</span><em>°</em></div>
+        <span class="tl-side" id="hud-lean-side">—</span>
+      </div>
+      <div class="tl-cell">
+        <span class="kicker cyan">Fuerza G</span>
+        <div class="tl-num"><span id="hud-g">0.0</span><em>g</em></div>
+        <span class="tl-side">lateral + frenada</span>
+      </div>
+    </div>
+
     <div class="speed">
       <div class="speed-now"><span id="hud-spd">0</span><em id="hud-spd-unit">KM/H</em></div>
       <div class="speed-max"><span class="kicker">Máx</span><div id="hud-spdmax">0</div></div>
@@ -253,6 +266,19 @@
         <div><span class="k">V. máx</span><span class="v" id="sum-vmax">--</span></div>
       </div>
       <div class="opt-note">Óptima = suma de tus mejores sectores</div>
+    </div>
+
+    <div class="card imu-card" id="sum-imu" hidden>
+      <div class="imu-cell">
+        <span class="kicker">Inclinación máx</span>
+        <div class="imu-num" id="sum-lean">--</div>
+        <div class="imu-sub" id="sum-lean-lr">--</div>
+      </div>
+      <div class="imu-cell">
+        <span class="kicker cyan">G máx (lat+fren)</span>
+        <div class="imu-num cyan" id="sum-g">--</div>
+        <div class="imu-sub">del acelerómetro del móvil</div>
+      </div>
     </div>
 
     <div class="record" id="sum-record" hidden></div>
@@ -381,6 +407,14 @@
       <div class="grow"><div class="g-title">Pantalla siempre encendida</div><button class="sw on" data-toggle="wakelock"><i></i></button></div>
     </div>
 
+    <div class="list-head"><span class="kicker">Sensores</span></div>
+    <div class="group">
+      <div class="grow">
+        <div><div class="g-title">Inclinación y fuerzas G</div><div class="g-sub">Usa el acelerómetro y giroscopio del móvil. Se calibra al salir a pista (moto recta). Décimas de grado orientativas, no de telemetría profesional.</div></div>
+        <button class="sw" data-toggle="imu"><i></i></button>
+      </div>
+    </div>
+
     <div class="list-head"><span class="kicker">Pruebas</span></div>
     <div class="group">
       <div class="grow">
@@ -407,10 +441,11 @@
 
 <div id="toast" class="toast"></div>
 
-<script src="detect.js?v=20261111a"></script>
-<script src="analyze.js?v=20261111a"></script>
-<script src="cartagena-track.js?v=20261111a"></script>
-<script src="sim.js?v=20261111a"></script>
-<script src="app.js?v=20261111a"></script>
+<script src="detect.js?v=20261111b"></script>
+<script src="analyze.js?v=20261111b"></script>
+<script src="sensors.js?v=20261111b"></script>
+<script src="cartagena-track.js?v=20261111b"></script>
+<script src="sim.js?v=20261111b"></script>
+<script src="app.js?v=20261111b"></script>
 </body>
 </html>

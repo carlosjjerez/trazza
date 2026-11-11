@@ -17,8 +17,10 @@ let success=null;
 window.navigator.geolocation={ watchPosition:(s)=>{ success=s; return 1; }, clearWatch:()=>{} };
 window.confirm=()=>true; window.alert=()=>{};
 window.HTMLCanvasElement.prototype.getContext=()=>null;
+window.DeviceMotionEvent=function DeviceMotionEvent(){};        // sensores disponibles (sin requestPermission: tipo Android)
+try{ window.localStorage.setItem('trazza.settings.v2', JSON.stringify({imu:true})); }catch(e){}  // activa inclinación + G
 
-for(const f of ['detect.js','analyze.js','cartagena-track.js','sim.js','app.js']) window.eval(fs.readFileSync(path.join(APP,f),'utf8'));
+for(const f of ['detect.js','analyze.js','sensors.js','cartagena-track.js','sim.js','app.js']) window.eval(fs.readFileSync(path.join(APP,f),'utf8'));
 window.document.dispatchEvent(new window.Event('DOMContentLoaded'));
 
 const R=6378137, CART={lat:37.6444,lon:-1.0352};
@@ -45,6 +47,15 @@ ok('recordatorio añadido a la lista', window.document.querySelectorAll('#rem-li
 
 click('#btn-start');
 ok('pantalla HUD activa', window.document.querySelector('#screen-hud').classList.contains('active'));
+
+// ---- Sensores (inclinación + G con el IMU del móvil) ----
+const GRAV=9.80665;
+const motion=(aLat,aLon,aVert,roll,ts)=>{ const ev=new window.Event('devicemotion');
+  ev.accelerationIncludingGravity={x:aLat,y:aLon,z:aVert}; ev.rotationRate={alpha:0,beta:roll,gamma:0}; ev.timeStamp=ts; window.dispatchEvent(ev); };
+for(let i=0;i<62;i++) motion(0,0,GRAV,0, 900000+i*16);                       // calibración (moto recta)
+const tilt=d=>{ const r=d*Math.PI/180; return [GRAV*Math.sin(r),0,GRAV*Math.cos(r)]; };
+for(let i=0;i<220;i++){ const [x,y,z]=tilt(i<110?42:-42); motion(x,y,z,0, 960000+i*16); } // tumba derecha y luego izquierda
+ok('HUD telemetría visible con sensores', window.document.querySelector('#hud-telemetry').hidden===false);
 
 const A=200,B=110,DURS=[45,44,46,43.5];
 let theta=-0.6, lapIdx=0;
@@ -75,6 +86,11 @@ ok('resumen cuenta >=2 vueltas ('+count+')', count>=2);
 ok('resumen mejor vuelta válida', txt('#sum-best').trim()!=='--');
 ok('resumen vuelta óptima válida', txt('#sum-opt').trim()!=='--');
 ok('resumen muestra chips de sector', window.document.querySelectorAll('#sum-laps .lap-secs .sc').length>0);
+
+// sensores: guardados en la sesión + visibles en el resumen
+const sess1=(JSON.parse(window.localStorage.getItem('trazza.sessions.v2')||'[]'))[0];
+ok('sesión guarda inclinación máx (IMU)', !!(sess1 && sess1.imu) && sess1.imu.leanL>10 && sess1.imu.leanR>10);
+ok('resumen muestra tarjeta de inclinación/G', window.document.querySelector('#sum-imu').hidden===false);
 
 // ---- Análisis de tanda (comparar vueltas) ----
 click('#btn-analyze');

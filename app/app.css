@@ -322,3 +322,17 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .lap.selA{border-color:rgba(31,224,200,.55);} .lap.selB{border-color:rgba(255,158,27,.5);}
 .an-tag{display:inline-block;margin-left:7px;font-family:var(--display);font-weight:800;font-size:11px;padding:1px 6px;border-radius:6px;vertical-align:middle;}
 .an-tag.cyan{color:var(--asfalto);background:var(--cian);} .an-tag.amber{color:var(--asfalto);background:var(--ambar);}
+
+/* ===================== Telemetría de sensores (inclinación + G) ===================== */
+/* HUD: fila de inclinación + G, encima del bloque de velocidad */
+.telemetry{display:flex;gap:10px;margin-bottom:10px;}
+.tl-cell{flex:1;background:var(--grafito-2);border:1px solid var(--linea);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;}
+.tl-num{font-family:var(--display);font-weight:700;font-size:40px;line-height:.9;color:var(--blanco);font-variant-numeric:tabular-nums;}
+.tl-num em{font-style:normal;font-size:18px;color:var(--niebla);margin-left:3px;font-weight:600;}
+.tl-side{font-size:11px;color:var(--niebla);letter-spacing:.04em;text-transform:uppercase;font-weight:600;}
+/* Resumen: tarjeta de inclinación máx + G máx */
+.imu-card{display:flex;gap:16px;}
+.imu-cell{flex:1;display:flex;flex-direction:column;gap:3px;}
+.imu-num{font-family:var(--display);font-weight:700;font-size:34px;line-height:.9;color:var(--blanco);font-variant-numeric:tabular-nums;}
+.imu-num.cyan{color:var(--cian);}
+.imu-sub{font-size:11.5px;color:var(--niebla);}

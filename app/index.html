@@ -18,7 +18,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;500;600;700;800&family=Saira+Semi+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="app.css?v=20261111j">
+  <link rel="stylesheet" href="app.css?v=20261111k">
 </head>
 <body>
 
@@ -131,6 +131,33 @@
     <div class="list-head"><span class="kicker">Tus tandas</span></div>
     <div id="session-list" class="stack"></div>
   </div>
+</section>
+
+<!-- ===================== ANTES DE SALIR (preflight) ===================== -->
+<section id="screen-preflight" class="screen">
+  <header class="appbar">
+    <button class="icon-btn" data-go="home" aria-label="Atrás">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F5F7FA" stroke-width="2.2"><path d="M15 6l-6 6 6 6"/></svg>
+    </button>
+    <span class="appbar-title left">Antes de salir</span>
+    <span class="appbar-spacer"></span>
+  </header>
+  <div class="scroll">
+    <div class="list-head"><span class="kicker">Comprobación</span></div>
+    <div class="group checks">
+      <div class="chk" id="chk-gps"><span class="ci"></span><div class="cx"><div class="ct">Señal GPS</div><div class="cs" id="chk-gps-sub">--</div></div></div>
+      <div class="hr"></div>
+      <div class="chk" id="chk-circuit"><span class="ci"></span><div class="cx"><div class="ct">Circuito y meta</div><div class="cs" id="chk-circuit-sub">--</div></div></div>
+      <div class="hr"></div>
+      <div class="chk" id="chk-bike"><span class="ci"></span><div class="cx"><div class="ct">Moto y reglaje</div><div class="cs" id="chk-bike-sub">--</div></div></div>
+      <div class="hr"></div>
+      <div class="chk" id="chk-sensors"><span class="ci"></span><div class="cx"><div class="ct">Sensores (inclinación y G)</div><div class="cs" id="chk-sensors-sub">--</div></div></div>
+      <div class="hr"></div>
+      <div class="chk" id="chk-screen"><span class="ci"></span><div class="cx"><div class="ct">Pantalla</div><div class="cs" id="chk-screen-sub">--</div></div></div>
+    </div>
+    <p class="help" id="preflight-note">Fija el móvil en el soporte, con la moto recta y parada. El cronómetro arranca en tu primer paso por meta.</p>
+  </div>
+  <div class="dock"><button class="cta" id="btn-preflight-go"><span>Salir a pista</span></button></div>
 </section>
 
 <!-- ===================== META ===================== -->
@@ -308,13 +335,15 @@
     <div class="card sum-card">
       <span class="kicker green">Mejor vuelta</span>
       <div class="sum-best" id="sum-best">--</div>
-      <div class="sum-stats">
+      <div class="sum-stats grid6">
         <div><span class="k">Óptima</span><span class="v green" id="sum-opt">--</span></div>
         <div><span class="k">Media</span><span class="v" id="sum-avg">--</span></div>
         <div><span class="k">Vueltas</span><span class="v" id="sum-count">0</span></div>
-        <div><span class="k">V. máx</span><span class="v" id="sum-vmax">--</span></div>
+        <div><span class="k">V. máx</span><span class="v cyan" id="sum-vmax">--</span></div>
+        <div><span class="k">Distancia</span><span class="v" id="sum-dist">--</span></div>
+        <div><span class="k">Constancia</span><span class="v" id="sum-cons">--</span></div>
       </div>
-      <div class="opt-note">Óptima = suma de tus mejores sectores</div>
+      <div class="opt-note">Óptima = suma de tus mejores sectores · Constancia = desviación entre vueltas</div>
     </div>
 
     <div class="card imu-card" id="sum-imu" hidden>
@@ -602,12 +631,12 @@
 
 <div id="toast" class="toast"></div>
 
-<script src="detect.js?v=20261111j"></script>
-<script src="analyze.js?v=20261111j"></script>
-<script src="sensors.js?v=20261111j"></script>
-<script src="garage.js?v=20261111j"></script>
-<script src="cartagena-track.js?v=20261111j"></script>
-<script src="sim.js?v=20261111j"></script>
-<script src="app.js?v=20261111j"></script>
+<script src="detect.js?v=20261111k"></script>
+<script src="analyze.js?v=20261111k"></script>
+<script src="sensors.js?v=20261111k"></script>
+<script src="garage.js?v=20261111k"></script>
+<script src="cartagena-track.js?v=20261111k"></script>
+<script src="sim.js?v=20261111k"></script>
+<script src="app.js?v=20261111k"></script>
 </body>
 </html>

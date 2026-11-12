@@ -311,6 +311,33 @@ function beep(kind){
 }
 function haptic(p){ if(settings.haptic&&navigator.vibrate) navigator.vibrate(p); }
 
+/* ----------------------------- Antes de salir (preflight) ----------------------------- */
+function openPreflight(){
+  if(!selectedMeta){ toast('Marca o elige una meta'); return; }
+  if(!GPS.last){ toast('Esperando GPS'); return; }
+  const setChk=(id,cls,sub)=>{ const el=$('#'+id); if(el) el.className='chk '+cls; const s=$('#'+id+'-sub'); if(s) s.textContent=sub; };
+  // GPS
+  if(GPS.last){ const a=GPS.last.acc, cls=a<=8?'ok':a<=20?'wait':'bad';
+    setChk('chk-gps', cls, '±'+a.toFixed(1)+' m · '+(GPS.hz?GPS.hz.toFixed(1):'--')+' Hz'); }
+  else setChk('chk-gps','bad','Esperando señal…');
+  // circuito + récord
+  const rec=loadRecord(recordKey(selectedMeta));
+  setChk('chk-circuit','ok', selectedMeta.name + (rec?(' · récord '+fmtLap(rec.bestMs)):' · aún sin récord'));
+  // moto
+  const b=preSession && preSession.bikeId ? bikeById(preSession.bikeId) : null;
+  if(b) setChk('chk-bike','ok', (preSession.bikeName||'Moto') + (preSession.setupName?(' · '+preSession.setupName):' · sin reglaje'));
+  else setChk('chk-bike','wait','Sin moto (opcional)');
+  // sensores
+  if(settings.imu && IMU.supported()) setChk('chk-sensors','ok','Activados · se calibra el 0° al empezar');
+  else if(settings.imu) setChk('chk-sensors','wait','Este móvil no expone sensores');
+  else setChk('chk-sensors','wait','Desactivados · actívalos en Ajustes');
+  // pantalla
+  const or={auto:'Auto',vertical:'Vertical',horizontal:'Horizontal'}[settings.orientation||'auto'];
+  setChk('chk-screen','ok', or + (settings.wakelock?' · siempre encendida':' · puede apagarse'));
+  const go=$('#btn-preflight-go'); if(go){ const sp=go.querySelector('span'); if(sp) sp.textContent=(settings.imu&&IMU.supported())?'Calibrar y salir a pista':'Salir a pista'; }
+  show('preflight');
+}
+
 /* ----------------------------- Sesión en vivo ----------------------------- */
 function startSession(){
   if(!selectedMeta){ toast('Marca o elige una meta'); return; }
@@ -663,6 +690,9 @@ function renderSummary(s){
   $('#sum-count').textContent=s.laps.length;
   $('#sum-vmax').textContent=(s.speedMaxKmh!=null?Math.round(s.speedMaxKmh*(settings.units==='mph'?0.621371:1)):'--')+' '+speedUnit();
   $('#sum-opt').textContent = s.optimal!=null ? fmtLap(s.optimal) : '--';
+  $('#sum-dist').textContent = s.distM!=null ? (s.distM/1000).toFixed(1)+' km' : '--';
+  { const c=TrazzaAnalyze.consistency((s.laps||[]).map(l=>l.ms)); const se=$('#sum-cons');
+    if(se) se.textContent = (c.sd!=null && c.count>=2) ? '±'+(c.sd/1000).toFixed(2).replace('.',',')+' s' : '--'; }
   // telemetría de sensores (inclinación / G máx) si la tanda la registró
   const imuBox=$('#sum-imu');
   if(imuBox){
@@ -1197,8 +1227,10 @@ function renderPresets(){
     const el=document.createElement('div'); el.className='preset'+(selectedMeta&&selectedMeta.name===p.name?' sel':'');
     const sub = p.template ? `plantilla · ${p.length} m · se coloca en tu posición`
                            : `${esc(p.sub)} · ${p.lat.toFixed(4)}, ${p.lon.toFixed(4)}`;
+    const rec = (!p.template && p.lat!=null) ? loadRecord(recordKey(p)) : null;
+    const recBadge = rec ? `<span class="preset-rec">🏁 ${fmtLap(rec.bestMs)}</span>` : '';
     el.innerHTML=`<div><div class="nm">${esc(p.name)}</div><div class="sub">${sub}</div></div>
-      <svg class="tick" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2.4"><path d="M5 12l5 5 9-9"/></svg>`;
+      <div class="preset-right">${recBadge}<svg class="tick" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B6FF1A" stroke-width="2.4"><path d="M5 12l5 5 9-9"/></svg></div>`;
     el.addEventListener('click',()=>{ if(p.template) selectTemplate(p); else chooseMeta(p,p.name); $all('.preset').forEach(e=>e.classList.remove('sel')); el.classList.add('sel'); });
     list.appendChild(el);
   });
@@ -1586,10 +1618,9 @@ function init(){
   $('#btn-undo').addEventListener('click', undoPoint);
   $('#btn-save-circuit').addEventListener('click', saveCircuit);
   $('#btn-confirm-meta').addEventListener('click', confirmMeta);
-  $('#btn-start').addEventListener('click', ()=>{
-    // iOS exige pedir permiso de sensores DENTRO de un gesto de usuario. No
-    // esperamos la promesa para no aplazar el arranque: la escucha se engancha
-    // ya y los eventos llegan en cuanto se concede.
+  $('#btn-start').addEventListener('click', openPreflight);
+  $('#btn-preflight-go').addEventListener('click', ()=>{
+    // iOS exige pedir permiso de sensores DENTRO de un gesto de usuario.
     if(settings.imu && IMU.supported() && IMU.permission==='unknown') IMU.requestPermission();
     startSession();
   });

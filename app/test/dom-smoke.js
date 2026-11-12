@@ -46,6 +46,9 @@ click('#rem-add-btn');
 ok('recordatorio añadido a la lista', window.document.querySelectorAll('#rem-list .rem-item').length===1);
 
 click('#btn-start');
+ok('preflight activo tras salir a pista', window.document.querySelector('#screen-preflight').classList.contains('active'));
+ok('preflight: chequeo de circuito', window.document.querySelector('#chk-circuit').className.includes('ok'));
+click('#btn-preflight-go');
 ok('pantalla HUD activa', window.document.querySelector('#screen-hud').classList.contains('active'));
 ok('tab bar oculta en el HUD', window.document.querySelector('#tabbar').classList.contains('hidden')===true);
 
@@ -118,7 +121,7 @@ const firstRecMs = recs[Object.keys(recs)[0]].bestMs;
 // 2ª sesión más rápida en la misma meta -> debe batir el récord
 click('[data-go="home"]'); click('#meta-card');
 feed(CART.lat,CART.lon,4,t,0); t+=1000;                 // vuelve a la misma meta
-click('#btn-mark-here'); click('#btn-confirm-meta'); click('#btn-start');
+click('#btn-mark-here'); click('#btn-confirm-meta'); click('#btn-start'); click('#btn-preflight-go');
 { const A=200,B=110,DURS=[40,39.5]; let theta=-0.6,lapIdx=0;
   for(let s=0;s<150;s++){ const x=B*(Math.cos(theta)-1),y=A*Math.sin(theta); const ll=offset(CART.lat,CART.lon,x,y);
     feed(ll.lat,ll.lon,3,t,45); t+=1000;
@@ -171,7 +174,7 @@ ok('confirmar habilitado tras guardar', window.document.querySelector('#btn-conf
 ok('circuito en lista guardadas', window.document.querySelectorAll('#saved-list .preset').length>=1);
 click('#btn-confirm-meta');
 ok('meta seleccionada = circuito', txt('#meta-name').includes('Circuito'));
-click('#btn-start');
+click('#btn-start'); click('#btn-preflight-go');
 ok('HUD tiene mapa en vivo', !!window.document.querySelector('#hud-map'));
 feed(CART.lat,CART.lon,4,t,10); t+=1000;
 ok('sigue en HUD tras fix (mapa no rompe)', qsActive('#screen-hud'));
@@ -215,7 +218,7 @@ ok('al usar moto vuelve a inicio', qsActive('#screen-home'));
 ok('tarjeta de inicio muestra la moto', txt('#bike-card-name').includes('Panigale Test'));
 ok('aviso de mantenimiento oculto si no toca', window.document.querySelector('#bike-card-warn').hidden===true);
 // la tanda hereda moto y reglaje
-click('#btn-start');
+click('#btn-start'); click('#btn-preflight-go');
 feed(CART.lat,CART.lon,4,t,10); t+=1000; feed(CART.lat,CART.lon,4,t,10); t+=1000;
 click('#btn-stop');
 const gsess=(JSON.parse(window.localStorage.getItem('trazza.sessions.v2')||'[]'))[0];

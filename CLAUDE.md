@@ -83,6 +83,9 @@ en PWA, y «mantener pantalla encendida», desde la pestaña Pista.
 **HUD «cabina»**: tira de estado arriba (GPS Hz · precisión · sensores Hz · reloj), MEJOR en
 cabecera, bloque Delta + **Previsión** (tiempo estimado de vuelta) + Última, sectores y fila de
 datos Velocidad · Inclinación · G.
+**Preflight «Antes de salir»**: al pulsar «Salir a pista» se muestra una comprobación (GPS,
+circuito+récord, moto, sensores, pantalla) con tics; el botón «Calibrar y salir a pista» arranca.
+**Resumen**: rejilla de stats (óptima, media, vueltas, V.máx, distancia, constancia).
 Cronómetro con detección automática, sectores en vivo, delta predictivo verde/rojo,
 mini-mapa del circuito en el HUD, crear circuitos (GPS o punto a punto), preset Cartagena
 y plantilla de maniobras, récord histórico (PB) por circuito, recordatorios por vuelta,

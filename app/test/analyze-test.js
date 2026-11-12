@@ -70,6 +70,17 @@ function north(lat, m){ return lat + (m/R)*180/Math.PI; }
   ok('g/l: todos los sectores favorables a A (dt<0)', gl.every(s=>s.dt<0));
 }
 
+// ---- lean/g se arrastran en perfil y delta ----
+{
+  const pts=[]; for(let i=0;i<=10;i++) pts.push({ t:i*1000, lat:north(CLAT,i*20), lon:CLON, spd:20, lean:(i%2?30:-30), g:1.1 });
+  const prof=A.lapProfile(pts);
+  ok('perfil: arrastra lean', prof[1].lean===30 && prof[2].lean===-30);
+  ok('perfil: arrastra g', prof[3].g===1.1);
+  const pb=A.lapProfile(pts.map(p=>({...p, lean:0})));
+  const dd=A.deltaByDistance(prof, pb, 20);
+  ok('delta: incluye leanA y leanB', dd.some(p=>p.leanA!=null) && dd.every(p=>p.leanB===0));
+}
+
 // ---- consistency ----
 {
   const c=A.consistency([100000,100000,100000]);

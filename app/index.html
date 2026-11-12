@@ -18,7 +18,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;500;600;700;800&family=Saira+Semi+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="app.css?v=20261111d">
+  <link rel="stylesheet" href="app.css?v=20261111e">
 </head>
 <body>
 
@@ -308,6 +308,10 @@
       <span>Analizar tanda</span>
     </button>
 
+    <div class="pills sm" id="sum-colormode" hidden>
+      <button data-cm="spd" class="on">Velocidad</button>
+      <button data-cm="lean">Inclinación</button>
+    </div>
     <div class="map-wrap">
       <canvas id="sum-map" class="map"></canvas>
       <div class="map-zoom">
@@ -316,7 +320,7 @@
         <button id="zoom-reset" aria-label="Restablecer">⟲</button>
       </div>
     </div>
-    <div class="map-legend">
+    <div class="map-legend" id="sum-legend">
       <span><i class="lg" style="background:#FF3B30"></i>Lento</span>
       <span><i class="lg" style="background:#FF9E1B"></i>Medio</span>
       <span><i class="lg" style="background:#1FE0C8"></i>Rápido</span>
@@ -456,6 +460,13 @@
       <canvas id="an-speed" class="an-chart"></canvas>
     </div>
 
+    <!-- inclinación por distancia (solo si la tanda registró sensores) -->
+    <div class="an-chart-wrap" id="an-lean-wrap" hidden>
+      <div class="an-chart-head"><span class="kicker">Inclinación por distancia</span>
+        <span class="an-hint">IZQ ·/· DER · del IMU del móvil</span></div>
+      <canvas id="an-lean" class="an-chart"></canvas>
+    </div>
+
     <!-- tabla de vueltas y sectores -->
     <div class="laps-head"><span class="kicker">Vueltas y sectores</span><span class="kicker">Tiempo · Δ</span></div>
     <div id="an-laps" class="stack tight"></div>
@@ -544,12 +555,12 @@
 
 <div id="toast" class="toast"></div>
 
-<script src="detect.js?v=20261111d"></script>
-<script src="analyze.js?v=20261111d"></script>
-<script src="sensors.js?v=20261111d"></script>
-<script src="garage.js?v=20261111d"></script>
-<script src="cartagena-track.js?v=20261111d"></script>
-<script src="sim.js?v=20261111d"></script>
-<script src="app.js?v=20261111d"></script>
+<script src="detect.js?v=20261111e"></script>
+<script src="analyze.js?v=20261111e"></script>
+<script src="sensors.js?v=20261111e"></script>
+<script src="garage.js?v=20261111e"></script>
+<script src="cartagena-track.js?v=20261111e"></script>
+<script src="sim.js?v=20261111e"></script>
+<script src="app.js?v=20261111e"></script>
 </body>
 </html>

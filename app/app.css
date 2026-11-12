@@ -374,3 +374,5 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .dash-grid .v{font-family:var(--display);font-weight:700;font-size:24px;line-height:.95;color:var(--blanco);font-variant-numeric:tabular-nums;}
 .dash-grid .v.cyan{color:var(--cian);} .dash-grid .v.green{color:var(--hiviz);font-size:19px;}
 .sess-bike{display:inline-block;margin-left:8px;font-family:var(--display);font-weight:700;font-size:11px;color:var(--cian);background:rgba(31,224,200,.1);border-radius:6px;padding:1px 7px;vertical-align:middle;}
+.pills.sm{margin:14px 0 0;}
+.pills.sm button{padding:9px 10px;font-size:14px;}

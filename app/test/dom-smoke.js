@@ -91,6 +91,7 @@ ok('resumen muestra chips de sector', window.document.querySelectorAll('#sum-lap
 const sess1=(JSON.parse(window.localStorage.getItem('trazza.sessions.v2')||'[]'))[0];
 ok('sesión guarda inclinación máx (IMU)', !!(sess1 && sess1.imu) && sess1.imu.leanL>10 && sess1.imu.leanR>10);
 ok('resumen muestra tarjeta de inclinación/G', window.document.querySelector('#sum-imu').hidden===false);
+ok('toggle de color del mapa visible (hay lean)', window.document.querySelector('#sum-colormode').hidden===false);
 
 // ---- Análisis de tanda (comparar vueltas) ----
 click('#btn-analyze');
@@ -100,6 +101,7 @@ ok('selector B con >=2 vueltas', window.document.querySelectorAll('#an-b option'
 ok('A y B son vueltas distintas por defecto', window.document.querySelector('#an-a').value!==window.document.querySelector('#an-b').value);
 ok('narrativa de análisis con contenido', txt('#an-narr').trim().length>0);
 ok('tabla de análisis lista vueltas', window.document.querySelectorAll('#an-laps .lap').length>=2);
+ok('gráfica de inclinación visible (hay sensores)', window.document.querySelector('#an-lean-wrap').hidden===false);
 ok('tabla marca la vuelta A', window.document.querySelectorAll('#an-laps .lap.selA').length===1);
 click('#an-back');
 ok('vuelve al resumen desde análisis', window.document.querySelector('#screen-summary').classList.contains('active'));

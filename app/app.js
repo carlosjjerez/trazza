@@ -80,6 +80,7 @@ settings.sim = false; // el modo demo nunca persiste
 let selectedMeta = null;   // {lat,lon,name}
 let viewingSessionId = null;
 let curSummary = null;     // sesión mostrada en resumen (base del análisis)
+let sumColorMode = 'spd';  // coloreado del mapa de resumen: 'spd' | 'lean'
 
 const live = {
   running:false, gate:null, detector:null,
@@ -696,9 +697,28 @@ function renderSummary(s){
 
   $('#btn-csv').onclick=()=>exportCSV(s);
   $('#btn-gpx').onclick=()=>exportGPX(s);
+  // toggle de color del mapa: velocidad / inclinación (solo si hay lean)
+  const hasLean=(s.track||[]).some(p=>p.lean!=null);
+  sumColorMode='spd';
+  const cm=$('#sum-colormode'); if(cm){ cm.hidden=!hasLean; $all('#sum-colormode button').forEach(b=>b.classList.toggle('on', b.dataset.cm==='spd')); }
+  updateMapLegend('spd');
   const sm=$('#sum-map');
   if(sm){ sm._view={zoom:1,panX:0,panY:0}; attachMapZoom(sm, ()=>drawSummaryMap(sm, s)); }
   requestAnimationFrame(()=>drawSummaryMap(sm, s));
+}
+function updateMapLegend(mode){
+  const el=$('#sum-legend'); if(!el) return;
+  if(mode==='lean'){
+    el.innerHTML='<span><i class="lg" style="background:#1FE0C8"></i>Suave</span>'
+      +'<span><i class="lg" style="background:#FF9E1B"></i>Medio</span>'
+      +'<span><i class="lg" style="background:#FF3B30"></i>Al límite</span>'
+      +'<span><i class="lg" style="background:rgba(138,147,166,.5)"></i>Resto</span>';
+  } else {
+    el.innerHTML='<span><i class="lg" style="background:#FF3B30"></i>Lento</span>'
+      +'<span><i class="lg" style="background:#FF9E1B"></i>Medio</span>'
+      +'<span><i class="lg" style="background:#1FE0C8"></i>Rápido</span>'
+      +'<span><i class="lg" style="background:rgba(138,147,166,.5)"></i>Resto</span>';
+  }
 }
 
 /* ----------------------------- Análisis de tanda ----------------------------- */
@@ -759,6 +779,10 @@ function renderAnalysis(){
   renderNarrative(la,lb,gl,totalMs);
   drawDeltaChart($('#an-delta'), dd);
   drawSpeedChart($('#an-speed'), dd);
+  // inclinación por distancia: solo si alguna de las dos vueltas tiene lean
+  const hasLean = dd.some(p=>p.leanA!=null || p.leanB!=null);
+  const lw=$('#an-lean-wrap'); if(lw) lw.hidden=!hasLean;
+  if(hasLean) drawLeanChart($('#an-lean'), dd);
   renderAnalysisLaps();
 }
 
@@ -844,6 +868,21 @@ function drawSpeedChart(canvas, dd){
   ctx.fillText(Math.round(vmax*f)+'', 2, Y(vmax)+8);
   ctx.fillText('0', 2, Y(0)-1);
   ctx.textAlign='right'; ctx.fillText(Math.round(L)+' m', pad.l+pw, pad.t+ph+13);
+}
+
+// inclinación por distancia: izquierda (arriba) / derecha (abajo), A cian / B ámbar
+function drawLeanChart(canvas, dd){
+  const B=chartBase(canvas); if(!B) return;
+  if(!dd||dd.length<2){ emptyChart(B,'Sin datos'); return; }
+  const {ctx,pad,pw,ph}=B, L=dd[dd.length-1].d||1;
+  let lmax=20; dd.forEach(p=>{ if(p.leanA!=null)lmax=Math.max(lmax,Math.abs(p.leanA)); if(p.leanB!=null)lmax=Math.max(lmax,Math.abs(p.leanB)); });
+  const X=d=>pad.l+(d/L)*pw, Y=v=>pad.t+ph/2-(v/lmax)*(ph/2);
+  ctx.strokeStyle='rgba(138,147,166,.25)'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(pad.l,Y(0)); ctx.lineTo(pad.l+pw,Y(0)); ctx.stroke();
+  const line=(key,color)=>{ ctx.beginPath(); let on=false; dd.forEach(p=>{ const v=p[key]; if(v==null)return; const x=X(p.d),y=Y(v); on?ctx.lineTo(x,y):ctx.moveTo(x,y); on=true; }); ctx.strokeStyle=color; ctx.lineWidth=1.8; ctx.lineJoin='round'; ctx.stroke(); };
+  line('leanB','#FF9E1B'); line('leanA','#1FE0C8');
+  ctx.fillStyle='#8A93A6'; ctx.font='600 10px Saira,sans-serif'; ctx.textAlign='left';
+  ctx.fillText('DER '+Math.round(lmax)+'°', 2, Y(lmax)+8);
+  ctx.fillText('IZQ '+Math.round(lmax)+'°', 2, Y(-lmax));
 }
 
 function renderAnalysisLaps(){
@@ -1047,14 +1086,18 @@ function drawSummaryMap(canvas, s){
     const t0=s.crossTimes[idx], t1=s.crossTimes[idx+1];
     if(t0!=null && t1!=null) seg=track.filter(p=>p.t>=t0 && p.t<=t1);
   }
-  // rango de velocidad para normalizar el color
-  const spds=seg.map(p=>p.spd).filter(v=>v!=null);
-  const vmin=spds.length?Math.min(...spds):0, vmax=spds.length?Math.max(...spds):1, rng=(vmax-vmin)||1;
+  // modo de color: velocidad (por defecto) o inclinación (|lean|) si hay sensores
+  const mode = (sumColorMode==='lean' && seg.some(p=>p.lean!=null)) ? 'lean' : 'spd';
+  let vmin, vmax;
+  if(mode==='lean'){ const vs=seg.map(p=>p.lean!=null?Math.abs(p.lean):null).filter(v=>v!=null); vmin=0; vmax=vs.length?Math.max(...vs):1; }
+  else { const vs=seg.map(p=>p.spd).filter(v=>v!=null); vmin=vs.length?Math.min(...vs):0; vmax=vs.length?Math.max(...vs):1; }
+  const rng=(vmax-vmin)||1;
   for(let i=1;i<seg.length;i++){
     const a=P.toPx(seg[i-1]), b=P.toPx(seg[i]);
-    const v=seg[i].spd!=null?seg[i].spd:vmin;
+    const raw = mode==='lean' ? (seg[i].lean!=null?Math.abs(seg[i].lean):vmin) : (seg[i].spd!=null?seg[i].spd:vmin);
+    const frac=(raw-vmin)/rng;
     P.ctx.beginPath(); P.ctx.moveTo(a.x,a.y); P.ctx.lineTo(b.x,b.y);
-    P.ctx.strokeStyle=speedColor((v-vmin)/rng); P.ctx.lineWidth=3.5; P.ctx.lineJoin='round'; P.ctx.lineCap='round'; P.ctx.stroke();
+    P.ctx.strokeStyle=speedColor(mode==='lean'?(1-frac):frac); P.ctx.lineWidth=3.5; P.ctx.lineJoin='round'; P.ctx.lineCap='round'; P.ctx.stroke();
   }
   // puntos de sector sobre la mejor vuelta
   placeSectorMarkers(P, seg.map(p=>({lat:p.lat,lon:p.lon})), s.nSectors||0);
@@ -1429,6 +1472,10 @@ function init(){
   $('#zoom-in') && $('#zoom-in').addEventListener('click',()=>sm._zoomBtn&&sm._zoomBtn(1.4));
   $('#zoom-out') && $('#zoom-out').addEventListener('click',()=>sm._zoomBtn&&sm._zoomBtn(1/1.4));
   $('#zoom-reset') && $('#zoom-reset').addEventListener('click',()=>sm._zoomReset&&sm._zoomReset());
+  $all('#sum-colormode button').forEach(b=>b.addEventListener('click',()=>{
+    sumColorMode=b.dataset.cm; $all('#sum-colormode button').forEach(x=>x.classList.toggle('on', x===b));
+    updateMapLegend(sumColorMode); if(sm && sm._redraw) sm._redraw(); else if(curSummary) drawSummaryMap(sm, curSummary);
+  }));
   $('#btn-create-circuit').addEventListener('click', openBuilder);
   $all('#bld-mode button').forEach(b=>b.addEventListener('click',()=>setBuilderMode(b.dataset.mode)));
   $('#btn-rec-toggle').addEventListener('click', recToggle);

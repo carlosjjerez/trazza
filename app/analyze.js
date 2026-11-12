@@ -54,11 +54,12 @@
     if(!points || points.length<2) return [];
     const t0=points[0].t;
     let cum=0;
-    const prof=[{ d:0, t:0, spd:points[0].spd!=null?points[0].spd:null, lat:points[0].lat, lon:points[0].lon }];
+    const mk=(p,d,t)=>({ d, t, spd:p.spd!=null?p.spd:null, lean:p.lean!=null?p.lean:null, g:p.g!=null?p.g:null, lat:p.lat, lon:p.lon });
+    const prof=[ mk(points[0], 0, 0) ];
     for(let i=1;i<points.length;i++){
       const d=haversine(points[i-1].lat,points[i-1].lon,points[i].lat,points[i].lon);
       if(d>minGap) cum+=d;
-      prof.push({ d:cum, t:points[i].t-t0, spd:points[i].spd!=null?points[i].spd:null, lat:points[i].lat, lon:points[i].lon });
+      prof.push( mk(points[i], cum, points[i].t-t0) );
     }
     return prof;
   }
@@ -108,7 +109,9 @@
     for(let i=0;i<n;i++){
       const d=(i/(n-1))*L;
       const tA=interpAt(profA,d,'t'), tB=interpAt(profB,d,'t');
-      out.push({ d, dt:(tA!=null&&tB!=null)?(tA-tB):null, spdA:interpAt(profA,d,'spd'), spdB:interpAt(profB,d,'spd') });
+      out.push({ d, dt:(tA!=null&&tB!=null)?(tA-tB):null,
+        spdA:interpAt(profA,d,'spd'), spdB:interpAt(profB,d,'spd'),
+        leanA:interpAt(profA,d,'lean'), leanB:interpAt(profB,d,'lean') });
     }
     return out;
   }

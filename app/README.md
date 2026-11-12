@@ -53,6 +53,8 @@ Todo el núcleo (`detect.js`) está cubierto por pruebas (ver `test/`).
   **delta por distancia** (área verde/roja) y **velocidad por distancia** (A/B
   superpuestas). Todo por **distancia recorrida**, coherente con el delta en vivo,
   y con nota de honestidad (décimas, no centésimas). Núcleo puro en `analyze.js`.
+  Si la tanda registró sensores, añade **inclinación por distancia** (A/B); y el mapa del
+  resumen se puede colorear por **velocidad o inclinación** (toggle + leyenda).
 - **Inclinación (lean angle) y fuerzas G** con el **IMU del propio móvil**
   (acelerómetro + giroscopio, `DeviceMotion` ~60 Hz; sin hardware externo).
   Filtro complementario (el acelerómetro solo se equivoca en curva, así que el

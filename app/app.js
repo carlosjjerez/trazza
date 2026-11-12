@@ -1114,6 +1114,78 @@ function speedColor(frac){
   return `rgb(${Math.round(a[0]+(b[0]-a[0])*t)},${Math.round(a[1]+(b[1]-a[1])*t)},${Math.round(a[2]+(b[2]-a[2])*t)})`;
 }
 
+/* -------- Mapa sobre satélite (Web Mercator + tiles Esri World Imagery) -------- */
+const SAT_TILE=256;
+const SAT_URL=(z,x,y)=>`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`;
+const _satTiles={};            // url -> {img, loaded, err}
+let _satOn = true;             // se apaga si los tiles no cargan (fallback vector)
+function _satLoad(url, redraw){
+  let t=_satTiles[url];
+  if(t){ return t.loaded?t.img:null; }
+  t={img:null, loaded:false, err:false}; _satTiles[url]=t;
+  if(typeof Image==='undefined') return null;      // entorno sin DOM (tests)
+  const img=new Image();
+  img.onload =()=>{ t.img=img; t.loaded=true; if(redraw) redraw(); };
+  img.onerror=()=>{ t.err=true; };
+  img.src=url;
+  return null;
+}
+// lat/lon -> fracción mundial Web Mercator [0..1]
+function _mercN(lat,lon){
+  const s=Math.max(-0.9999,Math.min(0.9999,Math.sin(lat*Math.PI/180)));
+  return { x:(lon+180)/360, y:0.5 - Math.log((1+s)/(1-s))/(4*Math.PI) };
+}
+// proyección Web Mercator que encuadra allPts, con tiles de satélite debajo
+function setupSatCanvas(canvas, allPts, view){
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.clientWidth, H=canvas.clientHeight; if(!W||!H) return null;
+  canvas.width=W*dpr; canvas.height=H*dpr;
+  const ctx=canvas.getContext && canvas.getContext('2d'); if(!ctx) return null;
+  ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,H);
+  if(!allPts.length) return null;
+  let minx=1,maxx=0,miny=1,maxy=0;
+  allPts.forEach(p=>{ const m=_mercN(p.lat,p.lon); if(m.x<minx)minx=m.x; if(m.x>maxx)maxx=m.x; if(m.y<miny)miny=m.y; if(m.y>maxy)maxy=m.y; });
+  // margen mínimo para circuitos muy compactos
+  const MINSPAN=0.00004;
+  if(maxx-minx<MINSPAN){ const c=(maxx+minx)/2; minx=c-MINSPAN/2; maxx=c+MINSPAN/2; }
+  if(maxy-miny<MINSPAN){ const c=(maxy+miny)/2; miny=c-MINSPAN/2; maxy=c+MINSPAN/2; }
+  const fx=(maxx-minx)||1e-6, fy=(maxy-miny)||1e-6;
+  const pad=0.84;
+  let z=Math.floor(Math.log2(Math.min(W*pad/(fx*SAT_TILE), H*pad/(fy*SAT_TILE))));
+  z=Math.max(2,Math.min(19,z));
+  const world=SAT_TILE*Math.pow(2,z);
+  const cxw=(minx+maxx)/2*world, cyw=(miny+maxy)/2*world;   // centro bbox en world-px
+  const lat0=allPts.reduce((a,p)=>a+p.lat,0)/allPts.length;
+  const vz=(view&&view.zoom)||1, px=(view&&view.panX)||0, py=(view&&view.panY)||0;
+  const wToPx=(wx,wy)=>({ x:(wx-cxw)*vz+W/2+px, y:(wy-cyw)*vz+H/2+py });
+  const toPx=p=>{ const m=_mercN(p.lat,p.lon); return wToPx(m.x*world, m.y*world); };
+  const pxPerMeter = vz*Math.pow(2,z)/(156543.03392*Math.cos(lat0*Math.PI/180));
+  const scale = pxPerMeter*111320;   // compat drawFinish: (radiusM/111320)*scale = radiusM*pxPerMeter
+  const drawTiles=(redraw)=>{
+    if(!_satOn) return false;
+    const n=Math.pow(2,z);
+    const hx=(W/2+Math.abs(px))/vz, hy=(H/2+Math.abs(py))/vz;
+    const tx0=Math.floor((cxw-hx)/SAT_TILE), tx1=Math.floor((cxw+hx)/SAT_TILE);
+    const ty0=Math.floor((cyw-hy)/SAT_TILE), ty1=Math.floor((cyw+hy)/SAT_TILE);
+    let any=false;
+    for(let tx=tx0;tx<=tx1;tx++) for(let ty=ty0;ty<=ty1;ty++){
+      if(ty<0||ty>=n) continue;
+      const wx=((tx%n)+n)%n;
+      const img=_satLoad(SAT_URL(z,wx,ty), redraw);
+      const sp=wToPx(tx*SAT_TILE, ty*SAT_TILE), sz=SAT_TILE*vz;
+      if(img){ try{ ctx.drawImage(img, sp.x, sp.y, sz, sz); any=true; }catch(e){} }
+      else { ctx.fillStyle='#0b0e13'; ctx.fillRect(sp.x,sp.y,sz,sz); }
+    }
+    // velo oscuro para que la trazada de color resalte sobre el satélite
+    ctx.fillStyle='rgba(8,10,14,.32)'; ctx.fillRect(0,0,W,H);
+    // atribución (obligatoria con Esri)
+    ctx.fillStyle='rgba(245,247,250,.5)'; ctx.font='9px Inter, sans-serif'; ctx.textAlign='right';
+    ctx.fillText('© Esri', W-6, H-6); ctx.textAlign='left';
+    return any;
+  };
+  return { ctx, W, H, scale, zoom:vz, toPx, drawTiles };
+}
+
 // mapa EN VIVO del HUD: trazado del circuito + tu posición moviéndose
 function drawHudMap(){
   const canvas=$('#hud-map'); if(!canvas) return;
@@ -1143,27 +1215,32 @@ function drawMap(canvas, pts, finish, radiusM){
 function drawMetaMap(){
   const m=selectedMeta;
   if(m && m.outline){
+    const canvas=$('#meta-map');
     const pts=m.outline.map(p=>({lat:p[0],lon:p[1]}));
-    const P=setupCanvas($('#meta-map'), pts); if(!P) return;
-    strokeLine(P.ctx, P.toPx, pts, '#1FE0C8', 2.5);
-    placeSectorMarkers(P, pts, settings.sectors);
-    drawFinish(P.ctx, P.toPx, {lat:m.lat,lon:m.lon}, settings.radius, P.scale);
-    if(GPS.last){ const c=P.toPx({lat:GPS.last.lat,lon:GPS.last.lon}); P.ctx.beginPath(); P.ctx.arc(c.x,c.y,6,0,2*Math.PI);
-      P.ctx.fillStyle='#F5F7FA'; P.ctx.fill(); P.ctx.lineWidth=2; P.ctx.strokeStyle='#0E0F12'; P.ctx.stroke(); }
+    const paint=(P,onSat)=>{
+      strokeLine(P.ctx, P.toPx, pts, onSat?'#B6FF1A':'#1FE0C8', onSat?3:2.5);
+      placeSectorMarkers(P, pts, settings.sectors);
+      drawFinish(P.ctx, P.toPx, {lat:m.lat,lon:m.lon}, settings.radius, P.scale);
+      if(GPS.last){ const c=P.toPx({lat:GPS.last.lat,lon:GPS.last.lon}); P.ctx.beginPath(); P.ctx.arc(c.x,c.y,6,0,2*Math.PI);
+        P.ctx.fillStyle='#F5F7FA'; P.ctx.fill(); P.ctx.lineWidth=2; P.ctx.strokeStyle='#0E0F12'; P.ctx.stroke(); }
+    };
+    if(_satOn){
+      const P=setupSatCanvas(canvas, pts, canvas._view);
+      if(P){ P.drawTiles(()=>drawMetaMap()); paint(P,true); return; }
+    }
+    const P=setupCanvas(canvas, pts); if(!P) return;
+    paint(P,false);
     return;
   }
   const finish = m || (GPS.last?{lat:GPS.last.lat,lon:GPS.last.lon}:null);
   drawMap($('#meta-map'), metaTrack.map(f=>({lat:f.lat,lon:f.lon})), finish, settings.radius);
 }
 
-// mapa de resumen: track completo atenuado + MEJOR vuelta coloreada por velocidad
-function drawSummaryMap(canvas, s){
-  if(!canvas) return;
+// dibuja track atenuado + mejor vuelta coloreada + sectores + meta sobre una proyección P
+function _paintSummaryTrack(P, s, onSat){
   const track=s.track||[];
-  const P=setupCanvas(canvas, track.concat(s.gate?[s.gate]:[]), canvas._view); if(!P) return;
-  // track completo (atenuado)
-  strokeLine(P.ctx, P.toPx, track, 'rgba(138,147,166,.35)', 2);
-  // segmento de la mejor vuelta
+  // track completo (atenuado). Sobre satélite va más marcado para leerse.
+  strokeLine(P.ctx, P.toPx, track, onSat?'rgba(245,247,250,.30)':'rgba(138,147,166,.35)', onSat?2.5:2);
   const bestLap = s.laps.find(l=>l.ms===s.best);
   let seg=track;
   if(bestLap && s.crossTimes && s.crossTimes.length>=2){
@@ -1177,16 +1254,38 @@ function drawSummaryMap(canvas, s){
   if(mode==='lean'){ const vs=seg.map(p=>p.lean!=null?Math.abs(p.lean):null).filter(v=>v!=null); vmin=0; vmax=vs.length?Math.max(...vs):1; }
   else { const vs=seg.map(p=>p.spd).filter(v=>v!=null); vmin=vs.length?Math.min(...vs):0; vmax=vs.length?Math.max(...vs):1; }
   const rng=(vmax-vmin)||1;
+  // halo oscuro bajo la trazada de color para contraste sobre satélite
+  if(onSat){
+    P.ctx.beginPath();
+    for(let i=0;i<seg.length;i++){ const q=P.toPx(seg[i]); i?P.ctx.lineTo(q.x,q.y):P.ctx.moveTo(q.x,q.y); }
+    P.ctx.strokeStyle='rgba(8,10,14,.6)'; P.ctx.lineWidth=7; P.ctx.lineJoin='round'; P.ctx.lineCap='round'; P.ctx.stroke();
+  }
   for(let i=1;i<seg.length;i++){
     const a=P.toPx(seg[i-1]), b=P.toPx(seg[i]);
     const raw = mode==='lean' ? (seg[i].lean!=null?Math.abs(seg[i].lean):vmin) : (seg[i].spd!=null?seg[i].spd:vmin);
     const frac=(raw-vmin)/rng;
     P.ctx.beginPath(); P.ctx.moveTo(a.x,a.y); P.ctx.lineTo(b.x,b.y);
-    P.ctx.strokeStyle=speedColor(mode==='lean'?(1-frac):frac); P.ctx.lineWidth=3.5; P.ctx.lineJoin='round'; P.ctx.lineCap='round'; P.ctx.stroke();
+    P.ctx.strokeStyle=speedColor(mode==='lean'?(1-frac):frac); P.ctx.lineWidth=onSat?4:3.5; P.ctx.lineJoin='round'; P.ctx.lineCap='round'; P.ctx.stroke();
   }
-  // puntos de sector sobre la mejor vuelta
   placeSectorMarkers(P, seg.map(p=>({lat:p.lat,lon:p.lon})), s.nSectors||0);
   drawFinish(P.ctx, P.toPx, s.gate, settings.radius, P.scale);
+}
+// mapa de resumen: satélite + MEJOR vuelta coloreada por velocidad/inclinación (fallback vector)
+function drawSummaryMap(canvas, s){
+  if(!canvas) return;
+  const track=s.track||[];
+  const all=track.concat(s.gate?[s.gate]:[]);
+  if(_satOn){
+    const P=setupSatCanvas(canvas, all, canvas._view);
+    if(P){
+      P.drawTiles(()=>drawSummaryMap(canvas, s));   // redibuja al cargar cada tile
+      _paintSummaryTrack(P, s, true);
+      return;
+    }
+  }
+  // fallback vector (sin tiles / sin red)
+  const P=setupCanvas(canvas, all, canvas._view); if(!P) return;
+  _paintSummaryTrack(P, s, false);
 }
 
 /* ----------------------------- Meta (marcar / elegir) ----------------------------- */

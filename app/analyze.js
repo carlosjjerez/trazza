@@ -155,7 +155,60 @@
     return best;
   }
 
-  const api={ segmentLaps, lapProfile, interpAt, resampleByDistance, deltaByDistance, gainLossBySector, consistency, peakSpeed };
+  /* Detecta las CURVAS de una vuelta a partir del perfil de velocidad: cada
+     mínimo local de velocidad con prominencia suficiente es el vértice de una
+     curva; la curva va del pico de velocidad anterior al siguiente. Por curva
+     devuelve velocidades de entrada/mínima/salida, inclinación máx, punto de
+     frenada (donde empieza a caer la velocidad) y tiempo del tramo.
+     Todo por DISTANCIA. opts.promFrac = prominencia mínima (fracción del rango
+     de velocidad) para que un mínimo cuente como curva (por defecto 0.12). */
+  function corners(profile, opts){
+    opts=opts||{};
+    const prom = opts.promFrac!=null?opts.promFrac:0.12;
+    const win  = opts.smoothWin!=null?opts.smoothWin:3;
+    const n = profile?profile.length:0; if(n<5) return [];
+    const d=profile.map(p=>p.d), v=profile.map(p=>p.spd!=null?p.spd:null);
+    if(v.some(x=>x==null)) return [];               // sin velocidad fiable, no hay curvas
+    // suavizado (media móvil) para no detectar ruido del GPS como curvas
+    const h=Math.max(0,(win-1)>>1);
+    const vs=v.map((_,i)=>{ let s=0,c=0; for(let j=-h;j<=h;j++){ const k=i+j; if(k>=0&&k<n){s+=v[k];c++;} } return s/c; });
+    let vmin=Infinity, vmax=-Infinity; vs.forEach(x=>{ vmin=Math.min(vmin,x); vmax=Math.max(vmax,x); });
+    const minProm=prom*((vmax-vmin)||1);
+    const peaks=[], valleys=[];
+    for(let i=1;i<n-1;i++){
+      if(vs[i]<vs[i-1] && vs[i]<=vs[i+1]) valleys.push(i);
+      else if(vs[i]>vs[i-1] && vs[i]>=vs[i+1]) peaks.push(i);
+    }
+    const out=[];
+    valleys.forEach(k=>{
+      let left=0; peaks.forEach(p=>{ if(p<k) left=p; });
+      let right=n-1; for(let pi=peaks.length-1;pi>=0;pi--){ if(peaks[pi]>k) right=peaks[pi]; }
+      const vEntry=vs[left], vExit=vs[right], vMin=vs[k];
+      if((Math.min(vEntry,vExit)-vMin) < minProm) return;     // no frenas lo bastante: recta, no curva
+      let brake=left; for(let i=left;i<=k;i++){ if(vs[i] < vEntry-0.5){ brake=i; break; } }
+      let maxLean=0, hasLean=false;
+      for(let i=left;i<=right;i++){ const L=profile[i].lean; if(L!=null){ hasLean=true; maxLean=Math.max(maxLean, Math.abs(L)); } }
+      out.push({ iApex:k, dStart:d[left], dApex:d[k], dEnd:d[right], dBrake:d[brake],
+        vEntry, vMin, vExit, maxLean: hasLean?maxLean:null, tSeg: profile[right].t-profile[left].t });
+    });
+    // descarta curvas solapadas (mismo tramo): quédate con la de menor vMin
+    out.sort((a,b)=>a.dStart-b.dStart);
+    const merged=[];
+    out.forEach(c=>{ const last=merged[merged.length-1];
+      if(last && c.dStart < last.dEnd){ if(c.vMin < last.vMin) merged[merged.length-1]=c; }
+      else merged.push(c); });
+    return merged;
+  }
+
+  /* Delta de tiempo de una ventana de distancia [dFrom,dTo] entre dos perfiles
+     (A menos B). Útil para comparar una curva A contra la misma zona en B. */
+  function windowDelta(profA, profB, dFrom, dTo){
+    const tA = interpAt(profA,dTo,'t') - interpAt(profA,dFrom,'t');
+    const tB = interpAt(profB,dTo,'t') - interpAt(profB,dFrom,'t');
+    return (tA!=null && tB!=null) ? (tA - tB) : null;
+  }
+
+  const api={ segmentLaps, lapProfile, interpAt, resampleByDistance, deltaByDistance, gainLossBySector, consistency, peakSpeed, corners, windowDelta };
   if(typeof module!=='undefined' && module.exports) module.exports=api;
   global.TrazzaAnalyze=api;
 })(typeof self!=='undefined' ? self : globalThis);

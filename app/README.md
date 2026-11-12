@@ -55,6 +55,8 @@ Todo el núcleo (`detect.js`) está cubierto por pruebas (ver `test/`).
   y con nota de honestidad (décimas, no centésimas). Núcleo puro en `analyze.js`.
   Si la tanda registró sensores, añade **inclinación por distancia** (A/B); y el mapa del
   resumen se puede colorear por **velocidad o inclinación** (toggle + leyenda).
+  Y **curva a curva**: detecta las curvas por los mínimos de velocidad y da, por curva,
+  velocidad de paso, inclinación máx, punto de frenada y Δ frente a la vuelta B.
 - **Inclinación (lean angle) y fuerzas G** con el **IMU del propio móvil**
   (acelerómetro + giroscopio, `DeviceMotion` ~60 Hz; sin hardware externo).
   Filtro complementario (el acelerómetro solo se equivoca en curva, así que el

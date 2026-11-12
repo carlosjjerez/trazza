@@ -376,3 +376,14 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .sess-bike{display:inline-block;margin-left:8px;font-family:var(--display);font-weight:700;font-size:11px;color:var(--cian);background:rgba(31,224,200,.1);border-radius:6px;padding:1px 7px;vertical-align:middle;}
 .pills.sm{margin:14px 0 0;}
 .pills.sm button{padding:9px 10px;font-size:14px;}
+/* curva a curva */
+.corner{display:flex;align-items:center;gap:12px;background:var(--grafito-2);border:1px solid var(--linea);border-radius:13px;padding:11px 13px;}
+.corner .cn{flex:0 0 auto;width:40px;height:40px;border-radius:11px;background:rgba(31,224,200,.12);color:var(--cian);font-family:var(--display);font-weight:800;font-size:17px;display:flex;align-items:center;justify-content:center;}
+.corner .cbody{flex:1;min-width:0;}
+.corner .cmain{display:flex;align-items:baseline;gap:8px;}
+.corner .cv{font-family:var(--display);font-weight:700;font-size:22px;font-variant-numeric:tabular-nums;color:var(--blanco);}
+.corner .cv em{font-style:normal;font-size:12px;color:var(--niebla);margin-left:2px;font-weight:600;}
+.corner .cl{font-size:12px;color:var(--niebla);}
+.corner .csub{font-size:12px;color:var(--niebla);margin-top:2px;}
+.corner .cdelta{flex:0 0 auto;font-family:var(--display);font-weight:800;font-size:18px;font-variant-numeric:tabular-nums;}
+.corner .cdelta.good{color:var(--hiviz);} .corner .cdelta.bad{color:var(--rojo);} .corner .cdelta.flat{color:var(--niebla);}

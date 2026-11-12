@@ -18,7 +18,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;500;600;700;800&family=Saira+Semi+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="app.css?v=20261111e">
+  <link rel="stylesheet" href="app.css?v=20261111f">
 </head>
 <body>
 
@@ -471,6 +471,10 @@
     <div class="laps-head"><span class="kicker">Vueltas y sectores</span><span class="kicker">Tiempo · Δ</span></div>
     <div id="an-laps" class="stack tight"></div>
 
+    <!-- curva a curva (de la vuelta A) -->
+    <div class="laps-head" id="an-corners-head" hidden><span class="kicker">Curva a curva</span><span class="an-hint" id="an-corners-sub"></span></div>
+    <div id="an-corners" class="stack tight"></div>
+
     <p class="foot" id="an-honesty">GPS del móvil ≈1 Hz: trabajamos en <b>décimas, no centésimas</b>. Las gráficas van por <b>distancia recorrida</b> y se suavizan entre fixes.</p>
   </div>
 </section>
@@ -555,12 +559,12 @@
 
 <div id="toast" class="toast"></div>
 
-<script src="detect.js?v=20261111e"></script>
-<script src="analyze.js?v=20261111e"></script>
-<script src="sensors.js?v=20261111e"></script>
-<script src="garage.js?v=20261111e"></script>
-<script src="cartagena-track.js?v=20261111e"></script>
-<script src="sim.js?v=20261111e"></script>
-<script src="app.js?v=20261111e"></script>
+<script src="detect.js?v=20261111f"></script>
+<script src="analyze.js?v=20261111f"></script>
+<script src="sensors.js?v=20261111f"></script>
+<script src="garage.js?v=20261111f"></script>
+<script src="cartagena-track.js?v=20261111f"></script>
+<script src="sim.js?v=20261111f"></script>
+<script src="app.js?v=20261111f"></script>
 </body>
 </html>

@@ -92,9 +92,10 @@ y las horas de motor se suman al terminar. Núcleo en `garage.js` (claves `trazz
 
 ## Ideas de siguiente paso (solo móvil; confirmar con el usuario antes de construir)
 Guía de adaptación competitiva (vs Lap360): teardown en `research/` cuando se mueva ahí.
-- Análisis de tanda v2: HECHO parcial → gráfica de inclinación por distancia (A/B) y
-  trazada del resumen coloreable por velocidad/inclinación. Pendiente: trazada sobre
-  satélite real, curva a curva, zoom sincronizado mapa↔gráfica, comparar >2 vueltas.
+- Análisis de tanda v2: HECHO → inclinación por distancia (A/B), trazada coloreable por
+  velocidad/inclinación, y **curva a curva** (vel. de paso, inclinación, frenada, Δ vs B;
+  detección de curvas por mínimos de velocidad en `analyze.js`). Pendiente: trazada sobre
+  satélite real, zoom sincronizado mapa↔gráfica, comparar >2 vueltas.
 - Inclinación + G (IMU): v1 HECHA (HUD + máximos). Pendiente v2: afinar `IMU_AXES` y el
   signo del roll en MOTO REAL (depende del soporte); lean/G por distancia en el análisis;
   corrección por ancho de neumático con geometría real; muestreo denso → **IndexedDB**

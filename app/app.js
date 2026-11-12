@@ -784,6 +784,33 @@ function renderAnalysis(){
   const lw=$('#an-lean-wrap'); if(lw) lw.hidden=!hasLean;
   if(hasLean) drawLeanChart($('#an-lean'), dd);
   renderAnalysisLaps();
+  renderCorners(pa, pb, la, lb);
+}
+
+// curva a curva de la vuelta A: velocidad de paso, inclinación, frenada y Δ vs B
+function renderCorners(pa, pb, la, lb){
+  const head=$('#an-corners-head'), wrap=$('#an-corners'); if(!wrap) return;
+  const cs = pa ? TrazzaAnalyze.corners(pa) : [];
+  if(!cs.length){ head.hidden=true; wrap.innerHTML=''; return; }
+  head.hidden=false;
+  const cmp = pb && la && lb && la.n!==lb.n;
+  $('#an-corners-sub').textContent = cmp ? ('V'+pad2(la.n)+' vs V'+pad2(lb.n)) : ('V'+pad2(la.n));
+  const f=speedFactor(), u=speedUnit();
+  wrap.innerHTML='';
+  cs.forEach((c,i)=>{
+    const dMs = cmp ? TrazzaAnalyze.windowDelta(pa, pb, c.dStart, c.dEnd) : null;
+    const dcls = dMs==null?'':(dMs<0?'good':(dMs>0?'bad':'flat'));
+    const lean = c.maxLean!=null ? (Math.round(c.maxLean)+'°') : '—';
+    const brakeM = Math.max(0, Math.round(c.dApex-c.dBrake));
+    const el=document.createElement('div'); el.className='corner';
+    el.innerHTML=`<div class="cn">C${i+1}</div>
+      <div class="cbody">
+        <div class="cmain"><span class="cv">${Math.round(c.vMin*f)}<em>${u}</em></span><span class="cl">en el vértice · inclin ${lean}</span></div>
+        <div class="csub">entra ${Math.round(c.vEntry*f)} · sale ${Math.round(c.vExit*f)} · frenas a ${brakeM} m del vértice</div>
+      </div>
+      ${dMs!=null?`<div class="cdelta ${dcls}">${fmtDelta(dMs)}</div>`:''}`;
+    wrap.appendChild(el);
+  });
 }
 
 function renderNarrative(la,lb,gl,totalMs){

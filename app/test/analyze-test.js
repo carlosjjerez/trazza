@@ -81,6 +81,30 @@ function north(lat, m){ return lat + (m/R)*180/Math.PI; }
   ok('delta: incluye leanA y leanB', dd.some(p=>p.leanA!=null) && dd.every(p=>p.leanB===0));
 }
 
+// ---- corners: detección de curvas por mínimos de velocidad ----
+{
+  // perfil con dos bajadas claras de velocidad (dos curvas) y rectas entre medias
+  const speeds=[42,40,38,30,20,15,22,34,40,41,38,28,18,13,20,33,40,42];
+  const prof=speeds.map((sp,i)=>({ d:i*30, t:i*1000, spd:sp, lean:(i===4?40:i===13?-46:0) }));
+  const cs=A.corners(prof);
+  ok('curvas: detecta 2', cs.length===2);
+  ok('curvas: ordenadas por distancia', cs.length===2 && cs[0].dApex < cs[1].dApex);
+  ok('curvas: vMin < entrada y salida', cs.every(c=>c.vMin<c.vEntry && c.vMin<c.vExit));
+  ok('curvas: frenada antes del vértice', cs.every(c=>c.dBrake<=c.dApex && c.dBrake>=c.dStart));
+  ok('curvas: inclinación máx registrada', cs.every(c=>c.maxLean>0));
+  // una recta pura no genera curvas
+  const flat=Array.from({length:12},(_,i)=>({d:i*30,t:i*1000,spd:40}));
+  ok('curvas: una recta no da curvas', A.corners(flat).length===0);
+}
+
+// ---- windowDelta ----
+{
+  const mk=(v)=>{ const p=[]; const n=Math.round(300/v); for(let i=0;i<=n;i++) p.push({t:i*1000,lat:north(CLAT,i*v),lon:CLON,spd:v}); return A.lapProfile(p); };
+  const pa=mk(20), pb=mk(16); // A más rápida
+  const dw=A.windowDelta(pa, pb, 0, 100);
+  ok('windowDelta: A más rápida -> negativo', dw<0);
+}
+
 // ---- consistency ----
 {
   const c=A.consistency([100000,100000,100000]);

@@ -563,6 +563,12 @@ function persistSession(finalize){
     speedMaxKmh: Math.round(live.speedMax*3.6),
     gate:{ lat:live.gate.lat, lon:live.gate.lon }, crossTimes: live.crossTimes.slice(), track: live.track,
   };
+  // distancia recorrida de la tanda (para «km en pista» del resumen de inicio)
+  if(finalize){
+    let dm=0; const tr=live.track;
+    for(let i=1;i<tr.length;i++) dm+=TrazzaDetect.haversine(tr[i-1].lat,tr[i-1].lon,tr[i].lat,tr[i].lon);
+    data.distM=Math.round(dm);
+  }
   // telemetría de sensores (inclinación/G) si la tanda la registró
   if(live.peaks && (live.peaks.leanL||live.peaks.leanR||live.peaks.gHoriz)){
     data.imu={ leanL:Math.round(live.peaks.leanL), leanR:Math.round(live.peaks.leanR),
@@ -595,18 +601,39 @@ function persistSession(finalize){
 }
 function renderSessions(){
   const list=$('#session-list'), sessions=loadJSON(LS_SESSIONS,[]);
+  renderHomeDashboard(sessions);
   if(!sessions.length){ list.innerHTML='<div class="empty">Aún no tienes sesiones. Sal a pista y marca tu primera vuelta.</div>'; return; }
   list.innerHTML='';
   sessions.forEach(s=>{
     const d=new Date(s.startedAt);
     const date=d.toLocaleDateString('es-ES',{day:'2-digit',month:'short'}).toUpperCase().replace('.','');
+    const km = s.distM!=null ? (s.distM/1000).toFixed(1) : '–';
+    const bike = s.bikeName ? `<span class="sess-bike">${esc(s.bikeName)}</span>` : '';
     const el=document.createElement('div'); el.className='sess';
-    el.innerHTML=`<div class="top"><div class="nm">${esc(s.name)}</div><div class="dt">${date}</div></div>
-      <div class="st"><div><span class="k">Mejor</span><div class="v green">${fmtLap(s.best)}</div></div>
-      <div><span class="k">Vueltas</span><div class="v">${s.laps.length}</div></div></div>`;
+    el.innerHTML=`<div class="top"><div class="nm">${esc(s.name)}${bike}</div><div class="dt">${date}</div></div>
+      <div class="st">
+        <div><span class="k">Mejor</span><div class="v green">${fmtLap(s.best)}</div></div>
+        <div><span class="k">Vueltas</span><div class="v">${s.laps.length}</div></div>
+        <div><span class="k">Km</span><div class="v">${km}</div></div>
+      </div>`;
     el.addEventListener('click',()=>{ renderSummary(s); show('summary'); });
     list.appendChild(el);
   });
+}
+// Resumen de inicio: sesiones, vueltas, km en pista y mejor récord global.
+function renderHomeDashboard(sessions){
+  const el=$('#home-dash'); if(!el) return;
+  sessions = sessions || loadJSON(LS_SESSIONS,[]);
+  if(!sessions.length){ el.hidden=true; return; }
+  el.hidden=false;
+  let laps=0, dist=0;
+  sessions.forEach(s=>{ laps+=(s.laps?s.laps.length:0); dist+=(s.distM||0); });
+  $('#dash-sessions').textContent=sessions.length;
+  $('#dash-laps').textContent=laps;
+  $('#dash-km').textContent=(dist/1000).toFixed(1);
+  let best=null; const recs=loadRecords();
+  Object.keys(recs).forEach(k=>{ const r=recs[k]; if(r&&r.bestMs!=null&&(best==null||r.bestMs<best)) best=r.bestMs; });
+  $('#dash-record').textContent = best!=null ? fmtLap(best) : '--';
 }
 function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 

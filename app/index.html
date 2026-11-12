@@ -18,7 +18,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;500;600;700;800&family=Saira+Semi+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="app.css?v=20261111c">
+  <link rel="stylesheet" href="app.css?v=20261111d">
 </head>
 <body>
 
@@ -92,6 +92,16 @@
       <span>Salir a pista</span>
     </button>
     <div class="cta-reason" id="start-reason">Esperando señal GPS y meta…</div>
+
+    <div class="card dash-card" id="home-dash" hidden>
+      <span class="kicker">Tu resumen</span>
+      <div class="dash-grid">
+        <div><span class="k">Sesiones</span><span class="v" id="dash-sessions">0</span></div>
+        <div><span class="k">Vueltas</span><span class="v" id="dash-laps">0</span></div>
+        <div><span class="k">Km en pista</span><span class="v cyan" id="dash-km">0</span></div>
+        <div><span class="k">Mejor récord</span><span class="v green" id="dash-record">--</span></div>
+      </div>
+    </div>
 
     <div class="list-head"><span class="kicker">Sesiones</span></div>
     <div id="session-list" class="stack"></div>
@@ -534,12 +544,12 @@
 
 <div id="toast" class="toast"></div>
 
-<script src="detect.js?v=20261111c"></script>
-<script src="analyze.js?v=20261111c"></script>
-<script src="sensors.js?v=20261111c"></script>
-<script src="garage.js?v=20261111c"></script>
-<script src="cartagena-track.js?v=20261111c"></script>
-<script src="sim.js?v=20261111c"></script>
-<script src="app.js?v=20261111c"></script>
+<script src="detect.js?v=20261111d"></script>
+<script src="analyze.js?v=20261111d"></script>
+<script src="sensors.js?v=20261111d"></script>
+<script src="garage.js?v=20261111d"></script>
+<script src="cartagena-track.js?v=20261111d"></script>
+<script src="sim.js?v=20261111d"></script>
+<script src="app.js?v=20261111d"></script>
 </body>
 </html>

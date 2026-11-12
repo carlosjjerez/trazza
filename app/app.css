@@ -365,3 +365,12 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .frow input,.frow select,.frow textarea{background:var(--grafito);border:1px solid var(--linea);border-radius:12px;color:var(--blanco);font-family:var(--ui);font-size:16px;padding:12px 13px;width:100%;}
 .frow input:focus,.frow select:focus,.frow textarea:focus{outline:none;border-color:var(--hiviz);}
 .frow textarea{resize:vertical;font-size:15px;}
+
+/* ===================== Resumen de inicio (dashboard) ===================== */
+.dash-card{margin-top:14px;}
+.dash-grid{display:flex;gap:8px;margin-top:10px;}
+.dash-grid>div{flex:1;background:var(--grafito-2);border:1px solid var(--linea);border-radius:12px;padding:10px 8px;display:flex;flex-direction:column;gap:3px;align-items:center;text-align:center;}
+.dash-grid .k{font-size:10.5px;color:var(--niebla);letter-spacing:.04em;text-transform:uppercase;font-weight:600;}
+.dash-grid .v{font-family:var(--display);font-weight:700;font-size:24px;line-height:.95;color:var(--blanco);font-variant-numeric:tabular-nums;}
+.dash-grid .v.cyan{color:var(--cian);} .dash-grid .v.green{color:var(--hiviz);font-size:19px;}
+.sess-bike{display:inline-block;margin-left:8px;font-family:var(--display);font-weight:700;font-size:11px;color:var(--cian);background:rgba(31,224,200,.1);border-radius:6px;padding:1px 7px;vertical-align:middle;}

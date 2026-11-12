@@ -44,6 +44,8 @@ Todo el núcleo (`detect.js`) está cubierto por pruebas (ver `test/`).
   curso grande arriba, vueltas/tanda/anterior/mejor pequeños, y la pantalla entera
   se pone **verde si vas más rápido** o **roja si más lento** que tu vuelta rápida,
   con la diferencia en segundos y décimas, recalculada al cruzar cada sector.
+- **Resumen de inicio**: tarjeta «Tu resumen» (sesiones, vueltas, km en pista, mejor
+  récord global) y lista de sesiones con moto y km por tanda.
 - Resumen con todas las vueltas, mejor resaltada, mapa del track (con zoom) y export.
 - **Análisis de tanda** (comparar vueltas): desde el resumen, «Analizar tanda» abre
   una pantalla que **compara dos vueltas** (A vs B) con cabecera **narrativa**

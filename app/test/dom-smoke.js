@@ -141,6 +141,9 @@ ok('botón reset vuelve a zoom 1', sm._view.zoom===1 && sm._view.panX===0);
 
 click('[data-go="home"]');
 ok('sesión listada en home', window.document.querySelectorAll('#session-list .sess').length>=1);
+ok('resumen de inicio visible', window.document.querySelector('#home-dash').hidden===false);
+ok('resumen cuenta sesiones', parseInt(txt('#dash-sessions'))>=1);
+ok('resumen muestra km en pista', txt('#dash-km')!=='0' || txt('#dash-km')==='0.0');
 
 // ---- Constructor de circuito (punto a punto) + mapa del HUD ----
 const qsActive=s=>window.document.querySelector(s).classList.contains('active');

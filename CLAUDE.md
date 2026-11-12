@@ -100,7 +100,7 @@ Guía de adaptación competitiva (vs Lap360): teardown en `research/` cuando se 
   antes de guardar streams a >1 Hz (localStorage no escala).
 - Garaje: v1 HECHA (motos, mantenimiento por horas, reglajes, mejor por reglaje). Pendiente:
   editar intervalos de mantenimiento, recordatorio de mantenimiento en el HUD/inicio.
-- Home dashboard (sesiones/km/vueltas/récord) y lista de sesiones mejorada.
+- Home dashboard (sesiones/km/vueltas/récord) y lista de sesiones mejorada: HECHO.
 - Liga/comunidad/quedadas → backend (Supabase disponible); fase mayor, cuentas incluidas.
 - Mejoras de precisión con GPS de móvil (suavizado, filtrado de outliers del fix).
 

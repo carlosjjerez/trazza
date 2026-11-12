@@ -207,6 +207,7 @@ ok('reglaje listado en la moto', [...window.document.querySelectorAll('#bike-set
 window.document.querySelector('#bike-setups .mini-use').dispatchEvent(new window.Event('click',{bubbles:true}));
 ok('al usar moto vuelve a inicio', qsActive('#screen-home'));
 ok('tarjeta de inicio muestra la moto', txt('#bike-card-name').includes('Panigale Test'));
+ok('aviso de mantenimiento oculto si no toca', window.document.querySelector('#bike-card-warn').hidden===true);
 // la tanda hereda moto y reglaje
 click('#btn-start');
 feed(CART.lat,CART.lon,4,t,10); t+=1000; feed(CART.lat,CART.lon,4,t,10); t+=1000;

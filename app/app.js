@@ -1336,11 +1336,18 @@ let viewingBikeId=null, editingBikeId=null, editingSetupId=null;
 function savePreSession(){ saveJSON(LS_PRESESSION, preSession); renderBikeCard(); }
 
 function renderBikeCard(){
-  const nm=$('#bike-card-name'), sub=$('#bike-card-sub'); if(!nm) return;
-  if(preSession && preSession.bikeId && bikeById(preSession.bikeId)){
+  const nm=$('#bike-card-name'), sub=$('#bike-card-sub'), warn=$('#bike-card-warn'); if(!nm) return;
+  const b = preSession && preSession.bikeId ? bikeById(preSession.bikeId) : null;
+  if(b){
     nm.textContent=preSession.bikeName||'Moto';
     sub.textContent = preSession.setupName ? ('Reglaje: '+preSession.setupName) : 'Sin reglaje · toca para elegir';
   } else { nm.textContent='Sin moto'; sub.textContent='Elige moto y reglaje para la tanda (opcional)'; }
+  // aviso de mantenimiento pendiente de la moto elegida
+  if(warn){
+    const due = b ? (b.maint||[]).filter(m=>TrazzaGarage.maintStatus(m, b.engineHours).due).map(m=>m.label) : [];
+    if(due.length){ warn.hidden=false; warn.textContent='⚠ Toca: '+due.join(', '); }
+    else warn.hidden=true;
+  }
 }
 function bikeSpecLine(b){
   const bits=[]; const mm=[b.make,b.model].filter(Boolean).join(' '); if(mm) bits.push(mm);

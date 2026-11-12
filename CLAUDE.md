@@ -102,7 +102,7 @@ Guía de adaptación competitiva (vs Lap360): teardown en `research/` cuando se 
   corrección por ancho de neumático con geometría real; muestreo denso → **IndexedDB**
   antes de guardar streams a >1 Hz (localStorage no escala).
 - Garaje: HECHO (motos, mantenimiento por horas con intervalos editables, reglajes, mejor
-  por reglaje). Pendiente: recordatorio de mantenimiento en el HUD/inicio.
+  por reglaje, aviso de mantenimiento pendiente en la tarjeta de moto de inicio).
 - Home dashboard (sesiones/km/vueltas/récord) y lista de sesiones mejorada: HECHO.
 - Liga/comunidad/quedadas → backend (Supabase disponible); fase mayor, cuentas incluidas.
 - Mejoras de precisión con GPS de móvil (suavizado, filtrado de outliers del fix).

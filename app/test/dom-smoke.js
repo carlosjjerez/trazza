@@ -47,6 +47,7 @@ ok('recordatorio añadido a la lista', window.document.querySelectorAll('#rem-li
 
 click('#btn-start');
 ok('pantalla HUD activa', window.document.querySelector('#screen-hud').classList.contains('active'));
+ok('tab bar oculta en el HUD', window.document.querySelector('#tabbar').classList.contains('hidden')===true);
 
 // ---- Sensores (inclinación + G con el IMU del móvil) ----
 const GRAV=9.80665;
@@ -143,11 +144,15 @@ ok('segundo + sigue acercando', z2>1.3);
 window.document.querySelector('#zoom-reset').dispatchEvent(new window.Event('click',{bubbles:true}));
 ok('botón reset vuelve a zoom 1', sm._view.zoom===1 && sm._view.panX===0);
 
-click('[data-go="home"]');
-ok('sesión listada en home', window.document.querySelectorAll('#session-list .sess').length>=1);
+// navega a la pestaña Sesiones (nueva tab bar)
+click('#tabbar .tab[data-tab="sessions"]');
+ok('pestaña sesiones activa', window.document.querySelector('#screen-sessions').classList.contains('active'));
+ok('tab bar visible en pantalla raíz', window.document.querySelector('#tabbar').classList.contains('hidden')===false);
+ok('sesión listada en sesiones', window.document.querySelectorAll('#session-list .sess').length>=1);
 ok('resumen de inicio visible', window.document.querySelector('#home-dash').hidden===false);
 ok('resumen cuenta sesiones', parseInt(txt('#dash-sessions'))>=1);
 ok('resumen muestra km en pista', txt('#dash-km')!=='0' || txt('#dash-km')==='0.0');
+click('#tabbar .tab[data-tab="home"]');
 
 // ---- Constructor de circuito (punto a punto) + mapa del HUD ----
 const qsActive=s=>window.document.querySelector(s).classList.contains('active');

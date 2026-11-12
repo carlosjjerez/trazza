@@ -5,7 +5,7 @@
    ===================================================================== */
 'use strict';
 
-const DEFAULTS = { radius:30, minLap:20, sectors:3, units:'kmh', sound:true, haptic:true, wakelock:true, sim:false, imu:false };
+const DEFAULTS = { radius:30, minLap:20, sectors:3, units:'kmh', sound:true, haptic:true, wakelock:true, sim:false, imu:false, orientation:'auto' };
 
 function metersToLatLon(lat0,lon0,e,n){ return [lat0+n/111320, lon0+e/(111320*Math.cos(lat0*Math.PI/180))]; }
 // Trazado REAL del Circuito de Cartagena (OpenStreetMap, lat/lon reales): forma
@@ -344,6 +344,8 @@ function startSession(){
   viewingSessionId=null;
   resetHud();
   show('hud');
+  { const hud=$('#screen-hud'); if(hud) hud.dataset.orient=settings.orientation||'auto'; }
+  lockOrientation(settings.orientation);
   acquireWake();
   if(audioCtx&&audioCtx.state==='suspended') audioCtx.resume();
   // sensores (inclinación + G) si están activados y disponibles
@@ -545,6 +547,8 @@ function stopSession(){
   live.running=false;
   cancelAnimationFrame(live.rafId);
   releaseWake();
+  unlockOrientation();
+  { const hud=$('#screen-hud'); if(hud) hud.removeAttribute('data-orient'); }
   IMU.stop();
   const saved=persistSession(true);
   renderSummary(saved); show('summary');
@@ -1511,15 +1515,48 @@ function delSetup(){
 }
 
 /* ----------------------------- Navegación / init ----------------------------- */
-function show(id){ $all('.screen').forEach(s=>s.classList.remove('active')); $('#screen-'+id).classList.add('active'); }
+const TAB_SCREENS=['home','sessions','garage','settings'];
+function show(id){
+  $all('.screen').forEach(s=>s.classList.remove('active'));
+  const el=$('#screen-'+id); if(el) el.classList.add('active');
+  const isTab=TAB_SCREENS.includes(id);
+  const tb=$('#tabbar'); if(tb) tb.classList.toggle('hidden', !isTab);
+  if(isTab) $all('#tabbar .tab').forEach(t=>t.classList.toggle('on', t.dataset.tab===id));
+  // vuelve el scroll arriba al cambiar de pantalla raíz
+  const sc=el&&el.querySelector('.scroll'); if(sc) sc.scrollTop=0;
+}
+function showTab(name){
+  if(name==='sessions'){ renderSessions(); }
+  else if(name==='garage'){ renderGarage(); }
+  else if(name==='settings'){ renderSettings(); }
+  else if(name==='home'){ renderReminders(); renderBikeCard(); applyOrientUI(); syncToggles(); refreshStartState(); }
+  show(name);
+}
+// sincroniza los interruptores (pueden estar duplicados en inicio y ajustes)
+function syncToggles(){ $all('.sw[data-toggle]').forEach(b=>b.classList.toggle('on', !!settings[b.dataset.toggle])); }
+// pills de orientación (inicio)
+function applyOrientUI(){ $all('#orient button').forEach(b=>b.classList.toggle('on', b.dataset.orient===(settings.orientation||'auto'))); }
+// bloqueo de orientación en pista (solo surte efecto a pantalla completa/PWA)
+function lockOrientation(mode){
+  try{
+    const o=screen.orientation;
+    if(mode==='vertical' && o && o.lock) o.lock('portrait').catch(()=>{});
+    else if(mode==='horizontal' && o && o.lock) o.lock('landscape').catch(()=>{});
+    else if(o && o.unlock) o.unlock();
+  }catch(e){}
+}
+function unlockOrientation(){ try{ if(screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); }catch(e){} }
 
 function init(){
-  $all('[data-go]').forEach(b=>b.addEventListener('click',()=>{ const d=b.dataset.go; if(d==='home'){ renderSessions(); renderReminders(); renderBikeCard(); } if(d==='meta'){ renderPresets(); renderSaved(); } show(d); }));
+  $all('[data-go]').forEach(b=>b.addEventListener('click',()=>{ const d=b.dataset.go; if(d==='home'){ renderReminders(); renderBikeCard(); applyOrientUI(); syncToggles(); } if(d==='meta'){ renderPresets(); renderSaved(); } show(d); }));
   $('#rem-add-btn').addEventListener('click', addReminderFromInputs);
   $('#rem-text').addEventListener('keydown',e=>{ if(e.key==='Enter') addReminderFromInputs(); });
   $('#rem-lap').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#rem-text').focus(); });
   renderReminders();
-  $('#btn-settings').addEventListener('click',()=>{ renderSettings(); show('settings'); });
+  // navegación por pestañas (barra inferior)
+  $all('#tabbar .tab').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+  // orientación de pantalla en pista
+  $all('#orient button').forEach(b=>b.addEventListener('click',()=>{ settings.orientation=b.dataset.orient; saveJSON(LS_SETTINGS,settings); applyOrientUI(); toast('Orientación: '+b.textContent,1600); }));
   $('#gps-card').addEventListener('click',()=>GPS.start());
   $('#meta-card').addEventListener('click',()=>{ metaTrack=[]; renderPresets(); renderSaved(); show('meta'); GPS.start(); requestAnimationFrame(drawMetaMap); });
   $('#btn-mark-here').addEventListener('click', markHere);
@@ -1571,7 +1608,10 @@ function init(){
   wireSettings();
   renderSettings();
   renderSessions();
+  applyOrientUI();
+  syncToggles();
   refreshStartState();
+  show('home');   // arranca en Pista con la tab bar visible
 
   // sin service worker: desinstala cualquiera anterior y limpia cachés (auto-sanado)
   if('serviceWorker' in navigator){

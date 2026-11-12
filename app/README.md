@@ -24,6 +24,9 @@ la trayectoria:
 Todo el núcleo (`detect.js`) está cubierto por pruebas (ver `test/`).
 
 ## Funciones
+- **Navegación por pestañas** (barra inferior): Pista · Sesiones · Garaje · Ajustes;
+  se oculta en el HUD y pantallas de detalle. **Orientación** elegible (Auto/Vertical/
+  Horizontal) con bloqueo nativo en PWA, y «mantener pantalla encendida», desde Pista.
 - Estado GPS prominente y a color (precisión, frecuencia, calidad de fix).
 - **Crear circuitos**: grabándolos por GPS (das una vuelta y se dibuja solo) o
   **punto a punto** (fijas meta y pineas puntos). Se guardan y se reutilizan.

@@ -357,6 +357,32 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .maint-bot .mint-d{width:24px;height:24px;border-radius:7px;background:var(--grafito);border:1px solid var(--linea);color:var(--blanco);font-family:var(--display);font-weight:700;font-size:15px;line-height:1;margin:0 2px;}
 .maint-bot .mint-d:active{background:var(--hiviz);color:var(--asfalto);border-color:var(--hiviz);}
 .bike-warn{margin-top:6px;font-size:12.5px;font-weight:600;color:var(--rojo);}
+
+/* ===================== Navegación (tab bar) + rediseño app ===================== */
+.appbar-tag{font-family:var(--num);font-weight:700;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--niebla);background:var(--grafito);padding:5px 11px;border-radius:999px;}
+.appbar-title.left{margin:0;text-align:left;flex:1;}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:50;display:flex;gap:2px;
+  background:rgba(18,20,25,.92);backdrop-filter:saturate(1.3) blur(14px);-webkit-backdrop-filter:saturate(1.3) blur(14px);
+  border-top:1px solid var(--linea);padding:8px 8px calc(env(safe-area-inset-bottom) + 8px);}
+.tabbar.hidden{display:none;}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;color:var(--niebla);background:none;transition:color .15s;}
+.tab svg{width:23px;height:23px;}
+.tab span{font-family:var(--num);font-weight:600;font-size:10.5px;letter-spacing:.01em;}
+.tab.on{color:var(--hiviz);}
+.tab:active{color:var(--blanco);}
+/* las pantallas raíz dejan hueco para la tab bar */
+#screen-home .scroll,#screen-sessions .scroll,#screen-garage .scroll,#screen-settings .scroll{padding-bottom:calc(env(safe-area-inset-bottom) + 86px);}
+/* tarjeta de opciones de pantalla (orientación + encendido) */
+.screen-opts .grow{padding:13px 0;}
+.screen-opts .hr{margin:0 -18px;background:var(--linea);}
+/* forzar orientación en el HUD (además del bloqueo nativo cuando es PWA) */
+#screen-hud[data-orient="vertical"].active .hud-top,
+#screen-hud[data-orient="vertical"].active .hud-body{display:flex !important;}
+#screen-hud[data-orient="vertical"].active #track-mode{display:none !important;}
+#screen-hud[data-orient="horizontal"].active .hud-top,
+#screen-hud[data-orient="horizontal"].active .hud-body{display:none !important;}
+#screen-hud[data-orient="horizontal"].active #track-mode{display:flex;flex-direction:column;height:100%;width:100%;
+  padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);padding-bottom:env(safe-area-inset-bottom);}
 .best-row{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--grafito-2);border:1px solid var(--linea);border-radius:12px;padding:11px 13px;}
 .best-row .br-c{font-weight:600;font-size:14.5px;} .best-row .br-s{font-size:12px;color:var(--niebla);}
 .best-row .br-t{font-family:var(--display);font-weight:700;font-size:20px;font-variant-numeric:tabular-nums;}

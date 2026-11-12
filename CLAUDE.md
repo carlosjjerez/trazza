@@ -15,7 +15,10 @@ Cronómetro GPS de vueltas para **moto en circuito**, en **español**, como PWA.
 
 ## Dónde está cada cosa
 - `app/` — la PWA (todo el producto actual). Sin build, ficheros estáticos.
-  - `index.html` — 5 pantallas: inicio, meta, HUD, resumen, ajustes + builder + modo track.
+  - `index.html` — app con **barra de navegación inferior** (Pista · Sesiones · Garaje ·
+    Ajustes) + pantallas de detalle (meta, HUD, resumen, análisis, moto/reglaje, builder,
+    modo track). «Pista» incluye tarjeta «Pantalla en pista» (orientación Auto/Vertical/
+    Horizontal + mantener encendida).
   - `app.css` — estilos; tokens de paleta de marca en `:root`.
   - `app.js` — GPS, sesión, delta predictivo, mini-mapa, récord (PB), recordatorios,
     modo track horizontal, export, ajustes.
@@ -74,6 +77,9 @@ Tras tocar lógica de detección o de sesión, **corre los tests** antes de dar 
   de localStorage para datos pesados).
 
 ## Estado actual (funciona)
+**Navegación tipo app**: barra inferior con pestañas Pista/Sesiones/Garaje/Ajustes (se oculta
+en HUD/detalle). Orientación de pantalla elegible (Auto/Vertical/Horizontal) con bloqueo nativo
+en PWA, y «mantener pantalla encendida», desde la pestaña Pista.
 Cronómetro con detección automática, sectores en vivo, delta predictivo verde/rojo,
 mini-mapa del circuito en el HUD, crear circuitos (GPS o punto a punto), preset Cartagena
 y plantilla de maniobras, récord histórico (PB) por circuito, recordatorios por vuelta,

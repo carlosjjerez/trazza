@@ -18,7 +18,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;500;600;700;800&family=Saira+Semi+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="app.css?v=20261111i">
+  <link rel="stylesheet" href="app.css?v=20261111j">
 </head>
 <body>
 
@@ -219,9 +219,18 @@
 <!-- ===================== HUD ===================== -->
 <section id="screen-hud" class="screen hud">
   <div class="hud-reminder" id="hud-reminder" hidden role="alert"></div>
+  <!-- tira de estado (telemetría) -->
+  <div class="hud-strip">
+    <i class="hs-dot" id="hud-strip-dot"></i>
+    <span id="hud-strip-gps">GPS -- Hz · ±-- m</span>
+    <span class="hs-sens" id="hud-strip-sens" hidden>sensores -- Hz</span>
+    <span class="hs-spacer"></span>
+    <span id="hud-clock">--:--</span>
+  </div>
+
   <div class="hud-top">
     <span class="hud-lapnum" id="hud-lapnum">VUELTA 00</span>
-    <span class="fixpill sm" id="hud-gps"><i class="dot"></i><span id="hud-gps-text">±-- m</span></span>
+    <span class="hud-top-best"><em>MEJOR</em><b id="hud-best">--</b></span>
     <button class="hud-fin" id="btn-stop">FIN</button>
   </div>
 
@@ -232,42 +241,37 @@
       <div class="hero" id="hud-cur">0:00<span class="ms">.000</span></div>
     </div>
 
-    <div class="delta" id="hud-delta">
-      <span class="kicker">Delta · predictivo vs mejor</span>
-      <div class="delta-num" id="hud-delta-num">--</div>
+    <div class="delta2" id="hud-delta">
+      <div class="d2-main">
+        <span class="kicker">Delta · por distancia</span>
+        <div class="delta-num" id="hud-delta-num">--</div>
+      </div>
+      <div class="d2-side">
+        <div><span class="k">Previsión</span><b id="hud-prevision">--</b></div>
+        <div><span class="k">Última</span><b id="hud-last">--</b></div>
+      </div>
     </div>
 
     <div class="sectors" id="hud-sectors"></div>
 
-    <div class="duo">
-      <div class="duo-cell">
-        <span class="kicker">Última</span>
-        <div class="duo-num" id="hud-last">--</div>
-      </div>
-      <div class="duo-cell best">
-        <span class="kicker green">Mejor</span>
-        <div class="duo-num green" id="hud-best">--</div>
-      </div>
-    </div>
-
     <div class="hud-fill"></div>
 
-    <div class="telemetry" id="hud-telemetry" hidden>
-      <div class="tl-cell">
-        <span class="kicker">Inclinación</span>
-        <div class="tl-num"><span id="hud-lean">0</span><em>°</em></div>
-        <span class="tl-side" id="hud-lean-side">—</span>
+    <div class="hud-data">
+      <div class="hd-cell">
+        <span class="k">Velocidad</span>
+        <div class="hd-v cyan"><span id="hud-spd">0</span><em id="hud-spd-unit">km/h</em></div>
+        <span class="hd-sub">máx <b id="hud-spdmax">0</b></span>
       </div>
-      <div class="tl-cell">
-        <span class="kicker cyan">Fuerza G</span>
-        <div class="tl-num"><span id="hud-g">0.0</span><em>g</em></div>
-        <span class="tl-side">lateral + frenada</span>
+      <div class="hd-cell tel" id="hud-tel-lean" hidden>
+        <span class="k">Inclinación</span>
+        <div class="hd-v"><span id="hud-lean">0</span><em>°</em></div>
+        <span class="hd-sub" id="hud-lean-side">—</span>
       </div>
-    </div>
-
-    <div class="speed">
-      <div class="speed-now"><span id="hud-spd">0</span><em id="hud-spd-unit">KM/H</em></div>
-      <div class="speed-max"><span class="kicker">Máx</span><div id="hud-spdmax">0</div></div>
+      <div class="hd-cell tel" id="hud-tel-g" hidden>
+        <span class="k">Fuerza G</span>
+        <div class="hd-v"><span id="hud-g">0.0</span><em>g</em></div>
+        <span class="hd-sub">lat + fren</span>
+      </div>
     </div>
   </div>
 
@@ -598,12 +602,12 @@
 
 <div id="toast" class="toast"></div>
 
-<script src="detect.js?v=20261111i"></script>
-<script src="analyze.js?v=20261111i"></script>
-<script src="sensors.js?v=20261111i"></script>
-<script src="garage.js?v=20261111i"></script>
-<script src="cartagena-track.js?v=20261111i"></script>
-<script src="sim.js?v=20261111i"></script>
-<script src="app.js?v=20261111i"></script>
+<script src="detect.js?v=20261111j"></script>
+<script src="analyze.js?v=20261111j"></script>
+<script src="sensors.js?v=20261111j"></script>
+<script src="garage.js?v=20261111j"></script>
+<script src="cartagena-track.js?v=20261111j"></script>
+<script src="sim.js?v=20261111j"></script>
+<script src="app.js?v=20261111j"></script>
 </body>
 </html>

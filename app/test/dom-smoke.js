@@ -56,7 +56,8 @@ const motion=(aLat,aLon,aVert,roll,ts)=>{ const ev=new window.Event('devicemotio
 for(let i=0;i<62;i++) motion(0,0,GRAV,0, 900000+i*16);                       // calibración (moto recta)
 const tilt=d=>{ const r=d*Math.PI/180; return [GRAV*Math.sin(r),0,GRAV*Math.cos(r)]; };
 for(let i=0;i<220;i++){ const [x,y,z]=tilt(i<110?42:-42); motion(x,y,z,0, 960000+i*16); } // tumba derecha y luego izquierda
-ok('HUD telemetría visible con sensores', window.document.querySelector('#hud-telemetry').hidden===false);
+ok('HUD telemetría visible con sensores', window.document.querySelector('#hud-tel-lean').hidden===false && window.document.querySelector('#hud-tel-g').hidden===false);
+ok('tira de estado con sensores', window.document.querySelector('#hud-strip-sens').hidden===false);
 
 const A=200,B=110,DURS=[45,44,46,43.5];
 let theta=-0.6, lapIdx=0;

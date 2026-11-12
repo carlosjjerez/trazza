@@ -193,7 +193,7 @@ const IMU_AXES = { rollRate:'beta', aLat:'x', aLon:'y', aVert:'z', rollSign:1 };
 const IMU = {
   active:false, available:false, permission:'unknown',
   filter:null, calib:null, calibrating:false, calBuf:null,
-  last:{ lean:0, g:null }, lastT:null, _handler:null, _calTimer:null,
+  last:{ lean:0, g:null }, lastT:null, hz:0, _handler:null, _calTimer:null,
   supported(){ return typeof window!=='undefined' && typeof window.DeviceMotionEvent!=='undefined'; },
   needsPermission(){ return this.supported() && typeof window.DeviceMotionEvent.requestPermission==='function'; },
   async requestPermission(){
@@ -239,6 +239,7 @@ const IMU = {
     }
     const now=(e.timeStamp!=null?e.timeStamp:(typeof performance!=='undefined'?performance.now():Date.now()));
     let dt=this.lastT!=null ? (now-this.lastT)/1000 : 0; this.lastT=now;
+    if(dt>0 && dt<0.5) this.hz = this.hz ? 0.9*this.hz+0.1*(1/dt) : 1/dt;
     if(!(dt>0) || dt>0.5) dt=0.016;            // protege de saltos/pausas
     const bias=this.calib?this.calib.gyroBias.x:0;
     const lean=this.filter.update(dt, rawRoll-bias, ax, az, Math.hypot(ax,ay,az));
@@ -270,8 +271,9 @@ function updateGpsUI(fix){
   $('#gps-hz').textContent=(GPS.hz?GPS.hz.toFixed(1):'--')+' Hz';
   $('#gps-spd').textContent=fmtSpeed(fix.spd)+' '+speedUnit();
   $('#gps-hint').textContent = fix.acc<=8 ? 'Señal lista para cronometrar' : fix.acc<=20 ? 'Señal aceptable, mejor esperar' : 'Señal pobre, espera a cielo abierto';
-  // pill del HUD
-  const hp=$('#hud-gps'); if(hp){ hp.className='fixpill sm '+c; $('#hud-gps-text').textContent='±'+fix.acc.toFixed(1)+' m'; }
+  // tira de estado del HUD
+  const sg=$('#hud-strip-gps'); if(sg) sg.textContent='GPS '+(GPS.hz?GPS.hz.toFixed(1):'--')+' Hz · ±'+fix.acc.toFixed(1)+' m';
+  const sd=$('#hud-strip-dot'); if(sd) sd.className='hs-dot '+c;
 }
 
 function refreshStartState(){
@@ -350,7 +352,8 @@ function startSession(){
   if(audioCtx&&audioCtx.state==='suspended') audioCtx.resume();
   // sensores (inclinación + G) si están activados y disponibles
   live.peaks = (settings.imu && IMU.supported()) ? TrazzaSensors.makePeaks() : null;
-  { const tel=$('#hud-telemetry'); if(tel) tel.hidden = !live.peaks; }
+  { const on=!!live.peaks; ['#hud-tel-lean','#hud-tel-g'].forEach(id=>{ const e=$(id); if(e) e.hidden=!on; });
+    const ss=$('#hud-strip-sens'); if(ss) ss.hidden=!on; }
   IMU.start();
   GPS.start(); // asegura modo correcto (real/sim)
   startClock();
@@ -377,7 +380,8 @@ function liveFix(fix){
     live.samples.push({ d:live.cumDist, t:elapsed });
     if(live.refProfile){
       const ref=TrazzaDetect.interpProfile(live.refProfile, live.cumDist);
-      if(ref!=null){ setDelta(elapsed-ref); setTrackDelta(elapsed-ref); }  // delta y color en vivo
+      if(ref!=null){ setDelta(elapsed-ref); setTrackDelta(elapsed-ref);   // delta y color en vivo
+        if(live.refMs!=null){ const pv=$('#hud-prevision'); if(pv) pv.textContent=fmtLap(live.refMs+(elapsed-ref)); } }
     }
     updateLiveSectors(elapsed);
   }
@@ -521,7 +525,8 @@ function resetHud(){
   $('#hud-lapnum').textContent='VUELTA 00';
   $('#hud-last').innerHTML='--'; $('#hud-best').innerHTML='--';
   $('#hud-spd').textContent='0'; $('#hud-spdmax').textContent='0';
-  $('#hud-spd-unit').textContent=speedUnit().toUpperCase();
+  $('#hud-spd-unit').textContent=speedUnit();
+  { const pv=$('#hud-prevision'); if(pv) pv.textContent='--'; }
   setDelta(null);
   $all('#hud-sectors .sec').forEach(c=>{ c.classList.remove('good','warn','bad','cur'); const sd=c.querySelector('.sd'); if(sd) sd.textContent='—'; });
   // modo track
@@ -536,6 +541,12 @@ function startClock(){
     if(!live.running) return;
     if(live.lapStartT!=null){ const cur=Date.now()-live.lapStartT; const sl=splitLap(cur); $('#hud-cur').innerHTML=`${sl.main}<span class="ms">${sl.ms}</span>`; $('#tk-cur').textContent=fmtTenths(cur); }
     if(live.startedAt!=null) $('#tk-elapsed').textContent=fmtMMSS(Date.now()-live.startedAt);
+    // reloj + Hz de sensores en la tira de estado (1/s, barato)
+    const now=Date.now();
+    if(!live._clkT || now-live._clkT>=1000){ live._clkT=now;
+      const cl=$('#hud-clock'); if(cl){ const d=new Date(); cl.textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+      if(live.peaks && IMU.available){ const ss=$('#hud-strip-sens'); if(ss){ ss.hidden=false; ss.textContent='sensores '+Math.round(IMU.hz||0)+' Hz'; } }
+    }
     live.rafId=requestAnimationFrame(tick);
   };
   live.rafId=requestAnimationFrame(tick);

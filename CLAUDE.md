@@ -80,6 +80,9 @@ Tras tocar lógica de detección o de sesión, **corre los tests** antes de dar 
 **Navegación tipo app**: barra inferior con pestañas Pista/Sesiones/Garaje/Ajustes (se oculta
 en HUD/detalle). Orientación de pantalla elegible (Auto/Vertical/Horizontal) con bloqueo nativo
 en PWA, y «mantener pantalla encendida», desde la pestaña Pista.
+**HUD «cabina»**: tira de estado arriba (GPS Hz · precisión · sensores Hz · reloj), MEJOR en
+cabecera, bloque Delta + **Previsión** (tiempo estimado de vuelta) + Última, sectores y fila de
+datos Velocidad · Inclinación · G.
 Cronómetro con detección automática, sectores en vivo, delta predictivo verde/rojo,
 mini-mapa del circuito en el HUD, crear circuitos (GPS o punto a punto), preset Cartagena
 y plantilla de maniobras, récord histórico (PB) por circuito, recordatorios por vuelta,

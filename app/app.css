@@ -166,7 +166,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 #track-mode.faster .tk-fin,#track-mode.slower .tk-fin{border-color:rgba(255,255,255,.8);}
 
 @media (orientation:landscape){
-  #screen-hud.active .hud-top, #screen-hud.active .hud-body{display:none;}
+  #screen-hud.active .hud-strip, #screen-hud.active .hud-top, #screen-hud.active .hud-body{display:none;}
   #screen-hud.active #track-mode{display:flex;flex-direction:column;height:100%;width:100%;
     padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);padding-bottom:env(safe-area-inset-bottom);}
   /* el aviso de recordatorio, en horizontal, no tapa el tiempo */
@@ -201,10 +201,24 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .hero{font-family:var(--display);font-weight:700;font-size:68px;line-height:.86;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-top:2px;}
 .hero .ms{color:var(--niebla);}
 
-.delta{margin-top:16px;background:var(--grafito);border-radius:20px;padding:14px 18px;transition:background .15s;}
-.delta.good{background:rgba(182,255,26,.12);} .delta.bad{background:rgba(255,59,48,.12);}
+/* tira de estado (GPS/sensores/reloj) */
+.hud-strip{display:flex;align-items:center;gap:7px;padding:calc(env(safe-area-inset-top) + 8px) 18px 0;font-family:var(--num);font-weight:600;font-size:11.5px;letter-spacing:.02em;color:var(--niebla);}
+.hs-dot{width:7px;height:7px;border-radius:50%;background:var(--niebla);flex:none;}
+.hs-dot.ok{background:var(--hiviz);} .hs-dot.wait{background:var(--ambar);} .hs-dot.bad{background:var(--rojo);}
+.hs-sens{color:var(--cian);} .hs-spacer{flex:1;} #hud-clock{font-variant-numeric:tabular-nums;}
+/* cabecera: MEJOR a la derecha */
+.hud-top-best{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;line-height:1;gap:2px;}
+.hud-top-best em{font-style:normal;font-family:var(--num);font-weight:600;font-size:9.5px;letter-spacing:.16em;color:var(--niebla);}
+.hud-top-best b{font-family:var(--display);font-weight:700;font-size:18px;color:var(--hiviz);font-variant-numeric:tabular-nums;}
+/* delta + previsión + última */
+.delta2{display:flex;gap:14px;margin-top:14px;background:var(--grafito);border-radius:20px;padding:14px 18px;transition:background .15s;}
+.delta2.good{background:rgba(182,255,26,.12);} .delta2.bad{background:rgba(255,59,48,.12);}
+.d2-main{flex:1;min-width:0;}
 .delta-num{font-family:var(--display);font-weight:700;font-size:50px;line-height:.85;font-variant-numeric:tabular-nums;color:var(--niebla);margin-top:4px;}
 .delta-num.good{color:var(--hiviz);} .delta-num.bad{color:var(--rojo);}
+.d2-side{display:flex;flex-direction:column;justify-content:center;gap:11px;flex:0 0 auto;min-width:94px;border-left:1px solid var(--linea);padding-left:14px;}
+.d2-side .k{display:block;font-family:var(--num);font-weight:600;font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--niebla);margin-bottom:1px;}
+.d2-side b{font-family:var(--display);font-weight:700;font-size:21px;font-variant-numeric:tabular-nums;color:var(--blanco);}
 
 /* sectores HUD */
 .sectors{display:flex;gap:8px;margin-top:12px;}
@@ -216,19 +230,16 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .sectors .sec.warn .sd{color:var(--ambar);}
 .sectors .sec.bad .sd{color:var(--rojo);}
 
-.duo{display:flex;gap:12px;margin-top:14px;}
-.duo-cell{flex:1;background:var(--grafito);border-radius:16px;padding:14px 16px;}
-.duo-cell.best{border:1px solid rgba(182,255,26,.35);}
-.duo-num{font-family:var(--display);font-weight:700;font-size:32px;line-height:1;font-variant-numeric:tabular-nums;margin-top:6px;}
-.duo-num.green{color:var(--hiviz);}
-
 .hud-fill{flex:1;min-height:12px;}
-.speed{display:flex;align-items:flex-end;justify-content:space-between;padding-top:16px;border-top:1px solid var(--linea);}
-.speed-now{display:flex;align-items:baseline;gap:9px;}
-.speed-now span{font-family:var(--display);font-weight:700;font-size:72px;line-height:.8;color:var(--cian);font-variant-numeric:tabular-nums;}
-.speed-now em{font-style:normal;font-family:var(--num);font-weight:600;font-size:14px;letter-spacing:.12em;color:var(--cian);}
-.speed-max{text-align:right;}
-.speed-max div{font-family:var(--display);font-weight:700;font-size:28px;line-height:1;font-variant-numeric:tabular-nums;margin-top:2px;}
+/* fila de datos: velocidad / inclinación / G */
+.hud-data{display:flex;gap:10px;padding-top:14px;border-top:1px solid var(--linea);}
+.hud-data .hd-cell{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
+.hud-data .k{font-family:var(--num);font-weight:600;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--niebla);}
+.hud-data .hd-v{display:flex;align-items:baseline;gap:3px;font-family:var(--display);font-weight:700;font-size:clamp(34px,11vw,46px);line-height:.85;font-variant-numeric:tabular-nums;color:var(--blanco);}
+.hud-data .hd-v.cyan{color:var(--cian);}
+.hud-data .hd-v em{font-style:normal;font-size:13px;font-weight:600;color:var(--niebla);}
+.hud-data .hd-sub{font-family:var(--num);font-size:11px;color:var(--niebla);}
+.hud-data .hd-sub b{color:var(--blanco);font-weight:700;}
 
 .screen.hud.flash{animation:flash .6s ease;}
 @keyframes flash{0%{background:var(--hiviz);}100%{background:var(--asfalto);}}
@@ -379,6 +390,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 #screen-hud[data-orient="vertical"].active .hud-top,
 #screen-hud[data-orient="vertical"].active .hud-body{display:flex !important;}
 #screen-hud[data-orient="vertical"].active #track-mode{display:none !important;}
+#screen-hud[data-orient="horizontal"].active .hud-strip,
 #screen-hud[data-orient="horizontal"].active .hud-top,
 #screen-hud[data-orient="horizontal"].active .hud-body{display:none !important;}
 #screen-hud[data-orient="horizontal"].active #track-mode{display:flex;flex-direction:column;height:100%;width:100%;

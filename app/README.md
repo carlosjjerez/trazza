@@ -57,6 +57,8 @@ Todo el núcleo (`detect.js`) está cubierto por pruebas (ver `test/`).
   resumen se puede colorear por **velocidad o inclinación** (toggle + leyenda).
   Y **curva a curva**: detecta las curvas por los mínimos de velocidad y da, por curva,
   velocidad de paso, inclinación máx, punto de frenada y Δ frente a la vuelta B.
+  La vuelta B puede ser otra vuelta de la tanda o tu **récord del circuito** (compara tu
+  mejor vuelta de hoy contra tu mejor marca histórica).
 - **Inclinación (lean angle) y fuerzas G** con el **IMU del propio móvil**
   (acelerómetro + giroscopio, `DeviceMotion` ~60 Hz; sin hardware externo).
   Filtro complementario (el acelerómetro solo se equivoca en curva, así que el

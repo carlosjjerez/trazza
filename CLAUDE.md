@@ -94,14 +94,15 @@ y las horas de motor se suman al terminar. Núcleo en `garage.js` (claves `trazz
 Guía de adaptación competitiva (vs Lap360): teardown en `research/` cuando se mueva ahí.
 - Análisis de tanda v2: HECHO → inclinación por distancia (A/B), trazada coloreable por
   velocidad/inclinación, y **curva a curva** (vel. de paso, inclinación, frenada, Δ vs B;
-  detección de curvas por mínimos de velocidad en `analyze.js`). Pendiente: trazada sobre
-  satélite real, zoom sincronizado mapa↔gráfica, comparar >2 vueltas.
+  detección de curvas por mínimos de velocidad en `analyze.js`), y **comparar contra el
+  récord del circuito** (vuelta B = Récord). Pendiente: trazada sobre satélite real, zoom
+  sincronizado mapa↔gráfica, comparar >2 vueltas.
 - Inclinación + G (IMU): v1 HECHA (HUD + máximos). Pendiente v2: afinar `IMU_AXES` y el
   signo del roll en MOTO REAL (depende del soporte); lean/G por distancia en el análisis;
   corrección por ancho de neumático con geometría real; muestreo denso → **IndexedDB**
   antes de guardar streams a >1 Hz (localStorage no escala).
-- Garaje: v1 HECHA (motos, mantenimiento por horas, reglajes, mejor por reglaje). Pendiente:
-  editar intervalos de mantenimiento, recordatorio de mantenimiento en el HUD/inicio.
+- Garaje: HECHO (motos, mantenimiento por horas con intervalos editables, reglajes, mejor
+  por reglaje). Pendiente: recordatorio de mantenimiento en el HUD/inicio.
 - Home dashboard (sesiones/km/vueltas/récord) y lista de sesiones mejorada: HECHO.
 - Liga/comunidad/quedadas → backend (Supabase disponible); fase mayor, cuentas incluidas.
 - Mejoras de precisión con GPS de móvil (suavizado, filtrado de outliers del fix).

@@ -727,7 +727,17 @@ function updateMapLegend(mode){
 let anProfiles=null;            // [{n, ms, profile:[{d,t,spd}]}]
 let anSel={ a:null, b:null };   // nº de vuelta A/B
 const pad2=n=>String(n).padStart(2,'0');
+const lapTag=n=> n<0 ? 'Récord' : ('V'+pad2(n));   // -1 = récord del circuito
 const capFirst=s=>s.charAt(0).toUpperCase()+s.slice(1);
+
+// perfil del récord del circuito (si existe) como vuelta especial n=-1.
+// Solo guarda {d,t} (no velocidad/inclinación): sirve para delta y curva a curva.
+function recordProfileFor(s){
+  if(!s || !s.gate) return null;
+  const rec=loadRecord(recordKey({ name:s.name, lat:s.gate.lat, lon:s.gate.lon }));
+  if(rec && rec.profile && rec.profile.length>=2) return { n:-1, ms:rec.bestMs, profile:rec.profile, isRecord:true };
+  return null;
+}
 
 // reconstruye el perfil por distancia de cada vuelta desde el track + crossTimes
 function buildLapProfiles(s){
@@ -745,8 +755,11 @@ function openAnalysis(s){
   anProfiles=buildLapProfiles(s);
   $('#an-title').textContent='Análisis · '+(s.name||'tanda');
   if(anProfiles.length<1){ renderAnalysisEmpty(); show('analysis'); return; }
-  const byMs=anProfiles.slice().sort((a,b)=>a.ms-b.ms);
-  anSel.a=byMs[0].n; anSel.b=(byMs[1]||byMs[0]).n;
+  const rp=recordProfileFor(s); if(rp) anProfiles.push(rp);     // compara contra tu récord
+  const laps=anProfiles.filter(p=>p.n>=0);
+  const byMs=laps.slice().sort((a,b)=>a.ms-b.ms);
+  anSel.a=byMs[0].n;                       // A = mejor vuelta de la tanda
+  anSel.b=rp ? -1 : (byMs[1]||byMs[0]).n;  // B = récord del circuito si existe
   fillLapSelectors();
   show('analysis');
   renderAnalysis();                         // narrativa + tabla (síncrono)
@@ -761,7 +774,7 @@ function renderAnalysisEmpty(){
 
 function fillLapSelectors(){
   const html=anProfiles.slice().sort((a,b)=>a.n-b.n)
-    .map(p=>`<option value="${p.n}">V${pad2(p.n)} · ${fmtLap(p.ms)}</option>`).join('');
+    .map(p=>`<option value="${p.n}">${lapTag(p.n)} · ${fmtLap(p.ms)}</option>`).join('');
   const a=$('#an-a'), b=$('#an-b');
   a.innerHTML=html; b.innerHTML=html; a.value=anSel.a; b.value=anSel.b;
   a.onchange=()=>{ anSel.a=+a.value; renderAnalysis(); };
@@ -794,7 +807,7 @@ function renderCorners(pa, pb, la, lb){
   if(!cs.length){ head.hidden=true; wrap.innerHTML=''; return; }
   head.hidden=false;
   const cmp = pb && la && lb && la.n!==lb.n;
-  $('#an-corners-sub').textContent = cmp ? ('V'+pad2(la.n)+' vs V'+pad2(lb.n)) : ('V'+pad2(la.n));
+  $('#an-corners-sub').textContent = cmp ? (lapTag(la.n)+' vs '+lapTag(lb.n)) : lapTag(la.n);
   const f=speedFactor(), u=speedUnit();
   wrap.innerHTML='';
   cs.forEach((c,i)=>{
@@ -818,13 +831,13 @@ function renderNarrative(la,lb,gl,totalMs){
   const same=la.n===lb.n;
   let head;
   if(same){
-    head=`<div class="an-head one"><div><span class="k cyan">Vuelta ${pad2(la.n)}</span><span class="an-hero cyan">${fmtLap(la.ms)}</span></div><div class="an-note">Elige una vuelta distinta en B para comparar.</div></div>`;
+    head=`<div class="an-head one"><div><span class="k cyan">${la.n<0?'Récord':'Vuelta '+pad2(la.n)}</span><span class="an-hero cyan">${fmtLap(la.ms)}</span></div><div class="an-note">Elige una vuelta distinta en B para comparar.</div></div>`;
   } else {
     const cls=totalMs<0?'good':(totalMs>0?'bad':'flat');
     head=`<div class="an-head">
-      <div class="an-side"><span class="k cyan">A · V${pad2(la.n)}</span><span class="an-hero cyan">${fmtLap(la.ms)}</span></div>
+      <div class="an-side"><span class="k cyan">A · ${lapTag(la.n)}</span><span class="an-hero cyan">${fmtLap(la.ms)}</span></div>
       <div class="an-net ${cls}"><b>${fmtDelta(totalMs)}</b><small>A frente a B</small></div>
-      <div class="an-side r"><span class="k amber">B · V${pad2(lb.n)}</span><span class="an-hero amber">${fmtLap(lb.ms)}</span></div>
+      <div class="an-side r"><span class="k amber">B · ${lapTag(lb.n)}</span><span class="an-hero amber">${fmtLap(lb.ms)}</span></div>
     </div>`;
   }
   let chips='';
@@ -1369,8 +1382,9 @@ function renderBike(){
     const row=document.createElement('div'); row.className='maint';
     row.innerHTML=`<div class="maint-top"><span class="ml">${esc(m.label)}</span><span class="mr ${cls}">${rem}</span></div>
       <div class="mbar"><i class="${cls}" style="width:${pct}%"></i></div>
-      <div class="maint-bot"><span>cada ${m.intervalH} h</span><button class="mini-done" type="button">Hecho</button></div>`;
+      <div class="maint-bot"><span class="mint">cada <button class="mint-d" data-d="-1" type="button">−</button> <b>${m.intervalH}</b> h <button class="mint-d" data-d="1" type="button">+</button></span><button class="mini-done" type="button">Hecho</button></div>`;
     row.querySelector('.mini-done').addEventListener('click',()=>markMaintDone(b.id, m.id));
+    row.querySelectorAll('.mint-d').forEach(btn=>btn.addEventListener('click',()=>editMaintInterval(b.id, m.id, +btn.dataset.d)));
     mw.appendChild(row);
   });
   const sw=$('#bike-setups'); sw.innerHTML='';
@@ -1399,6 +1413,13 @@ function setupSummary(s){
   if(f.altTra!=null) bits.push('alt tras '+f.altTra);
   if(s.notes) bits.push(s.notes);
   return bits.join(' · ')||'Ficha de reglaje';
+}
+function editMaintInterval(bikeId, mid, delta){
+  const bikes=loadBikes(), b=bikes.find(x=>x.id===bikeId); if(!b) return;
+  const m=(b.maint||[]).find(x=>x.id===mid); if(!m) return;
+  const cur=m.intervalH||1, step = cur>=20 ? 5 : 1;   // pasos finos hasta 20 h, luego de 5
+  m.intervalH=Math.min(300, Math.max(1, cur + delta*step));
+  saveBikes(bikes); renderBike();
 }
 function markMaintDone(bikeId, mid){
   const bikes=loadBikes(), b=bikes.find(x=>x.id===bikeId); if(!b) return;

@@ -102,6 +102,8 @@ ok('A y B son vueltas distintas por defecto', window.document.querySelector('#an
 ok('narrativa de análisis con contenido', txt('#an-narr').trim().length>0);
 ok('tabla de análisis lista vueltas', window.document.querySelectorAll('#an-laps .lap').length>=2);
 ok('gráfica de inclinación visible (hay sensores)', window.document.querySelector('#an-lean-wrap').hidden===false);
+ok('B compara con el récord del circuito', [...window.document.querySelectorAll('#an-b option')].some(o=>o.textContent.includes('Récord')));
+ok('B por defecto es el récord', window.document.querySelector('#an-b').value==='-1');
 ok('tabla marca la vuelta A', window.document.querySelectorAll('#an-laps .lap.selA').length===1);
 click('#an-back');
 ok('vuelve al resumen desde análisis', window.document.querySelector('#screen-summary').classList.contains('active'));
@@ -192,6 +194,9 @@ click('#btn-save-bike');
 ok('tras guardar, detalle de moto', qsActive('#screen-bike'));
 ok('horas de motor mostradas', txt('#bike-hours').indexOf('3.0')>=0);
 ok('mantenimiento con elementos', window.document.querySelectorAll('#bike-maint .maint').length>=5);
+{ const mb=window.document.querySelector('#bike-maint .maint .mint b'); const before=mb.textContent;
+  window.document.querySelector('#bike-maint .maint .mint-d[data-d="1"]').dispatchEvent(new window.Event('click',{bubbles:true}));
+  ok('editar intervalo de mantenimiento', window.document.querySelector('#bike-maint .maint .mint b').textContent!==before); }
 click('#btn-add-setup');
 ok('formulario de reglaje activo', qsActive('#screen-setup-edit'));
 window.document.querySelector('#s-name').value='Cheste B';

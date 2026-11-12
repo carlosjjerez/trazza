@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Matriz de funciones — Apps de cronometraje/telemetría para track</title>
+<style>
+  @page{ size:A4 landscape; margin:11mm 9mm 13mm; }
+  :root{ --ink:#16181d; --mut:#5b6470; --line:#cfd4db; --soft:#f4f6f9; --yes:#1f8f4e; --no:#c0392b; --part:#c77f12; --blue:#1f5fbf; }
+  *{box-sizing:border-box;}
+  body{margin:0;color:var(--ink);font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:9px;line-height:1.42;}
+  h1{font-size:21px;margin:0 0 4px;}
+  h2{font-size:14px;margin:16px 0 5px;padding:3px 8px;background:var(--ink);color:#fff;border-radius:4px;}
+  h3{font-size:11px;margin:12px 0 4px;}
+  p{margin:4px 0;}
+  small,.mut{color:var(--mut);}
+  .cover{border-bottom:3px solid var(--ink);padding:8px 0 10px;margin-bottom:8px;}
+  table{border-collapse:collapse;width:100%;margin:4px 0 8px;table-layout:fixed;}
+  th,td{border:1px solid var(--line);padding:3px 4px;vertical-align:top;}
+  th{background:var(--soft);font-weight:700;font-size:8.5px;text-align:center;}
+  td.feat{text-align:left;font-size:8.7px;width:150px;}
+  td{text-align:center;font-size:8.5px;}
+  thead th:first-child{text-align:left;width:150px;}
+  tr:nth-child(even) td{background:#fbfcfd;}
+  .y{color:var(--yes);font-weight:700;}
+  .n{color:#b9bfc7;}
+  .p{color:var(--part);font-weight:700;}
+  .nv{color:#b03a2e;font-size:7.5px;font-weight:700;}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:8.5px;margin:6px 0;}
+  .apps{font-size:8.5px;columns:3;margin:4px 0;}
+  .apps b{color:#000;}
+  .note{border-left:3px solid var(--part);background:#fff8ec;padding:6px 9px;margin:6px 0;border-radius:0 5px 5px 0;font-size:8.7px;}
+  .pagebreak{page-break-before:always;}
+  .cell-txt{font-size:7.8px;}
+  .fichas{column-count:2;column-gap:14px;}
+  .ficha{break-inside:avoid;border:1px solid var(--line);border-radius:6px;padding:6px 8px;margin:0 0 8px;background:#fcfdfe;}
+  .ficha h3{margin:0 0 2px;}
+  .ficha .meta{font-size:8px;color:var(--mut);}
+  .ficha ul{margin:3px 0 0;padding-left:14px;} .ficha li{margin:1px 0;}
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div style="font-size:8.5px;color:var(--mut);letter-spacing:.05em">MATRIZ DE FUNCIONES · APPS DE CRONOMETRAJE / TELEMETRÍA PARA TRACK · JUNIO 2026</div>
+  <h1>Funciones de cada aplicación, por categorías</h1>
+  <div class="mut">RaceBox · Harry's LapTimer · RaceChrono · TrackAddict/RaceRender · VBOX/Circuit Tools · AiM Race Studio 3 · Garmin Catalyst · Qstarz QRacing · Starlane MAAT</div>
+</div>
+
+<div class="legend">
+  <span><span class="y">✓</span> Sí</span>
+  <span><span class="p">◐</span> Parcial / limitado / con add-on</span>
+  <span><span class="n">–</span> No</span>
+  <span><span class="nv">NV</span> No verificado</span>
+  <span class="mut">Símbolos = funciones declaradas por fabricante salvo nota.</span>
+</div>
+<div class="apps">
+  <span><b>RB</b> = RaceBox (app oficial)</span> ·
+  <span><b>HLT</b> = Harry's LapTimer</span> ·
+  <span><b>RC</b> = RaceChrono (Pro)</span> ·
+  <span><b>TA</b> = TrackAddict (+RaceRender)</span> ·
+  <span><b>VB</b> = VBOX apps + Circuit Tools</span> ·
+  <span><b>AiM</b> = Race Studio 3 (+móvil)</span> ·
+  <span><b>GC</b> = Garmin Catalyst (app)</span> ·
+  <span><b>QS</b> = Qstarz QRacing (+Web)</span> ·
+  <span><b>SL</b> = Starlane MAAT</span>
+</div>
+
+<!-- 1 PLATAFORMAS -->
+<h2>1 · Plataformas, disponibilidad y precio</h2>
+<table>
+<thead><tr><th>Función</th><th>RB</th><th>HLT</th><th>RC</th><th>TA</th><th>VB</th><th>AiM</th><th>GC</th><th>QS</th><th>SL</th></tr></thead>
+<tbody>
+<tr><td class="feat">App iOS (iPhone/iPad)</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
+<tr><td class="feat">App Android</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="n">–</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
+<tr><td class="feat">App / portal web</td><td class="y">✓</td><td class="p">◐</td><td class="n">–</td><td class="p">◐</td><td class="n">–</td><td class="n">–</td><td class="n">–</td><td class="y">✓</td><td class="n">–</td></tr>
+<tr><td class="feat">Escritorio Win/Mac</td><td class="n">–</td><td class="n">–</td><td class="n">–</td><td class="y">✓<span class="cell-txt"> RR</span></td><td class="y">✓<span class="cell-txt"> CT</span></td><td class="p">◐<span class="cell-txt"> Win</span></td><td class="n">–</td><td class="p">◐<span class="cell-txt"> Win</span></td><td class="y">✓</td></tr>
+<tr><td class="feat">CarPlay / Apple Watch</td><td class="n">–</td><td class="y">✓</td><td class="n">–</td><td class="n">–</td><td class="n">–</td><td class="n">–</td><td class="n">–</td><td class="n">–</td><td class="n">–</td></tr>
+<tr><td class="feat">Gratis (sin compra app)</td><td class="y">✓</td><td class="n">–</td><td class="p">◐</td><td class="p">◐</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
+<tr><td class="feat">Coste app / tiers</td><td class="cell-txt">gratis*</td><td class="cell-txt">$9/$20/↑</td><td class="cell-txt">Pro ~$20</td><td class="cell-txt">Pro $8,99</td><td class="cell-txt">gratis*</td><td class="cell-txt">gratis</td><td class="cell-txt">gratis</td><td class="cell-txt">gratis*</td><td class="cell-txt">gratis</td></tr>
+<tr><td class="feat">Requiere hardware propio</td><td class="y">✓</td><td class="n">–</td><td class="n">–</td><td class="n">–</td><td class="p">◐</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
+</tbody>
+</table>
+<p class="mut" style="font-size:8px">* "gratis*" = la app no se paga pero necesita su dispositivo. RR = RaceRender · CT = Circuit Tools.</p>
+
+<!-- 2 CRONOMETRAJE -->
+<h2>2 · Cronometraje</h2>
+<table>
+<thead><tr><th>Función</th><th>RB</th><th>HLT</th><th>RC</th><th>TA</th><th>VB</th><th>AiM</th><th>GC</th><th>QS</th><th>SL</th></tr></thead>
+<tbody>
+<tr><td class="feat">Vuelta automática por GPS (línea de meta)</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
+<tr><td class="feat">Sectores / splits</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="p">◐</td><td class="y">✓</td><td class="y">✓</td></tr>
+<tr><td class="feat">Delta predictivo en vivo</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
+<tr><td class="feat">Vuelta óptima / teórica</td><td class="p">◐</td><td class="p">◐</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="p">◐</td></tr>
+<tr><td class="feat">Base de datos de circuitos + auto-detección</td><td class="y">✓<span class="cell-txt"> 1500+</span></td><td class="y">✓</td><td class="y">✓<span class="cell-txt"> 2600+</span></td><td class="y">✓<span class="cell-txt"> 1000+</span></td><td class="y">✓<span class="cell-txt"> 800+</span></td><td class="y">✓<span class="cell-txt"> 4000+</span></td><td class="y">✓</td><td class="y">✓</td><td class="y">✓<span class="cell-txt"> 1000+</span></td></tr>
+<tr><td class="feat">Crear circuito / meta personalizada</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="nv">NV</td><td class="p">◐</td><td class="y">✓</td></tr>
+<tr><td class="feat">Cuenta atrás / arranque sin tocar</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
+</tbody>
+</table>
+
+<!-- 3 MODOS -->
+<h2>3 · Modos de uso</h2>
+<table>
+<thead><tr><th>Función</th><th>RB</th><th>HLT</th><th>RC</th><th>TA</th><th>VB</th><th>AiM</th><th>GC</th><th>QS</th><th>SL</th></tr></thead>
+<tbody>
+<tr><td class="feat">Circuito (road course)</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
+<tr><td class="feat">Drag / aceleración (0-100, ¼ milla…)</td><td class="y">✓</td><td class="y">✓</td><td class="p">◐</td><td class="y">✓</td><td class="y">✓</td><td class="p">◐</td><td class="y">✓<span class="cell-txt"> (C2)</span></td><td class="y">✓</td><td class="p">◐</td></tr>
+<tr><td class="feat">Autocross / rally / drift / 4x4</td><td class="n">–</td><td class="p">◐</td><td class="p">◐</td><td class="y">✓</td><td class="n">–</td><td class="p">◐</td><td class="n">–</td><td class="p">◐</td><td class="n">–</td></tr>
+<tr><td class="feat">Punto a punto / hillclimb</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="p">◐</td><td class="y">✓</td><td class="n">–</td><td class="nv">NV</td><td class="p">◐</td></tr>
+</tbody>
+</table>
+
+<!-- 4 SENSORES -->
+<h2 class="pagebreak">4 · Datos y sensores</h2>
+<table>
+<thead><tr><th>Función</th><th>RB</th><th>HLT</th><th>RC</th><th>TA</th><th>VB</th><th>AiM</th><th>GC</th><th>QS</th><th>SL</th></tr></thead>
+<tbody>
+<tr><td class="feat">Usa GPS interno del móvil</td><td class="n">–</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="n">–</td><td class="n">–</td><td class="n">–</td><td class="n">–</td></tr>
+<tr><td class="feat">Soporta GPS externo / dispositivo de alta tasa</td><td class="y">✓<span class="cell-txt"> propio</span></td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓<span class="cell-txt"> propio</span></td><td class="y">✓<span class="cell-txt"> propio</span></td><td class="y">✓<span class="cell-txt"> propio</span></td><td class="y">✓<span class="cell-txt"> propio</span></td></tr>
+<tr><td class="feat">IMU / fuerzas G</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="n">–<span class="cell-txt"> Doppler</span></td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
+<tr><td class="feat">OBD-II / CAN / ECU</td><td class="n">–</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="p">◐</td><td class="y">✓<span class="cell-txt"> DL</span></td><td class="n">–</td><td class="n">–</td><td class="p">◐<span class="cell-txt"> WID</span></td></tr>
+<tr><td class="feat">Ángulo de inclinación (moto)</td><td class="p">◐<span class="cell-txt"> bike mode</span></td><td class="nv">NV</td><td class="nv">NV</td><td class="n">–</td><td class="n">–</td><td class="y">✓<span class="cell-txt"> sensor</span></td><td class="n">–</td><td class="n">–</td><td class="y">✓✓</td></tr>
+<tr><td class="feat">Canales personalizados (presión freno, etc.)</td><td class="n">–</td><td class="y">✓</td><td class="y">✓</td><td class="p">◐</td><td class="p">◐</td><td class="y">✓</td><td class="n">–</td><td class="n">–</td><td class="p">◐</td></tr>
+<tr><td class="feat">Telemetría en vivo a box/coach</td><td class="n">–</td><td class="p">◐</td><td class="n">–</td><td class="y">✓<span class="cell-txt"> Live.RR</span></td><td class="n">–</td><td class="p">◐</td><td class="n">–</td><td class="n">–</td><td class="n">–</td></tr>
+</tbody>
+</table>
+
+<!-- 5 VIDEO -->
+<h2>5 · Vídeo</h2>
+<table>
+<thead><tr><th>Función</th><th>RB</th><th>HLT</th><th>RC</th><th>TA</th><th>VB</th><th>AiM</th><th>GC</th><th>QS</th><th>SL</th></tr></thead>
+<tbody>
+<tr><td class="feat">Grabación de vídeo en la app</td><td class="y">✓</td><td class="y">✓<span class="cell-txt"> P+</span></td><td class="y">✓<span class="cell-txt"> Pro</span></td><td class="y">✓</td><td class="n">–<span class="cell-txt"> HW</span></td><td class="p">◐<span class="cell-txt"> SmartyCam</span></td><td class="y">✓<span class="cell-txt"> cám.</span></td><td class="p">◐<span class="cell-txt"> retir. v3.3</span></td><td class="n">–</td></tr>
+<tr><td class="feat">Overlay de datos sobre vídeo</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓<span class="cell-txt"> CT</span></td><td class="y">✓</td><td class="y">✓</td><td class="n">–</td><td class="y">✓</td></tr>
+<tr><td class="feat">Sincronización vídeo↔datos</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓<span class="cell-txt"> auto</span></td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="p">◐</td><td class="y">✓</td></tr>
+<tr><td class="feat">Multicámara / Picture-in-Picture</td><td class="n">–</td><td class="y">✓</td><td class="y">✓</td><td class="n">–</td><td class="n">–</td><td class="p">◐</td><td class="n">–</td><td class="n">–</td><td class="n">–</td></tr>
+<tr><td class="feat">Control / sync GoPro (Wi-Fi)</td><td class="p">◐<span class="cell-txt"> import</span></td><td class="y">✓</td><td class="y">✓</td><td class="p">◐</td><td class="n">–</td><td class="n">–</td><td class="n">–</td><td class="n">–</td><td class="n">–</td></tr>
+<tr><td class="feat">Exportar vídeo renderizado con overlay</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓<span class="cell-txt"> RR</span></td><td class="y">✓</td><td class="y">✓</td><td class="p">◐</td><td class="n">–</td><td class="y">✓</td></tr>
+</tbody>
+</table>
+
+<!-- 6 ANALISIS -->
+<h2>6 · Análisis</h2>
+<table>
+<thead><tr><th>Función</th><th>RB</th><th>HLT</th><th>RC</th><th>TA</th><th>VB</th><th>AiM</th><th>GC</th><th>QS</th><th>SL</th></tr></thead>
+<tbody>
+<tr><td class="feat">Gráficas (velocidad / G / altitud)</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="p">◐</td><td class="y">✓</td><td class="y">✓</td></tr>
+<tr><td class="feat">Comparación de vueltas</td><td class="y">✓</td><td class="p">◐</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓<span class="cell-txt"> 3 lap</span></td><td class="y">✓</td></tr>
+<tr><td class="feat">Mapa / trazada (racing line)</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓<span class="cell-txt"> heatmap</span></td><td class="y">✓</td><td class="y">✓</td></tr>
+<tr><td class="feat">Delta-T por distancia</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
+<tr><td class="feat">Dashboards / gauges configurables</td><td class="p">◐</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="p">◐</td><td class="y">✓</td><td class="n">–</td><td class="p">◐</td><td class="y">✓</td></tr>
+<tr><td class="feat">Coaching (audio / automático)</td><td class="n">–</td><td class="n">–</td><td class="n">–</td><td class="n">–</td><td class="n">–</td><td class="n">–</td><td class="y">✓</td><td class="n">–</td><td class="n">–</td></tr>
+<tr><td class="feat">Tabla min/med/máx por canal</td><td class="p">◐</td><td class="y">✓</td><td class="y">✓</td><td class="p">◐</td><td class="y">✓</td><td class="y">✓</td><td class="n">–</td><td class="p">◐</td><td class="y">✓</td></tr>
+</tbody>
+</table>
+
+<!-- 7 EXPORT -->
+<h2 class="pagebreak">7 · Exportación y formatos</h2>
+<table>
+<thead><tr><th>Función</th><th>RB</th><th>HLT</th><th>RC</th><th>TA</th><th>VB</th><th>AiM</th><th>GC</th><th>QS</th><th>SL</th></tr></thead>
+<tbody>
+<tr><td class="feat">CSV</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="n">–<span class="cell-txt"> *FIT</span></td><td class="y">✓</td><td class="y">✓</td></tr>
+<tr><td class="feat">GPX</td><td class="y">✓</td><td class="y">✓</td><td class="p">◐<span class="cell-txt"> conv.</span></td><td class="y">✓</td><td class="p">◐</td><td class="p">◐</td><td class="n">–</td><td class="y">✓<span class="cell-txt"> PC</span></td><td class="n">–</td></tr>
+<tr><td class="feat">VBO (VBOX)</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓<span class="cell-txt"> nativo</span></td><td class="n">–</td><td class="n">–</td><td class="y">✓</td><td class="n">–</td></tr>
+<tr><td class="feat">KML</td><td class="y">✓</td><td class="y">✓<span class="cell-txt"> imp.</span></td><td class="n">–</td><td class="y">✓</td><td class="n">–</td><td class="n">–</td><td class="n">–</td><td class="y">✓<span class="cell-txt"> PC</span></td><td class="n">–</td></tr>
+<tr><td class="feat">MP4 (vídeo)</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="p">◐</td><td class="n">–</td><td class="y">✓</td></tr>
+<tr><td class="feat">Formato nativo</td><td class="cell-txt">cloud</td><td class="cell-txt">HLPTRL</td><td class="cell-txt">.rcz</td><td class="cell-txt">CSV</td><td class="cell-txt">.vbo</td><td class="cell-txt">.xrk</td><td class="cell-txt">.FIT cerr.</td><td class="cell-txt">BIN</td><td class="cell-txt">propio</td></tr>
+<tr><td class="feat">API / SDK / DLL para terceros</td><td class="y">✓<span class="cell-txt"> abierto</span></td><td class="p">◐</td><td class="y">✓<span class="cell-txt"> BLE DIY</span></td><td class="n">–</td><td class="n">–</td><td class="y">✓<span class="cell-txt"> DLL</span></td><td class="n">–</td><td class="n">–</td><td class="n">–</td></tr>
+</tbody>
+</table>
+<p class="mut" style="font-size:8px">* Garmin: sin export CSV nativo; los datos quedan en .FIT en la microSD y solo se sacan con el FIT SDK (workaround, no es función).</p>
+
+<!-- 8 NUBE -->
+<h2>8 · Nube, cuenta y social</h2>
+<table>
+<thead><tr><th>Función</th><th>RB</th><th>HLT</th><th>RC</th><th>TA</th><th>VB</th><th>AiM</th><th>GC</th><th>QS</th><th>SL</th></tr></thead>
+<tbody>
+<tr><td class="feat">Cuenta + backup en la nube</td><td class="y">✓</td><td class="p">◐<span class="cell-txt"> iCloud</span></td><td class="n">–</td><td class="p">◐</td><td class="n">–</td><td class="y">✓<span class="cell-txt"> 20MB</span></td><td class="y">✓</td><td class="y">✓</td><td class="p">◐</td></tr>
+<tr><td class="feat">Sincronización multidispositivo</td><td class="y">✓</td><td class="n">–</td><td class="n">–</td><td class="n">–</td><td class="n">–</td><td class="y">✓</td><td class="y">✓</td><td class="p">◐</td><td class="n">–</td></tr>
+<tr><td class="feat">Compartir sesión</td><td class="y">✓<span class="cell-txt"> invit.</span></td><td class="y">✓</td><td class="y">✓<span class="cell-txt"> .rcz</span></td><td class="p">◐</td><td class="n">–</td><td class="y">✓</td><td class="p">◐<span class="cell-txt"> dev↔dev</span></td><td class="y">✓</td><td class="y">✓</td></tr>
+<tr><td class="feat">Leaderboards / ranking por circuito</td><td class="n">–</td><td class="y">✓<span class="cell-txt"> HoF</span></td><td class="n">–<span class="cell-txt"> (3os)</span></td><td class="n">–</td><td class="n">–</td><td class="n">–</td><td class="y">✓<span class="cell-txt"> C2</span></td><td class="y">✓<span class="cell-txt"> Web</span></td><td class="p">◐</td></tr>
+<tr><td class="feat">Comunidad de pistas (añadir/compartir)</td><td class="y">✓</td><td class="p">◐</td><td class="y">✓</td><td class="p">◐</td><td class="n">–</td><td class="p">◐</td><td class="n">–</td><td class="y">✓</td><td class="y">✓</td></tr>
+<tr><td class="feat">Suscripción de pago</td><td class="n">–</td><td class="n">–</td><td class="n">–</td><td class="n">–</td><td class="n">–</td><td class="n">–</td><td class="y">✓<span class="cell-txt"> Vault</span></td><td class="n">–</td><td class="n">–</td></tr>
+</tbody>
+</table>
+
+<div class="note">
+<b>Cómo leer la matriz.</b> <span class="p">◐</span> indica que la función existe pero con límite (p. ej. solo en tier de pago, solo con add-on de hardware, solo en una plataforma, o vía software de escritorio asociado). Garmin Catalyst destaca por <b>coaching por audio</b> (único) pero suspende en <b>exportación abierta</b>; Harry's y RaceChrono lideran <b>vídeo y canales</b>; Starlane es el referente de <b>ángulo de inclinación</b>; AiM/VBOX brillan en <b>profundidad de análisis</b> de escritorio. <span class="nv">NV</span> = no se pudo confirmar en fuente.
+</div>
+
+<!-- FICHAS -->
+<h2 class="pagebreak">9 · Ficha resumida por aplicación</h2>
+<div class="fichas">
+
+<div class="ficha"><h3>RaceBox (app oficial)</h3>
+<div class="meta">iOS · Android · Web · gratis (requiere hardware RaceBox)</div>
+<ul>
+<li><b>Fuerte:</b> sencilla y glanceable; drag meter; vídeo con overlay (graba o importa GoPro); cloud con backup y compartir; protocolo abierto.</li>
+<li><b>Flojo:</b> depende del HW; sin OBD/CAN; app Android peor valorada (crashes/pérdida de sesión); sin leaderboard público.</li>
+<li><b>Formatos:</b> CSV · VBO · GPX · KML · MP4.</li>
+</ul></div>
+
+<div class="ficha"><h3>Harry's LapTimer</h3>
+<div class="meta">iOS (líder) · Android · CarPlay · Watch · Rookie/Petrolhead/GrandPrix</div>
+<ul>
+<li><b>Fuerte:</b> el más completo en vídeo (MultiCam, PiP, GoPro/Sony, render en el móvil); OBD/CAN; "Online Racing" con amigos en vivo.</li>
+<li><b>Flojo:</b> curva de aprendizaje alta; comparación de vueltas interna débil; crashes/corrupción de BD reportados.</li>
+<li><b>Formatos:</b> CSV · VBO · GPX · KML · HLPTRL · MP4.</li>
+</ul></div>
+
+<div class="ficha"><h3>RaceChrono (Pro)</h3>
+<div class="meta">Android (origen) · iOS · Free + Pro ~$20</div>
+<ul>
+<li><b>Fuerte:</b> mejor relación análisis/precio; vídeo potente con sync GoPro; API BLE DIY abierta; estable y fácil frente a Harry's.</li>
+<li><b>Flojo:</b> export tras muro de pago en la free; sin nube propia (usa terceros); pérdida de datos en Android por ahorro de batería del SO.</li>
+<li><b>Formatos:</b> CSV · .vbo · NMEA · .rcz · MP4 (GPX vía conversión).</li>
+</ul></div>
+
+<div class="ficha"><h3>TrackAddict + RaceRender</h3>
+<div class="meta">iOS · Android · Free + Pro $8,99 · RaceRender (Win/Mac)</div>
+<ul>
+<li><b>Fuerte:</b> mucho gratis; modos (autocross/rally/drift); OBD-II; RaceRender hace overlays profesionales; telemetría en vivo (Live.RaceRender).</li>
+<li><b>Flojo:</b> Android va por detrás de iOS (crashes con BT-GPS, sin import de vídeo); bloqueo de archivos en Android 11.</li>
+<li><b>Formatos:</b> CSV · GPX · KML · VBO · MP4.</li>
+</ul></div>
+
+<div class="ficha"><h3>VBOX (Performance Test / LapTimer) + Circuit Tools</h3>
+<div class="meta">apps iOS-only · Circuit Tools Win/Mac/iOS · gratis (companion HW)</div>
+<ul>
+<li><b>Fuerte:</b> predictivo por posición GPS (no por distancia); .vbo + Circuit Tools con sync de vídeo; precisión de velocidad de referencia.</li>
+<li><b>Flojo:</b> sin IMU (acc por Doppler); apps solo iOS; sin nube; VBOX Sport descontinuado.</li>
+<li><b>Formatos:</b> .vbo (nativo) · CSV.</li>
+</ul></div>
+
+<div class="ficha"><h3>AiM Race Studio 3 (+ móvil)</h3>
+<div class="meta">Desktop Win-only · app iOS/Android (2026) · gratis</div>
+<ul>
+<li><b>Fuerte:</b> análisis muy profundo; SmartyCam con overlay; .xrk raw + CSV + MATLAB + DLL; AiM Cloud para compartir; DL lee ECU/CAN.</li>
+<li><b>Flojo:</b> software "de la edad media" (potente pero hostil); desktop solo Windows; sin export nativo a MoTeC.</li>
+<li><b>Formatos:</b> .xrk (nativo) · CSV · MATLAB · MP4.</li>
+</ul></div>
+
+<div class="ficha"><h3>Garmin Catalyst (app)</h3>
+<div class="meta">iOS · Android (sin web) · gratis (companion del dispositivo)</div>
+<ul>
+<li><b>Fuerte:</b> único con <b>coaching por audio</b> en tiempo real + "optimal lap"; vídeo on-device con overlay (mapa, vel, delta, círculo G-G); leaderboard (Catalyst 2).</li>
+<li><b>Flojo:</b> <b>ecosistema cerrado</b> (sin export raw/CSV, .FIT); sin OBD/CAN; coaching "rudimentario"; nube de vídeo de pago (Vault).</li>
+<li><b>Formatos:</b> — (solo workaround .FIT→CSV).</li>
+</ul></div>
+
+<div class="ficha"><h3>Qstarz QRacing + Web</h3>
+<div class="meta">móvil iOS/Android · QRacing PC (Win) · QRacing Web · gratis (req. GT BLE)</div>
+<ul>
+<li><b>Fuerte:</b> <b>leaderboards</b> y comunidad en QRacing Web; análisis en PC (replay 3 vueltas); drag; export amplio en PC.</li>
+<li><b>Flojo:</b> overlay de vídeo <b>eliminado en v3.3</b> (regresión); confusión de uso reportada; PC solo Windows.</li>
+<li><b>Formatos:</b> CSV (app); RCN · KML · GPX · CSV · VBO (PC).</li>
+</ul></div>
+
+<div class="ficha"><h3>Starlane MAAT</h3>
+<div class="meta">Desktop Win/Mac · móvil iOS/Android (iOS solo Wi-Fi) · gratis</div>
+<ul>
+<li><b>Fuerte:</b> referente <b>moto</b>: ángulo de inclinación + aceleraciones; vídeo con overlay; comparación de trazadas; macOS nativo (a diferencia de AiM).</li>
+<li><b>Flojo:</b> conexión Wi-Fi en iOS problemática (reseñas); MAAT no descarga directo de todos los modelos; software histórico criticado.</li>
+<li><b>Formatos:</b> CSV (+ propietario).</li>
+</ul></div>
+
+</div>
+
+<p class="mut" style="font-size:8px;margin-top:10px;border-top:1px solid var(--line);padding-top:6px">Datos de la Fase 2 de la investigación competitiva (junio 2026). Fuentes oficiales de fabricante, tiendas y foros; muchas páginas devolvieron HTTP 403 a la descarga directa, por lo que parte de los datos provienen de fragmentos de buscador. Símbolos = funciones declaradas salvo indicación; <span class="nv">NV</span> = no verificado.</p>
+
+</body>
+</html>

@@ -1,0 +1,229 @@
+// Smoke test con jsdom: arranca la app real, simula GPS y una sesión completa.
+// Requiere jsdom (dev):  cd app && npm i jsdom && node test/dom-smoke.js
+// Si jsdom no está instalado, se omite sin fallar.
+const fs=require('fs'), path=require('path');
+let JSDOM;
+try{ JSDOM=require('jsdom').JSDOM; }catch(e){ console.log('DOM SMOKE: omitido (instala jsdom con `npm i jsdom`)'); process.exit(0); }
+
+const APP=path.join(__dirname,'..');
+let html=fs.readFileSync(path.join(APP,'index.html'),'utf8');
+html=html.replace(/<script[\s\S]*?<\/script>/g,'').replace(/<link[^>]*>/g,'');
+
+const dom=new JSDOM(html,{ url:'https://localhost/', pretendToBeVisual:true, runScripts:'outside-only' });
+const { window }=dom;
+global.window=window; global.document=window.document; global.navigator=window.navigator;
+
+let success=null;
+window.navigator.geolocation={ watchPosition:(s)=>{ success=s; return 1; }, clearWatch:()=>{} };
+window.confirm=()=>true; window.alert=()=>{};
+window.HTMLCanvasElement.prototype.getContext=()=>null;
+window.DeviceMotionEvent=function DeviceMotionEvent(){};        // sensores disponibles (sin requestPermission: tipo Android)
+try{ window.localStorage.setItem('trazza.settings.v2', JSON.stringify({imu:true})); }catch(e){}  // activa inclinación + G
+
+for(const f of ['detect.js','analyze.js','sensors.js','garage.js','cartagena-track.js','sim.js','app.js']) window.eval(fs.readFileSync(path.join(APP,f),'utf8'));
+window.document.dispatchEvent(new window.Event('DOMContentLoaded'));
+
+const R=6378137, CART={lat:37.6444,lon:-1.0352};
+function offset(lat,lon,e,n){return{lat:lat+n/R*180/Math.PI,lon:lon+e/(R*Math.cos(lat*Math.PI/180))*180/Math.PI};}
+function feed(lat,lon,acc,t,spd){ success({ coords:{latitude:lat,longitude:lon,accuracy:acc,speed:spd==null?null:spd,heading:null}, timestamp:t }); }
+function click(sel){ const el=window.document.querySelector(sel); if(!el) throw new Error('no element '+sel); el.dispatchEvent(new window.Event('click',{bubbles:true})); }
+function txt(sel){ return window.document.querySelector(sel).textContent; }
+
+let pass=0,fail=0; const ok=(n,c)=>{ if(c)pass++; else{fail++; console.log('  FAIL',n);} };
+
+let t=1_000_000;
+for(let i=0;i<3;i++){ feed(CART.lat,CART.lon,4,t,1); t+=1000; }
+ok('GPS card muestra precisión', txt('#gps-acc')!=='--');
+
+click('#meta-card'); click('#btn-mark-here'); click('#btn-confirm-meta');
+ok('meta seleccionada en home', txt('#meta-name').trim()!=='Sin meta');
+ok('botón salir habilitado', window.document.querySelector('#btn-start').disabled===false);
+
+// recordatorio para la vuelta 2
+window.document.querySelector('#rem-lap').value='2';
+window.document.querySelector('#rem-text').value='mirar temperatura';
+click('#rem-add-btn');
+ok('recordatorio añadido a la lista', window.document.querySelectorAll('#rem-list .rem-item').length===1);
+
+click('#btn-start');
+ok('preflight activo tras salir a pista', window.document.querySelector('#screen-preflight').classList.contains('active'));
+ok('preflight: chequeo de circuito', window.document.querySelector('#chk-circuit').className.includes('ok'));
+click('#btn-preflight-go');
+ok('pantalla HUD activa', window.document.querySelector('#screen-hud').classList.contains('active'));
+ok('tab bar oculta en el HUD', window.document.querySelector('#tabbar').classList.contains('hidden')===true);
+
+// ---- Sensores (inclinación + G con el IMU del móvil) ----
+const GRAV=9.80665;
+const motion=(aLat,aLon,aVert,roll,ts)=>{ const ev=new window.Event('devicemotion');
+  ev.accelerationIncludingGravity={x:aLat,y:aLon,z:aVert}; ev.rotationRate={alpha:0,beta:roll,gamma:0}; ev.timeStamp=ts; window.dispatchEvent(ev); };
+for(let i=0;i<62;i++) motion(0,0,GRAV,0, 900000+i*16);                       // calibración (moto recta)
+const tilt=d=>{ const r=d*Math.PI/180; return [GRAV*Math.sin(r),0,GRAV*Math.cos(r)]; };
+for(let i=0;i<220;i++){ const [x,y,z]=tilt(i<110?42:-42); motion(x,y,z,0, 960000+i*16); } // tumba derecha y luego izquierda
+ok('HUD telemetría visible con sensores', window.document.querySelector('#hud-tel-lean').hidden===false && window.document.querySelector('#hud-tel-g').hidden===false);
+ok('tira de estado con sensores', window.document.querySelector('#hud-strip-sens').hidden===false);
+
+const A=200,B=110,DURS=[45,44,46,43.5];
+let theta=-0.6, lapIdx=0;
+for(let s=0;s<170;s++){
+  const x=B*(Math.cos(theta)-1), y=A*Math.sin(theta);
+  const ll=offset(CART.lat,CART.lon,x,y);
+  feed(ll.lat,ll.lon,3,t,40); t+=1000;
+  const dur=DURS[lapIdx%DURS.length];
+  const before=Math.floor(theta/(2*Math.PI)); theta+=2*Math.PI/dur;
+  if(Math.floor(theta/(2*Math.PI))>before) lapIdx++;
+}
+ok('mejor vuelta en HUD', txt('#hud-best').trim()!=='--');
+ok('última vuelta en HUD', txt('#hud-last').trim()!=='--');
+ok('contador de vuelta avanzó', txt('#hud-lapnum')!=='VUELTA 00');
+ok('velocidad máx > 0 en HUD', parseInt(txt('#hud-spdmax'))>0);
+ok('strip de 3 sectores en HUD', window.document.querySelectorAll('#hud-sectors .sec').length===3);
+ok('algún sector con tiempo', [...window.document.querySelectorAll('#hud-sectors .sd')].some(e=>e.textContent.trim()!=='—'));
+
+// recordatorio saltó en el HUD al llegar a la vuelta 2
+const remEl=window.document.querySelector('#hud-reminder');
+ok('aviso de recordatorio visible en el HUD', remEl.hidden===false);
+ok('aviso muestra el texto y la vuelta', remEl.textContent.includes('mirar temperatura') && remEl.textContent.includes('VUELTA 2'));
+
+click('#btn-stop');
+ok('pantalla resumen activa', window.document.querySelector('#screen-summary').classList.contains('active'));
+const count=parseInt(txt('#sum-count'));
+ok('resumen cuenta >=2 vueltas ('+count+')', count>=2);
+ok('resumen mejor vuelta válida', txt('#sum-best').trim()!=='--');
+ok('resumen vuelta óptima válida', txt('#sum-opt').trim()!=='--');
+ok('resumen muestra chips de sector', window.document.querySelectorAll('#sum-laps .lap-secs .sc').length>0);
+
+// sensores: guardados en la sesión + visibles en el resumen
+const sess1=(JSON.parse(window.localStorage.getItem('trazza.sessions.v2')||'[]'))[0];
+ok('sesión guarda inclinación máx (IMU)', !!(sess1 && sess1.imu) && sess1.imu.leanL>10 && sess1.imu.leanR>10);
+ok('resumen muestra tarjeta de inclinación/G', window.document.querySelector('#sum-imu').hidden===false);
+ok('toggle de color del mapa visible (hay lean)', window.document.querySelector('#sum-colormode').hidden===false);
+
+// ---- Análisis de tanda (comparar vueltas) ----
+click('#btn-analyze');
+ok('pantalla análisis activa', window.document.querySelector('#screen-analysis').classList.contains('active'));
+ok('selector A con >=2 vueltas', window.document.querySelectorAll('#an-a option').length>=2);
+ok('selector B con >=2 vueltas', window.document.querySelectorAll('#an-b option').length>=2);
+ok('A y B son vueltas distintas por defecto', window.document.querySelector('#an-a').value!==window.document.querySelector('#an-b').value);
+ok('narrativa de análisis con contenido', txt('#an-narr').trim().length>0);
+ok('tabla de análisis lista vueltas', window.document.querySelectorAll('#an-laps .lap').length>=2);
+ok('gráfica de inclinación visible (hay sensores)', window.document.querySelector('#an-lean-wrap').hidden===false);
+ok('B compara con el récord del circuito', [...window.document.querySelectorAll('#an-b option')].some(o=>o.textContent.includes('Récord')));
+ok('B por defecto es el récord', window.document.querySelector('#an-b').value==='-1');
+ok('tabla marca la vuelta A', window.document.querySelectorAll('#an-laps .lap.selA').length===1);
+click('#an-back');
+ok('vuelve al resumen desde análisis', window.document.querySelector('#screen-summary').classList.contains('active'));
+
+// ---- Récord histórico (PB) por circuito ----
+let recs=JSON.parse(window.localStorage.getItem('trazza.records.v1')||'{}');
+ok('récord guardado tras la 1ª sesión', Object.keys(recs).length>=1);
+ok('banner de récord visible en resumen', window.document.querySelector('#sum-record').hidden===false);
+const firstRecMs = recs[Object.keys(recs)[0]].bestMs;
+// 2ª sesión más rápida en la misma meta -> debe batir el récord
+click('[data-go="home"]'); click('#meta-card');
+feed(CART.lat,CART.lon,4,t,0); t+=1000;                 // vuelve a la misma meta
+click('#btn-mark-here'); click('#btn-confirm-meta'); click('#btn-start'); click('#btn-preflight-go');
+{ const A=200,B=110,DURS=[40,39.5]; let theta=-0.6,lapIdx=0;
+  for(let s=0;s<150;s++){ const x=B*(Math.cos(theta)-1),y=A*Math.sin(theta); const ll=offset(CART.lat,CART.lon,x,y);
+    feed(ll.lat,ll.lon,3,t,45); t+=1000;
+    const dur=DURS[lapIdx%DURS.length]; const before=Math.floor(theta/(2*Math.PI)); theta+=2*Math.PI/dur; if(Math.floor(theta/(2*Math.PI))>before) lapIdx++; } }
+// ---- Modo track (horizontal): info mínima + delta a pantalla completa ----
+ok('modo track: contador de vueltas', parseInt(txt('#tk-laps'))>=1);
+ok('modo track: mejor vuelta fijada', txt('#tk-best')!=='--');
+const tm=window.document.querySelector('#track-mode');
+ok('modo track: pantalla verde/rojo según delta', tm.className.includes('faster')||tm.className.includes('slower'));
+ok('modo track: muestra segundos y décimas', /[−+]\d/.test(txt('#tk-delta')));
+click('#btn-stop');
+ok('2ª sesión marca NUEVO récord', window.document.querySelector('#sum-record').className.indexOf('new')>=0);
+ok('banner indica mejora vs anterior', txt('#sum-record').includes('vs anterior'));
+recs=JSON.parse(window.localStorage.getItem('trazza.records.v1')||'{}');
+ok('récord actualizado a la mejor marca', recs[Object.keys(recs)[0]].bestMs < firstRecMs);
+
+// ---- Zoom del trazado en el resumen ----
+const sm=window.document.querySelector('#sum-map');
+window.document.querySelector('#zoom-in').dispatchEvent(new window.Event('click',{bubbles:true}));
+ok('botón + acerca el trazado', !!sm._view && sm._view.zoom>1);
+window.document.querySelector('#zoom-in').dispatchEvent(new window.Event('click',{bubbles:true}));
+const z2=sm._view.zoom;
+ok('segundo + sigue acercando', z2>1.3);
+window.document.querySelector('#zoom-reset').dispatchEvent(new window.Event('click',{bubbles:true}));
+ok('botón reset vuelve a zoom 1', sm._view.zoom===1 && sm._view.panX===0);
+
+// navega a la pestaña Sesiones (nueva tab bar)
+click('#tabbar .tab[data-tab="sessions"]');
+ok('pestaña sesiones activa', window.document.querySelector('#screen-sessions').classList.contains('active'));
+ok('tab bar visible en pantalla raíz', window.document.querySelector('#tabbar').classList.contains('hidden')===false);
+ok('sesión listada en sesiones', window.document.querySelectorAll('#session-list .sess').length>=1);
+ok('resumen de inicio visible', window.document.querySelector('#home-dash').hidden===false);
+ok('resumen cuenta sesiones', parseInt(txt('#dash-sessions'))>=1);
+ok('resumen muestra km en pista', txt('#dash-km')!=='0' || txt('#dash-km')==='0.0');
+click('#tabbar .tab[data-tab="home"]');
+
+// ---- Constructor de circuito (punto a punto) + mapa del HUD ----
+const qsActive=s=>window.document.querySelector(s).classList.contains('active');
+click('#meta-card');
+click('#btn-create-circuit');
+ok('pantalla constructor activa', qsActive('#screen-builder'));
+click('#bld-mode button[data-mode="manual"]');
+feed(CART.lat,CART.lon,4,t,1); t+=1000; click('#btn-pin');            // meta
+for(const [e,n] of [[60,0],[60,60],[0,60],[0,5]]){ const ll=offset(CART.lat,CART.lon,e,n); feed(ll.lat,ll.lon,4,t,5); t+=1000; click('#btn-pin'); }
+ok('constructor cuenta >=5 puntos', parseInt(txt('#bld-points'))>=5);
+window.prompt=()=>'Circuito Test';
+click('#btn-save-circuit');
+ok('vuelve a meta tras guardar', qsActive('#screen-meta'));
+ok('confirmar habilitado tras guardar', window.document.querySelector('#btn-confirm-meta').disabled===false);
+ok('circuito en lista guardadas', window.document.querySelectorAll('#saved-list .preset').length>=1);
+click('#btn-confirm-meta');
+ok('meta seleccionada = circuito', txt('#meta-name').includes('Circuito'));
+click('#btn-start'); click('#btn-preflight-go');
+ok('HUD tiene mapa en vivo', !!window.document.querySelector('#hud-map'));
+feed(CART.lat,CART.lon,4,t,10); t+=1000;
+ok('sigue en HUD tras fix (mapa no rompe)', qsActive('#screen-hud'));
+click('#btn-stop');
+
+// ---- Plantilla "Circuito de maniobras" (se ancla en tu posición) ----
+click('[data-go="home"]');
+click('#meta-card');
+const presetEls=[...window.document.querySelectorAll('#preset-list .preset')];
+ok('preset plantilla maniobras presente', presetEls.some(e=>e.textContent.toLowerCase().includes('maniobras')));
+feed(CART.lat,CART.lon,4,t,1); t+=1000;
+presetEls.find(e=>e.textContent.toLowerCase().includes('maniobras')).dispatchEvent(new window.Event('click',{bubbles:true}));
+ok('plantilla anclada habilita confirmar', window.document.querySelector('#btn-confirm-meta').disabled===false);
+click('#btn-confirm-meta');
+ok('meta = circuito de maniobras', txt('#meta-name').toLowerCase().includes('maniobras'));
+
+// ---- Garaje: motos, reglajes, mantenimiento y uso en la tanda ----
+click('#bike-card');
+ok('pantalla garaje activa', qsActive('#screen-garage'));
+click('#btn-add-bike');
+ok('formulario de moto activo', qsActive('#screen-bike-edit'));
+window.document.querySelector('#f-name').value='Panigale Test';
+window.document.querySelector('#f-cc').value='1103';
+window.document.querySelector('#f-hours').value='3';
+click('#btn-save-bike');
+ok('tras guardar, detalle de moto', qsActive('#screen-bike'));
+ok('horas de motor mostradas', txt('#bike-hours').indexOf('3.0')>=0);
+ok('mantenimiento con elementos', window.document.querySelectorAll('#bike-maint .maint').length>=5);
+{ const mb=window.document.querySelector('#bike-maint .maint .mint b'); const before=mb.textContent;
+  window.document.querySelector('#bike-maint .maint .mint-d[data-d="1"]').dispatchEvent(new window.Event('click',{bubbles:true}));
+  ok('editar intervalo de mantenimiento', window.document.querySelector('#bike-maint .maint .mint b').textContent!==before); }
+click('#btn-add-setup');
+ok('formulario de reglaje activo', qsActive('#screen-setup-edit'));
+window.document.querySelector('#s-name').value='Cheste B';
+window.document.querySelector('#sf-presTra').value='2.1';
+click('#btn-save-setup');
+ok('reglaje listado en la moto', [...window.document.querySelectorAll('#bike-setups .setup-row')].some(e=>e.textContent.includes('Cheste B')));
+// usa la moto + reglaje para la tanda
+window.document.querySelector('#bike-setups .mini-use').dispatchEvent(new window.Event('click',{bubbles:true}));
+ok('al usar moto vuelve a inicio', qsActive('#screen-home'));
+ok('tarjeta de inicio muestra la moto', txt('#bike-card-name').includes('Panigale Test'));
+ok('aviso de mantenimiento oculto si no toca', window.document.querySelector('#bike-card-warn').hidden===true);
+// la tanda hereda moto y reglaje
+click('#btn-start'); click('#btn-preflight-go');
+feed(CART.lat,CART.lon,4,t,10); t+=1000; feed(CART.lat,CART.lon,4,t,10); t+=1000;
+click('#btn-stop');
+const gsess=(JSON.parse(window.localStorage.getItem('trazza.sessions.v2')||'[]'))[0];
+ok('la sesión guarda la moto y el reglaje', !!(gsess && gsess.bikeName==='Panigale Test' && gsess.setupName==='Cheste B'));
+
+console.log('\nresumen mejor:', txt('#sum-best'), '| vueltas:', count);
+console.log(`DOM SMOKE: ${pass} pass, ${fail} fail`);
+process.exit(fail?1:0);
